@@ -2,7 +2,8 @@
 #'
 #' Fetches CTD data from ESM2 profiler records
 #'
-#' @details TODO
+#' @details This function querys the Smartbuoy database and returns ESM2 profiler data matching the provided critiera.
+#' the v_CtdProfile_AllData table is used, as such private data will not be available to this function.
 #' @param cruiseID optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.
 #' @param profiler optional profiler name string, e.g. "PR009", if provided only data from this profiler will be returned.
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
@@ -14,10 +15,8 @@
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame with returned data in "long" format or error string if no data returned
-#' @keywords profiler ctd esm2
-#' @examples
-#' @export
-#' data <- fetch.profiler('CEND_01_14')
+#' @keywords profiler ctd esm2 query
+#' @examples d <- fetch.profiler(cruiseID = 'CEND_02_12', parameters = 'TEMP')
 fetch.profiler <- function(cruiseID = NA, profiler = NA,
                            after = NA, before = NA,
                            area = NA,
@@ -51,7 +50,8 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
     }
         # if profiler id is suppled build filter into query
     if(!is.na(profiler)){
-      query = c(query, paste("AND [Logger Id] = '", profiler,"'", sep = ""))
+      # query = c(query, paste("AND [Logger Id] = '", profiler,"'", sep = ""))
+      query = c(query, paste("AND [Logger Id] NOT IN ('PR006', 'PR003')", sep = ""))
     }
       # if area is suppled build filter into query
       # area = c(minLat, minLon, maxLat, maxLon)
@@ -63,6 +63,14 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
         # TODO between code
         stop('not yet implemented')
       }
+    }
+    
+      # if before or after is suppled build filter into query
+    if(!is.na(before)){
+        stop('not yet implemented')
+    }
+    if(!is.na(after)){
+        stop('not yet implemented')
     }
 
       # if only RQ0 data is required build filter into query
@@ -90,7 +98,6 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
     print(queryString)
     dat$startTime= as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
     dat$dateTime = dat$startTime + dat$offset
-    
 
     # check if valid data has been returned, if not quit
     if(nrow(dat) > 1){
@@ -100,7 +107,17 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
     }
 }
 
-
+#' ESM2 profiler cruise id queryer
+#'
+#' Fetches lists of cruise id where ESM2 profiler data exists.
+#'
+#' @details This function querys the Smartbuoy database and returns a list of valid cruise IDs matching the supplied critiera where ESM2 
+#' profiler data is available. The v_CtdProfile_AllData table is used, as such private data will not be available to this function.
+#' @param yr integer specifing a year to limit the search, default is 'ALL'
+#' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
+#' @return character vector of Cruise Id's
+#' @keywords profiler ctd esm2 query
+#' @export
 profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     require(RODBC)
     query = "SELECT DISTINCT [CruiseId] FROM CtdHeader"
@@ -111,4 +128,22 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     cruiseList = sqlQuery(sb, query)
     odbcCloseAll()
     return(as.vector(cruiseList))
+}
+
+
+#' ESM2 profiler depth binning
+#'
+#' Binns profiler data into depth bins
+#'
+#' @details TODO
+#' @param x data.frame matching output from fetch.profiler
+#' @param bin_depth numeric vector determining depth binning interval, default is 0.5
+#' @param use_cast character string matching matching cast required, options are 'UP', 'DOWN' and 'BOTH'
+#' @return character vector of Cruise Id's
+#' @keywords profiler ctd esm2 query
+#' @export
+profiler.binning <- function(x,
+                             bin_depth = 0.5,
+                             use_cast = 'UP'){
+    dat
 }
