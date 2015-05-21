@@ -5,8 +5,8 @@
 \title{Ferrybox query tool}
 \usage{
 fetch.ferrybox(cruiseID = NA, after = NA, before = NA, area = NA,
-  parameters = c("TEMP", "SAL", "FTU", "O2CONC"), RQ0 = TRUE,
-  db.name = "ferrybox")
+  parameters = c("TEMP", "SAL", "FTU", "O2CONC"), QA_data = FALSE,
+  RQ0 = TRUE, db_name = "ferrybox")
 }
 \arguments{
 \item{optional}{cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.}

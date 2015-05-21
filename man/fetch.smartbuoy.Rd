@@ -6,7 +6,7 @@
 \usage{
 fetch.smartbuoy(deployment = NA, deployment_group = NA, after = NA,
   before = NA, parameters = c("TEMP", "SAL", "FTU", "O2CONC", "PAR"),
-  min_QA_reached = TRUE, RQ0 = TRUE, FSI_temp_only = FALSE,
+  min_QA_reached = TRUE, RQ0 = TRUE, ct_temp_only = TRUE,
   db_name = "smartbuoydblive")
 }
 \arguments{
@@ -22,7 +22,7 @@ fetch.smartbuoy(deployment = NA, deployment_group = NA, after = NA,
 
 \item{min_QA_reached}{boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.}
 
-\item{FSI_temp_only}{boolean, if True all non-FSI temperature data is discarded, default is False.}
+\item{ct_temp_only}{boolean, if True all non-FSI temperature data is discarded, default is False.}
 
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 

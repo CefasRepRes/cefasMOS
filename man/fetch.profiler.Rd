@@ -6,7 +6,7 @@
 \usage{
 fetch.profiler(cruiseID = NA, profiler = NA, after = NA, before = NA,
   area = NA, parameters = c("TEMP", "SAL", "FTU", "O2CONC", "PAR"),
-  RQ0 = TRUE, FSI_temp_only = FALSE, min_QA_reached = TRUE,
+  RQ0 = TRUE, CT_temp_only = TRUE, min_QA_reached = TRUE,
   db_name = "smartbuoydblive")
 }
 \arguments{
@@ -22,13 +22,13 @@ fetch.profiler(cruiseID = NA, profiler = NA, after = NA, before = NA,
 
 \item{parameters}{vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR')}
 
-\item{FSI_temp_only}{boolean, if True all non-FSI temperature data is discarded, default is False.}
-
 \item{min_QA_reached}{boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.}
 
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 
 \item{QA0}{boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True}
+
+\item{FSI_temp_only}{boolean, if True all non-FSI temperature data is discarded, default is False.}
 }
 \value{
 data.frame with returned data in "long" format or error string if no data returned
