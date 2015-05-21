@@ -17,17 +17,18 @@
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords profiler ctd esm2 query
 #' @examples d <- fetch.profiler(cruiseID = 'CEND_02_12', parameters = 'TEMP')
+#' @export
 fetch.profiler <- function(cruiseID = NA, profiler = NA,
                            after = NA, before = NA,
                            area = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR'),
-                           RQ0 = TRUE, FSI_temp_only = FALSE,
+                           RQ0 = TRUE, ct_temp_only = TRUE,
                            min_QA_reached = TRUE,
                            db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
         # boilerplate query start
-    query = c("SELECT (CAST([Date/Time] AS NVARCHAR)) as startTime,",
+    query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as startTime,",
               "[Start Time Offset (secs)] as offset,",
               "[Depth] as depth,",
               "[QA Status] as QA_level,",
@@ -42,16 +43,18 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
               "WHERE [Parameter code] IN")
 
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
-    query = c(query, paste("('",paste(parameters, collapse = "', '"),"')", sep = ""))
-
+    parameters = paste(parameters, collapse = "', '")
+    query = paste0(query, " ('", parameters, "') ")
+    
         # if cruise id is suppled build filter into query
-    if(!is.na(cruiseID)){
-      query = c(query, paste("AND [Cruise Id] = '", cruiseID,"'", sep = ""))
+    if(!is.na(cruiseID[1])){
+        cruiseID = paste(cruiseID, collapse = "', '")
+        query = paste0(query, "AND [Cruise Id] IN ('", cruiseID,"')")
     }
         # if profiler id is suppled build filter into query
-    if(!is.na(profiler)){
-      # query = c(query, paste("AND [Logger Id] = '", profiler,"'", sep = ""))
-      query = c(query, paste("AND [Logger Id] NOT IN ('PR006', 'PR003')", sep = ""))
+    if(!is.na(profiler[1])){
+        profiler = paste(profiler, collapse = "', '")
+        query = paste0(query, "AND [Logger Id] IN ('", profiler,"')")
     }
       # if area is suppled build filter into query
       # area = c(minLat, minLon, maxLat, maxLon)
@@ -67,40 +70,43 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
     
       # if before or after is suppled build filter into query
     if(!is.na(before)){
-        stop('not yet implemented')
+        query = paste0(query, " AND [Date/Time] <= '", before, "'")
     }
     if(!is.na(after)){
-        stop('not yet implemented')
+        query = paste0(query, " AND [Date/Time] >= '", after, "'")
     }
-
+    
       # if only RQ0 data is required build filter into query
     if(RQ0 == TRUE){
-      query = c(query, "AND [Result Quality] = 0")
+      query = paste(query, "AND [Result Quality] = 0 ")
     }
-    if(FSI_temp_only == T){
-      stop('not yet implemented')
-    }
+    
     if(min_QA_reached == TRUE){
         # TODO min QA level reached
-        query = c(query, "AND [QA Status] >= [QA Status Min Publish Level]")
+        query = paste(query, "AND [QA Status] >= [QA Status Min Publish Level]")
     }
-
-        # combine query elements into one query string
-    queryString = paste(query, collapse = ' ')
-        # fetch the data
-        # format dates
-        # if specified remove non-FSI temperature data
     
+    # finally
+    query = paste0(query, 'ORDER BY startTime')
+
+    print(query)
     sb = odbcConnect(db_name)
-    dat = data.table(sqlQuery(sb, queryString))
+    dat = data.table(sqlQuery(sb, query))
     odbcCloseAll()
     
-    print(queryString)
+
     dat$startTime= as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
     dat$dateTime = dat$startTime + dat$offset
+    
+        # if only CT temp wanted remove non ct data
+    ctSensors = c('FSI CT Module')
+    if(ct_temp_only == TRUE){
+        dat = dat[!(!sensor %in% ctSensors & par == 'TEMP')]
+    }
 
     # check if valid data has been returned, if not quit
     if(nrow(dat) > 1){
+        print(paste(nrow(dat), 'rows returned'))
         return(dat)
     }else{
         stop("no data returned")
