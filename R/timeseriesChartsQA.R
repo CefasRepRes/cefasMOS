@@ -7,27 +7,29 @@
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @param parcode character string matching parameter code of interested e.g. 'TEMP' or 'O2CONC'
 #' @param yr integer vector corrisponding to year or years of interest e.g. c(2014, 2015), defaults to current year.
-#' @param parcode2 TODO
 #' @param CT_temp_only optional boolean, if True and parcode = 'TEMP' only CT derived temperature data is returned
+#' @param include_telemetry optional boolean, if True (default) telemetry data is also used for the timeseries
 #' @return dygraph or ggplot object depending on style, or if return_data is True a data.table for the timeseries.
 #' @keywords profiler ctd esm2
 #' @examples plot.sbts('DOWSING', 'O2CONC')
 #' @examples plot.sbts('TH1', 'TEMP', yr = c(2012, 2013))
+#' @examples plot.sbts('WESTGAB', c('TEMP', 'SAL'))
 #' @export
-plot.sbts <- function(deploymentGroup, parcode,
+sbts <- function(deploymentGroup, parcode,
                       yr = year(now()),
-                      parcode2 = FALSE,
                       CT_temp_only = TRUE,
                       style = 'dygraph',
-                      include_telemetry = F,
+                      include_telemetry = TRUE,
+                      day_flu_only = TRUE,
                       db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
-    require(lubridate)
-    # Database connection, modify string to match name in windows ODBC
+    
+    if(length(parcode) > 1 & style == 'dygraph'){
+        stop('dygraphs can only display 1 y axis!')
+    }
+    
     smartbuoydb = odbcConnect(db_name)
-
-    # fetch the data from smartbuoy database
     queryString = paste0("
                         SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
                         [Parameter Code] as parcode,
@@ -40,8 +42,8 @@ plot.sbts <- function(deploymentGroup, parcode,
                         [QA Level] as QAlevel
                         FROM AdHocRetrieval_BurstMeanResults
                         WHERE
-                        ([Parameter Code] IN ('", parcode, "'))
-                        AND [Deployment Group Id] IN ('", deploymentGroup, "')
+                        ([Parameter Code] IN ('", paste(parcode, collapse = "', '"), "'))
+                        AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
                         AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
                         AND [Result Quality Flag] = 0
                         ORDER BY dateTime
@@ -60,14 +62,10 @@ plot.sbts <- function(deploymentGroup, parcode,
 
         # if only CT temp wanted remove non ct data
     ctSensors = c('Aanderaa Conductivity Sensor - Type 3919B IW','Aanderaa Conductivity Sensor - Type 4319B IW','FSI CT Module')
-    if(CT_temp_only & parcode == 'TEMP'){
+    if(CT_temp_only == TRUE & 'TEMP' %in% parcode){
         dat = dat[sensor %in% ctSensors,]
     }
-        # TODO split graphs by depth if depth varies
-    if(length(unique(dat$depth)) > 1){
-        stop('multiple depths not yet supported')
-    }
-
+    
     if(include_telemetry == T){
         # query telemetry table, only get data where no burstmean data
         smartbuoydb = odbcConnect(db_name)
@@ -84,37 +82,56 @@ plot.sbts <- function(deploymentGroup, parcode,
             WHERE NOT EXISTS
             (SELECT * FROM AdHocRetrieval_BurstMeanResults
                 WHERE [Deployment Id] = AdHocRetrieval_TelemetryResults.[Deployment Id])
-            AND ([Parameter Code] IN ('", parcode, "'))
-            AND [Deployment Group Id] IN ('", deploymentGroup, "')
+            AND ([Parameter Code] IN ('", paste(parcode, collapse = "', '"), "'))
+            AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
             AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
             AND [Result Quality Flag] = 0
             ORDER BY dateTime
             ")
         teldat= sqlQuery(smartbuoydb, telequery)
-        return(teldat)
         odbcCloseAll()
         teldat$dateTime = as.POSIXct(teldat$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
         teldat = data.table(teldat)
         
-        if(CT_temp_only & parcode == 'TEMP'){
+        if(CT_temp_only & 'TEMP' %in% parcode){
             teldat = teldat[sensor %in% ctSensors,]
         }
         teldat$deployment = paste0(teldat$deployment, '_telemetry')
-        # check if burstmean data is available and if so discard
-        # merge tables
         dat = rbind(dat, teldat, fill = T)
     }
+    
+    if(day_flu_only & "FLUORS" %in% parcode){
+        print('using PAR to subset FLUORS')
+        smartbuoydb = odbcConnect(db_name)
+        PARquery = paste0("
+                            SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
+                            [Result - Mean] as par
+                            FROM AdHocRetrieval_BurstMeanResults
+                            WHERE [Parameter Code] = 'PAR'
+                            AND [Depth Of Sensor] = 0
+                            AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
+                            AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
+                            AND [Result Quality Flag] = 0
+                            ORDER BY dateTime
+                            ")
+        par = sqlQuery(smartbuoydb, PARquery)
+        odbcCloseAll()
+        par$dateTime = as.POSIXct(par$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
+        par = data.table(par)
+        # dat = merge(dat, par, by = 'dateTime', all.x = T)
+    }
+    
+    dat$result = as.numeric(dat$result)
 
         # plots
     if(style == 'dygraph'){
         require(dygraphs)
         require(xts)
-        parcodes = unique(dat$parcode)
         dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor, value.var = 'result')
-
         dts= xts(dts[,!"dateTime", with=F], order.by = dts$dateTime)
-        print('generating dygraph..')
-        return(list('data' = dat, 'dygraph' = dygraph(dts, main = paste(deploymentGroup, yr)) %>% dyRangeSelector()))
+        title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
+        dg = dygraph(dts, main = title) %>% dyRangeSelector()
+        return(list('data' = dat, 'dygraph' = dg))
     }
     if(style == 'ggplot'){
         require(ggplot2)
