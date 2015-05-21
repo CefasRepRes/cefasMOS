@@ -4,23 +4,22 @@
 #'
 #' @details TODO
 #' @param deploymentGroup character string matching SmartBuoy deployment group (case sensitive)
-#' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @param parcode character string matching parameter code of interested e.g. 'TEMP' or 'O2CONC'
 #' @param yr integer vector corrisponding to year or years of interest e.g. c(2014, 2015), defaults to current year.
-#' @param CT_temp_only optional boolean, if True and parcode = 'TEMP' only CT derived temperature data is returned
+#' @param ct_temp_only optional boolean, if True and parcode = 'TEMP' only CT derived temperature data is returned
+#' @param style character string matching graph style, either 'dygraph' (default) or 'ggplot'
 #' @param include_telemetry optional boolean, if True (default) telemetry data is also used for the timeseries
+#' @param night_flu_only optional boolean, if True (default) only quenched flu data will be removed
+#' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return dygraph or ggplot object depending on style, or if return_data is True a data.table for the timeseries.
 #' @keywords profiler ctd esm2
-#' @examples plot.sbts('DOWSING', 'O2CONC')
-#' @examples plot.sbts('TH1', 'TEMP', yr = c(2012, 2013))
-#' @examples plot.sbts('WESTGAB', c('TEMP', 'SAL'))
 #' @export
 sbts <- function(deploymentGroup, parcode,
                       yr = year(now()),
-                      CT_temp_only = TRUE,
+                      ct_temp_only = TRUE,
                       style = 'dygraph',
                       include_telemetry = TRUE,
-                      day_flu_only = TRUE,
+                      night_flu_only = TRUE,
                       db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
@@ -100,7 +99,8 @@ sbts <- function(deploymentGroup, parcode,
         dat = rbind(dat, teldat, fill = T)
     }
     
-    if(day_flu_only & "FLUORS" %in% parcode){
+    if(night_flu_only & "FLUORS" %in% parcode){
+        stop('night_flu_only not implemented')
         print('using PAR to subset FLUORS')
         smartbuoydb = odbcConnect(db_name)
         PARquery = paste0("

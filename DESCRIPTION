@@ -1,9 +1,24 @@
 Package: cefasMOS
-Type: Package
-Title: What the package does (short line)
-Version: 1.0
+Title: Provides tools for Cefas MOS data activities
+Version: 0.1
 Date: 2015-04-15
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
+Description: Provides tools for Cefas MOS data activities
+Depends: 
+    R (>= 3.0.0)
+Imports:
+    data.table,
+    RODBC,
+    ggplot2,
+    reshape2,
+    RColorBrewer,
+    dygraphs,
+    xts,
+    mapdata,
+    raster,
+    rgdal,
+    ggmap,
+    stringr,
+    svDialogs,
+    lubridate,
+License: GPL-2

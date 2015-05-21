@@ -3,13 +3,13 @@
 #' Fetches SmartBuoy data
 #'
 #' @details This function querys the Smartbuoy database and returns 
-#' @param deployment 
-#' @param deployment_group
+#' @param deployment optional string matching smartbuoy deployment
+#' @param deployment_group optional string matching smartbuoy deployment_group
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR')
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
-#' @param QA0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
+#' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
 #' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned

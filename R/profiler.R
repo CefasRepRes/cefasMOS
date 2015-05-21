@@ -10,13 +10,12 @@
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param area optional area vector consisting of 4 elements, minimum Latitude, minimum Longitude, maximum Latitude, maximum Longitude e.g. c(52, -3.5, 53, -4)
 #' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR')
-#' @param QA0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
-#' @param FSI_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
+#' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
+#' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords profiler ctd esm2 query
-#' @examples d <- fetch.profiler(cruiseID = 'CEND_02_12', parameters = 'TEMP')
 #' @export
 fetch.profiler <- function(cruiseID = NA, profiler = NA,
                            after = NA, before = NA,
@@ -34,6 +33,7 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
               "[QA Status] as QA_level,",
               "[Result Quality] as QA_flag,",
               "[Result Value] as value,",
+              "[Latitude] as latitude, [Longitude] as longitude,",
               "[Sensor Description] as sensor,",
               "[Parameter code] as par,",
               "[Station] as station,",
@@ -97,6 +97,7 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
 
     dat$startTime= as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
     dat$dateTime = dat$startTime + dat$offset
+    dat[,max_depth := max(depth), by = list(startTime, profiler)]
     
         # if only CT temp wanted remove non ct data
     ctSensors = c('FSI CT Module')
@@ -144,12 +145,30 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @details TODO
 #' @param x data.frame matching output from fetch.profiler
 #' @param bin_depth numeric vector determining depth binning interval, default is 0.5
-#' @param use_cast character string matching matching cast required, options are 'UP', 'DOWN' and 'BOTH'
+#' @param use_cast character string matching matching cast required, options are 'UP'
+#' @param return_bin numeric vector, only these bin depths will be returned
 #' @return character vector of Cruise Id's
 #' @keywords profiler ctd esm2 query
 #' @export
 profiler.binning <- function(x,
                              bin_depth = 0.5,
-                             use_cast = 'UP'){
-    dat
+                             use_cast = 'UP',
+                             return_bin = 'all'){
+    require(data.table)
+    dat = data.table(x)     # just make sure
+    if(use_cast == 'UP'){
+        # subset to up cast only
+        max_depth_offsets =  dat[depth == max_depth, list(max_depth_offset = max(offset)), by = startTime]
+        dat = merge(dat, max_depth_offsets, by=  'startTime')
+        dat = dat[offset >= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
+    }
+    dat = dat[,depth_bin := floor(depth / bin_depth) * bin_depth]
+    
+    dat = dat[, list(bin_mean = mean(value), count = length(value)),
+        by = list(startTime, latitude, longitude, cruise, station, profiler, depth_bin, par)]
+    
+    if(return_bin != 'all'){
+        dat = dat[depth_bin == return_bin,]
+    }
+    return(dat)
 }

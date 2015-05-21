@@ -3,21 +3,22 @@
 #' Fetches ferrybox data
 #'
 #' @details TODO
-#' @param optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.
-#' @param optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
-#' @param optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
-#' @param optional area vector consisting of 4 elements, minimum Latitude, minimum Longitude, maximum Latitude, maximum Longitude e.g. c(52, -3.5, 53, -4)
-#' @param optional vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC')
-#' @param optional boolean, if True only data where result quality = 0 is returned, i.e. good data
-#' @param optional character string matching ODBC data source name, defaults to 'ferrybox'
+#' @param cruiseID optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.
+#' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
+#' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
+#' @param area optional vector consisting of 4 elements, minimum Latitude, minimum Longitude, maximum Latitude, maximum Longitude e.g. c(52, -3.5, 53, -4)
+#' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC')
+#' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
+#' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data, default it TRUE
+#' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords ferrybox query
-#' @examples d <- fetch.ferrybox('CEND_01_14')
+#' @export
 fetch.ferrybox<- function(cruiseID = NA,
                            after = NA, before = NA,
                            area = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC'),
-                           QA_data = FALSE,
+                           min_QA_reached = TRUE,
                            RQ0 = TRUE,
                            db_name = 'ferrybox'){
     require(RODBC)
@@ -74,7 +75,7 @@ fetch.ferrybox<- function(cruiseID = NA,
     if(RQ0 == TRUE){
         query = paste0(query, " AND [Result - Quality] = 0")
     }
-    if(QA_data == TRUE){
+    if(min_QA_reached == TRUE){
         query = paste0(query, " AND [Result - Required QA Level Met] = 1")
     }
 
@@ -104,8 +105,7 @@ fetch.ferrybox<- function(cruiseID = NA,
 #' @param devdata_folder character string indicating path to folder containing device data files
 #' @param pivot optional boolian indicating if returned table should be recast into 'wide' format
 #' @return data.frame
-#' @keywords ferrybox query
-#' @examples d <- fetch.ferrybox('CEND_01_14')
+#' @keywords ferrybox
 #' @export
 ferrybox.devdata <- function(devdata_folder, pivot = F){
     require(data.table)

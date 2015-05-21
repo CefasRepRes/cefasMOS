@@ -11,8 +11,7 @@
 #' @param style character string denoting map style, default is 'gsat'
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggmap object
-#' @keywords ferrybox query
-#' @examples d <- fetch.ferrybox('CEND_01_14')
+#' @keywords SmartBuoy
 #' @export
 deployment.map <- function(platforms = c(1, 4, 8),
                             deployment_group_id = 'ALL',
