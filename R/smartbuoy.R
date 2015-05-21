@@ -10,15 +10,16 @@
 #' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR')
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
 #' @param QA0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
-#' @param FSI_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
+#' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
+#' @export
 fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
                            after = NA, before = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR'),
                            min_QA_reached = TRUE,
-                           RQ0 = TRUE, FSI_temp_only = FALSE,
+                           RQ0 = TRUE, ct_temp_only = TRUE,
                            db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
@@ -31,6 +32,7 @@ fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
                   "[Result - mean] as value,",
                   "[Result - Std Dev] as stdev,",
                   "[Result - Count] as n,",
+                  "[Result - Error] as stdev_derived,",
                   "[Sensor Description] as sensor,",
                   "[Parameter code] as par,",
                   "[Parameter Unit] as unit",
@@ -45,10 +47,9 @@ fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
                   "[Result - mean] as value,",
                   "[Result - Std Dev] as stdev,",
                   "[Result - Count] as n,",
-                  "[Sensor Description] as sensor,",
+                  "[Sensor Descr] as sensor,",
                   "[Sensor Serial Number] as sensor_serial,",
-                  "[Parameter Code] as par,",
-                  "[Parameter Unit] as unit",
+                  "[Parameter Code] as par",
                   "FROM AdHocRetrieval_BurstMeanResults")
     }
     
@@ -56,43 +57,50 @@ fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
     parameters = paste(parameters, collapse = "', '")
     query = paste0(query, " WHERE [Parameter code] IN ('", parameters, "')")
 
-    # filter deployments
-    if(!is.na(deployment)){
+    # filter deployments, is.na evaluates each element of vector, so only check first one is not NA
+    if(!is.na(deployment[1])){
         deployment = paste(deployment, collapse = "', '")
         query = paste0(query, " AND [Deployment Id] IN ('", deployment, "')")
     }
-    if(!is.na(deployment_group)){
+    if(!is.na(deployment_group[1])){
         deployment_group = paste(deployment_group, collapse = "', '")
         query = paste0(query, " AND [Deployment Group Id] IN ('", deployment_group, "')")
     }
       # if only RQ0 data is required build filter into query
-    if(RQ0 == TRUE & min_QA_reached != TRUE){
-        query = paste(query, "AND [Result Quality] = 0")
+    if(RQ0 == TRUE){
+        if(min_QA_reached == TRUE){
+            query = paste(query, "AND [Result Quality] = 0")
+        }else{
+            query = paste(query, "AND [Result Quality Flag] = 0")
+        }
     }
-    if(FSI_temp_only == TRUE){
-      stop('not yet implemented')
-    }
+    
       # if before or after is suppled build filter into query
     if(!is.na(before)){
-        stop('not yet implemented')
+        query = paste0(query, " AND [Date/Time] <= '", before, "'")
     }
     if(!is.na(after)){
-        stop('not yet implemented')
+        query = paste0(query, " AND [Date/Time] >= '", after, "'")
     }
+    
     # finaly
     query = paste(query, 'ORDER BY dateTime')
     
+    print(query)
     sb = odbcConnect(db_name)
-    dat = data.table(sqlQuery(sb, query))
+    dat = sqlQuery(sb, query)
     odbcCloseAll()
     
-    print(query)
 
     # check if valid data has been returned, if not quit
-    if(nrow(dat) > 1){
-        dat$dateTime= as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
-        return(dat)
-    }else{
+    if(! nrow(dat) > 1){
         stop("no data returned")
     }
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
+    dat = data.table(dat)
+    if(ct_temp_only == TRUE){
+        ctSensors = c('Aanderaa Conductivity Sensor - Type 3919B IW', 'Aanderaa Conductivity Sensor - Type 4319B IW', 'FSI CT Module')
+        dat = dat[!(!sensor %in% ctSensors & par == 'TEMP')]
+    }
+    return(dat)
 }
