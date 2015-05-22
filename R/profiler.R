@@ -97,7 +97,7 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
 
     dat$startTime= as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
     dat$dateTime = dat$startTime + dat$offset
-    dat[,max_depth := max(depth), by = list(startTime, profiler)]
+    dat = dat[,max_depth := max(depth), by = list(startTime, profiler)]
     
         # if only CT temp wanted remove non ct data
     ctSensors = c('FSI CT Module')
@@ -144,14 +144,16 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #'
 #' @details TODO
 #' @param x data.frame matching output from fetch.profiler
-#' @param bin_depth numeric vector determining depth binning interval, default is 0.5
+#' @param bin_height numeric vector determining depth binning interval, default is 0.5
+#' @param method function for binning, default is floor, ceil and round also work
 #' @param use_cast character string matching matching cast required, options are 'UP'
 #' @param return_bin numeric vector, only these bin depths will be returned
 #' @return character vector of Cruise Id's
 #' @keywords profiler ctd esm2 query
 #' @export
 profiler.binning <- function(x,
-                             bin_depth = 0.5,
+                             bin_height= 1,
+                             method = floor,
                              use_cast = 'UP',
                              return_bin = 'all'){
     require(data.table)
@@ -162,7 +164,13 @@ profiler.binning <- function(x,
         dat = merge(dat, max_depth_offsets, by=  'startTime')
         dat = dat[offset >= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
     }
-    dat = dat[,depth_bin := floor(depth / bin_depth) * bin_depth]
+    if(use_cast == 'DOWN'){
+        # subset to up cast only
+        max_depth_offsets =  dat[depth == max_depth, list(max_depth_offset = max(offset)), by = startTime]
+        dat = merge(dat, max_depth_offsets, by=  'startTime')
+        dat = dat[offset <= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
+    }
+    dat = dat[,depth_bin := method(depth / bin_height) * bin_height]
     
     dat = dat[, list(bin_mean = mean(value), count = length(value)),
         by = list(startTime, latitude, longitude, cruise, station, profiler, depth_bin, par)]

@@ -4,12 +4,15 @@
 \alias{profiler.binning}
 \title{ESM2 profiler depth binning}
 \usage{
-profiler.binning(x, bin_depth = 0.5, use_cast = "UP", return_bin = "all")
+profiler.binning(x, bin_depth = 0.5, method = floor, use_cast = "UP",
+  return_bin = "all")
 }
 \arguments{
 \item{x}{data.frame matching output from fetch.profiler}
 
 \item{bin_depth}{numeric vector determining depth binning interval, default is 0.5}
+
+\item{method}{function for binning, default is floor, ceil and round also work}
 
 \item{use_cast}{character string matching matching cast required, options are 'UP'}
 
