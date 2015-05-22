@@ -67,12 +67,8 @@ fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
         query = paste0(query, " AND [Deployment Group Id] IN ('", deployment_group, "')")
     }
       # if only RQ0 data is required build filter into query
-    if(RQ0 == TRUE){
-        if(min_QA_reached == TRUE){
-            query = paste(query, "AND [Result Quality] = 0")
-        }else{
-            query = paste(query, "AND [Result Quality Flag] = 0")
-        }
+    if(RQ0 == TRUE & min_QA_reached != TRUE){
+        query = paste(query, "AND [Result Quality Flag] = 0")
     }
     
       # if before or after is suppled build filter into query
@@ -91,7 +87,6 @@ fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
     dat = sqlQuery(sb, query)
     odbcCloseAll()
     
-
     # check if valid data has been returned, if not quit
     if(! nrow(dat) > 1){
         stop("no data returned")
