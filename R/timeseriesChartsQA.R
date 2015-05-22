@@ -15,7 +15,7 @@
 #' @keywords profiler ctd esm2
 #' @export
 sbts <- function(deploymentGroup, parcode,
-                      yr = year(now()),
+                      yr = year(Sys.time()),
                       ct_temp_only = TRUE,
                       style = 'dygraph',
                       include_telemetry = TRUE,
@@ -25,7 +25,7 @@ sbts <- function(deploymentGroup, parcode,
     require(data.table)
     
     if(length(parcode) > 1 & style == 'dygraph'){
-        stop('dygraphs can only display 1 y axis!')
+        stop('dygraphs can only display 1 parameter')
     }
     
     smartbuoydb = odbcConnect(db_name)
@@ -61,7 +61,7 @@ sbts <- function(deploymentGroup, parcode,
 
         # if only CT temp wanted remove non ct data
     ctSensors = c('Aanderaa Conductivity Sensor - Type 3919B IW','Aanderaa Conductivity Sensor - Type 4319B IW','FSI CT Module')
-    if(CT_temp_only == TRUE & 'TEMP' %in% parcode){
+    if(ct_temp_only == TRUE & 'TEMP' %in% parcode){
         dat = dat[sensor %in% ctSensors,]
     }
     
@@ -92,7 +92,7 @@ sbts <- function(deploymentGroup, parcode,
         teldat$dateTime = as.POSIXct(teldat$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
         teldat = data.table(teldat)
         
-        if(CT_temp_only & 'TEMP' %in% parcode){
+        if(ct_temp_only & 'TEMP' %in% parcode){
             teldat = teldat[sensor %in% ctSensors,]
         }
         teldat$deployment = paste0(teldat$deployment, '_telemetry')

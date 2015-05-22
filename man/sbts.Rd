@@ -4,7 +4,7 @@
 \alias{sbts}
 \title{SmartBuoy time series plots}
 \usage{
-sbts(deploymentGroup, parcode, yr = year(now()), ct_temp_only = TRUE,
+sbts(deploymentGroup, parcode, yr = year(Sys.time()), ct_temp_only = TRUE,
   style = "dygraph", include_telemetry = TRUE, night_flu_only = TRUE,
   db_name = "smartbuoydblive")
 }
