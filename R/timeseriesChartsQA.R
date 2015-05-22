@@ -60,9 +60,9 @@ sbts <- function(deploymentGroup, parcode,
     dat = data.table(dat)
 
         # if only CT temp wanted remove non ct data
-    ctSensors = c('Aanderaa Conductivity Sensor - Type 3919B IW','Aanderaa Conductivity Sensor - Type 4319B IW','FSI CT Module')
+    ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
     if(ct_temp_only == TRUE & 'TEMP' %in% parcode){
-        dat = dat[sensor %in% ctSensors,]
+        dat = dat[sensor %like% ctSensors,]
     }
     
     if(include_telemetry == T){
@@ -93,7 +93,7 @@ sbts <- function(deploymentGroup, parcode,
         teldat = data.table(teldat)
         
         if(ct_temp_only & 'TEMP' %in% parcode){
-            teldat = teldat[sensor %in% ctSensors,]
+            teldat = teldat[sensor %like% ctSensors,]
         }
         teldat$deployment = paste0(teldat$deployment, '_telemetry')
         dat = rbind(dat, teldat, fill = T)

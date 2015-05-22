@@ -100,9 +100,9 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
     dat = dat[,max_depth := max(depth), by = list(startTime, profiler)]
     
         # if only CT temp wanted remove non ct data
-    ctSensors = c('FSI CT Module')
     if(ct_temp_only == TRUE){
-        dat = dat[!(!sensor %in% ctSensors & par == 'TEMP')]
+        ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
+        dat = dat[!(!sensor %like% ctSensors & par == 'TEMP')]
     }
 
     # check if valid data has been returned, if not quit

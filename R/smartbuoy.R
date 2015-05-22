@@ -84,7 +84,7 @@ fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
     
     print(query)
     sb = odbcConnect(db_name)
-    dat = sqlQuery(sb, query)
+    dat = data.table(sqlQuery(sb, query))
     odbcCloseAll()
     
     # check if valid data has been returned, if not quit
@@ -92,10 +92,9 @@ fetch.smartbuoy <- function(deployment = NA, deployment_group = NA,
         stop("no data returned")
     }
     dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
-    dat = data.table(dat)
     if(ct_temp_only == TRUE){
-        ctSensors = c('Aanderaa Conductivity Sensor - Type 3919B IW', 'Aanderaa Conductivity Sensor - Type 4319B IW', 'FSI CT Module')
-        dat = dat[!(!sensor %in% ctSensors & par == 'TEMP')]
+        ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
+        dat = dat[!(!sensor %like% ctSensors & par == 'TEMP')]
     }
     return(dat)
 }
