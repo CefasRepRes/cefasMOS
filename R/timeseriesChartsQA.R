@@ -19,7 +19,7 @@ sbts <- function(deploymentGroup, parcode,
                       ct_temp_only = TRUE,
                       style = 'dygraph',
                       include_telemetry = TRUE,
-                      night_flu_only = TRUE,
+                      night_flu_only = FALSE,
                       db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
@@ -128,7 +128,9 @@ sbts <- function(deploymentGroup, parcode,
         require(dygraphs)
         require(xts)
         dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor, value.var = 'result')
-        dts= xts(dts[,!"dateTime", with=F], order.by = dts$dateTime)
+        # dts= xts(dts[,!"dateTime", with=F], order.by = dts$dateTime) # this doesn't work, don't know why
+        dts = xts(dts, order.by = dts$dateTime)
+        dts$dateTime = NULL
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
         dg = dygraph(dts, main = title) %>% dyRangeSelector()
         return(list('data' = dat, 'dygraph' = dg))
