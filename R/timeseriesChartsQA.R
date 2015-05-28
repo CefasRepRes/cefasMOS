@@ -118,7 +118,7 @@ sbts <- function(deploymentGroup, parcode,
         odbcCloseAll()
         par$dateTime = as.POSIXct(par$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
         par = data.table(par)
-        dat = merge(dat, par, by = 'dateTime', all.x = T)
+        dat = merge(dat, par, by = 'dateTime', all = T, allow.cartesian = T) # allow.cartesian needed for duplicate timestamps
         dat = dat[is.na(par), par := -1]
         dat = dat[par < 1,]
     }
