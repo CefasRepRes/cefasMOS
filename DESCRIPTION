@@ -5,20 +5,21 @@ Date: 2015-04-15
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
 Description: Provides tools for Cefas MOS data activities
 Depends: 
-    R (>= 3.0.0)
+    R (>= 3.0.0),
+    data.table
 Imports:
-    data.table,
-    RODBC,
     ggplot2,
     reshape2,
     RColorBrewer,
     dygraphs,
     xts,
+    stringr,
+    svDialogs,
+    lubridate,
+Suggests:
+    RODBC,
     mapdata,
     raster,
     rgdal,
     ggmap,
-    stringr,
-    svDialogs,
-    lubridate,
 License: GPL-2

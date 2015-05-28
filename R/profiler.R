@@ -87,7 +87,7 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
     }
     
     # finally
-    query = paste0(query, 'ORDER BY startTime')
+    query = paste0(query, ' ORDER BY startTime')
 
     print(query)
     sb = odbcConnect(db_name)
@@ -95,9 +95,9 @@ fetch.profiler <- function(cruiseID = NA, profiler = NA,
     odbcCloseAll()
     
 
-    dat$startTime= as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
+    dat$startTime = as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
     dat$dateTime = dat$startTime + dat$offset
-    dat = dat[,max_depth := max(depth), by = list(startTime, profiler)]
+    # dat[,max_depth := max(depth), by = list(startTime, profiler)]
     
         # if only CT temp wanted remove non ct data
     if(ct_temp_only == TRUE){
