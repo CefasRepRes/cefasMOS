@@ -100,8 +100,8 @@ sbts <- function(deploymentGroup, parcode,
     }
     
     if(night_flu_only & "FLUORS" %in% parcode){
-        stop('night_flu_only not implemented')
-        print('using PAR to subset FLUORS')
+        # stop('night_flu_only not implemented')
+        print('using PAR to subset, FLUORS threshold = 1 uE m-2 s-1')
         smartbuoydb = odbcConnect(db_name)
         PARquery = paste0("
                             SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
@@ -118,7 +118,9 @@ sbts <- function(deploymentGroup, parcode,
         odbcCloseAll()
         par$dateTime = as.POSIXct(par$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
         par = data.table(par)
-        # dat = merge(dat, par, by = 'dateTime', all.x = T)
+        dat = merge(dat, par, by = 'dateTime', all.x = T)
+        dat = dat[is.na(par), par := -1]
+        dat = dat[par < 1,]
     }
     
     dat$result = as.numeric(dat$result)
