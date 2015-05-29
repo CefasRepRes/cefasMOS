@@ -152,3 +152,22 @@ ferrybox.devdata <- function(devdata_folder, pivot = F){
 #' ferrybox cruise id queryer
 #'
 #' Fetches lists of cruise id
+#' 
+#' @details This function querys the Smartbuoy database and returns a list of valid cruise IDs matching the supplied critiera where ESM2 
+#' profiler data is available. The v_CtdProfile_AllData table is used, as such private data will not be available to this function.
+#' @param yr integer specifing a year to limit the search, default is 'ALL'
+#' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
+#' @return character vector of Cruise Id's
+#' @keywords ferrybox 2 query
+#' @export
+ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
+    require(RODBC)
+    query = "SELECT DISTINCT [CruiseId] FROM ConfigHeader"
+    if(yr != 'ALL'){
+        query = paste(query, ' WHERE YEAR([StartTime]) = ', yr, sep = '')
+    }
+    sb = odbcConnect(db_name)
+    cruiseList = sqlQuery(sb, query)
+    odbcCloseAll()
+    return(as.vector(cruiseList))
+}
