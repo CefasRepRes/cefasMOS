@@ -1,13 +1,8 @@
-#' Test Function
-#'
-#' Tests stuff
-#'
-#' @details TODO
-#' @return whatever
-#' @export
-tester <- function(){
-    require(data.table)
-    x = data.table(int = c(0, 5, 1), id = c("MOUSE", "FROG", "DOG"), vec = c(900, 800, 400))
-    x = x[,!c("id"), with = F]
-    return(x)
+ferrybox.ADC_to_PAR <- function(y){
+    #       (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834
+    return( (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834 )
+}
+
+par_from_voltage <- function(x, factor, offset){
+    return(factor * exp(offset * x))
 }
