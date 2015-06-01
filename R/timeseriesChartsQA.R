@@ -129,7 +129,7 @@ sbts <- function(deploymentGroup, parcode,
     if(style == 'dygraph'){
         require(dygraphs)
         require(xts)
-        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor, value.var = 'result')
+        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor, value.var = 'result', fun.aggregate = median)
         dts = xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
         dg = dygraph(dts, main = title) %>% dyRangeSelector()
@@ -138,5 +138,12 @@ sbts <- function(deploymentGroup, parcode,
     if(style == 'ggplot'){
         require(ggplot2)
         print('ggplot not yet implemented')
+        return(dat)
+        dep_label = dat[,list(x = median(dateTime), y = mean(result), lim = min(dateTime)), by = list(deployment, pardesc)]
+        gp = ggplot(dat) + geom_line(aes(dateTime, result, colour = pardesc, group = deployment)) +
+            geom_text(data = dep_label, aes(x, y, label = deployment), alpha = 0.8) +
+            facet_grid(pardesc ~ ., scales = 'free_y') +
+            theme_bw()
+        return(list('data' = dat, 'ggplot' = gp))
     }else{ print('style not implemented') }
 }
