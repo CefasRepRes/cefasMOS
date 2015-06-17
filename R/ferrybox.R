@@ -14,7 +14,7 @@
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords ferrybox query
 #' @export
-fetch.ferrybox<- function(cruiseID = NA,
+ferrybox.fetch <- function(cruiseID = NA,
                            after = NA, before = NA,
                            area = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC'),

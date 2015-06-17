@@ -14,7 +14,7 @@
 #' @return dygraph or ggplot object depending on style, or if return_data is True a data.table for the timeseries.
 #' @keywords profiler ctd esm2
 #' @export
-sbts <- function(deploymentGroup, parcode,
+smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       yr = year(Sys.time()),
                       ct_temp_only = TRUE,
                       style = 'dygraph',
@@ -179,7 +179,6 @@ smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
                         [Parameter Code] IN ('TEMP', 'SAL')
                         AND [Deployment Id] IN ('", paste(deployment, collapse = "', '"), "')
                         AND [Result Quality Flag] = 0
-                        ORDER BY dateTime
                         ")
     dat = sqlQuery(smartbuoydb, queryString)
     odbcCloseAll()

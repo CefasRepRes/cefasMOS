@@ -17,7 +17,7 @@
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords profiler ctd esm2 query
 #' @export
-fetch.profiler <- function(cruiseID = NA, profiler = NA,
+profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            after = NA, before = NA,
                            area = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR'),
