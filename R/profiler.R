@@ -158,6 +158,7 @@ profiler.binning <- function(x,
                              return_bin = 'all'){
     require(data.table)
     dat = data.table(x)     # just make sure
+    dat[,max_depth := max(depth), by = startTime]
     if(use_cast == 'UP'){
         # subset to up cast only
         max_depth_offsets =  dat[depth == max_depth, list(max_depth_offset = max(offset)), by = startTime]
