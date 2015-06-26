@@ -60,7 +60,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
     dat = data.table(dat)
 
         # if only CT temp wanted remove non ct data
-    ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
+    ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird|Waverider'
     if(ct_temp_only == TRUE & 'TEMP' %in% parcode){
         dat = dat[sensor %like% ctSensors,]
     }
@@ -129,7 +129,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
     if(style == 'dygraph'){
         require(dygraphs)
         require(xts)
-        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor, value.var = 'result', fun.aggregate = median)
+        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + QAlevel, value.var = 'result', fun.aggregate = median)
         dts = xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
         dg = dygraph(dts, main = title) %>% dyRangeSelector()
