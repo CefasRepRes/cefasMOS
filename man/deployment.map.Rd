@@ -5,7 +5,7 @@
 \title{Deployment Map}
 \usage{
 deployment.map(platforms = c(1, 4, 8), deployment_group_id = "ALL",
-  style = "gsat", labels = TRUE, active_only = TRUE,
+  style = "gsat", point_size = 5, labels = TRUE, active_only = TRUE,
   zoom_to_group = TRUE, db_name = "smartbuoydblive")
 }
 \arguments{
@@ -14,6 +14,8 @@ deployment.map(platforms = c(1, 4, 8), deployment_group_id = "ALL",
 \item{deployment_group_id}{optional chararacter vector, if supplied only these deployments will be displayed.}
 
 \item{style}{character string denoting map style, default is 'gsat'}
+
+\item{point_size}{numeric, size of plotted points}
 
 \item{labels}{boolean, if True labels are plotted using directlabels.}
 
