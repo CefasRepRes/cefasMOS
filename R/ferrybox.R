@@ -171,3 +171,39 @@ ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
     odbcCloseAll()
     return(as.vector(cruiseList))
 }
+
+ferrybox.position <- function(cruiseID = NA,
+                              after = NA, before = NA,
+                              db_name = 'ferrybox'){
+    require(RODBC)
+        query = paste(
+            "SELECT CruiseId, DataHeaderTime as dateTime,",
+            "Latitude as latitude, Longitude as longitude,",
+            "Course, Heading, Speed",
+            "FROM [Ferrybox].[dbo].[DataHeader]",
+            "INNER JOIN [FerryBox].[dbo].[DataFile]",
+            "ON [FerryBox].[dbo].[DataHeader].DataHeaderId = [FerryBox].[dbo].[DataFile].DataFileId",
+            "INNER JOIN [FerryBox].[dbo].[ConfigHeader]",
+            "ON [FerryBox].[dbo].[DataFile].ConfigHeaderId = [FerryBox].[dbo].[ConfigHeader].ConfigHeaderId",
+            "WHERE PositionQualityOk = 1 AND SatellitesVisible > 0")
+    
+    if(!is.na(cruiseID[1])){
+        query= paste0(query, " AND CruiseId IN ('", paste(cruiseID, collapse = "', '"), "')")
+    }
+      # if before or after is suppled build filter into query
+    if(!is.na(before)){
+        query = paste0(query, " AND dateTime <= '", before, "'")
+    }
+    if(!is.na(after)){
+        query = paste0(query, " AND dateTime >= '", after, "'")
+    }
+    
+    # finally
+    query = paste(query, 'ORDER BY dateTime')
+    
+    sb = odbcConnect(db_name)
+    dat = sqlQuery(sb, query)
+    dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
+    odbcCloseAll()
+    return(data.table(dat))
+}
