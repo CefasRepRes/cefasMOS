@@ -118,8 +118,9 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
         }
     }
     
-    if(ct_temp_only == TRUE){
-        ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
+    if(ct_temp_only == TRUE & 'TEMP' %in% parameters){
+        ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird|Waverider'
+        print('removing non CT temperatures')
         dat = dat[!(!sensor %like% ctSensors & par == 'TEMP')]
     }
     if(is.na(averaging_period)){
@@ -129,7 +130,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
         averaging_period = averaging_period*60*60 # convert to seconds
         dat$dateTime = as.POSIXct(round(as.numeric(dat$dateTime) / averaging_period) * averaging_period, origin = '1970-01-01', tz = 'UTC')
         dat = dat[,.(value = mean(value), stdev = mean(stdev), n = length(value), stdev_derived = mean(stdev_derived)),
-            by = list(dateTime, deployment_group, deployment, depth, sensor, par, unit)]
+            by = list(dateTime, deployment_group, deployment, depth, sensor, par)]
         return(dat[order(dateTime),])
     }
 }
@@ -148,17 +149,26 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
 smartbuoy.fetch_burst <- function(deployment = NA,
                            parameters = NA,
                            db_name = 'smartbuoydblive'){
+    deptable= paste0('[SmartBuoyUser].[Result_', deployment,']')
+    depJoinQuery = paste0(deptable, '.DepSensorId = [dbo].[DeploymentSensor].DepSensorId')
+    parameters_fetch = paste0("('", paste(parameters, collapse = "', '"),"')")
     # stuff
-        query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
-                  "[Deployment Id] as deployment,",
-                  "[Deployment Group Id] as deployment_group,",
-                  "[Depth Of Sensor] as depth,",
-                  "[Result - mean] as value,",
-                  "[Result - Std Dev] as stdev,",
-                  "[Result - Count] as n,",
-                  "[Result - Error] as stdev_derived,",
-                  "[Sensor Description] as sensor,",
-                  "[Parameter code] as par,",
-                  "[Parameter Unit] as unit",
-                  "FROM v_BurstMean_QaData")
+        query = paste(
+            "SELECT ResultTime as dateTime,",
+            "BurstNumber, ResultFlag, ResultQuality,",
+            "SerialNumber as serial," ,
+            "ResultValue as Value" ,
+                  "FROM", deptable,
+            "INNER JOIN [dbo].[DeploymentSensor]",
+            "ON", depJoinQuery,
+            "INNER JOIN [dbo].[Sensor]",
+            "ON [dbo].[DeploymentSensor].SensorId = [dbo].[Sensor].SensorId",
+            "WHERE [Parcode] IN", parameters_fetch,
+            "ORDER BY [ResultTime]" )
+    print(query)
+    sb = odbcConnect(db_name)
+    dat = data.table(sqlQuery(sb, query))
+    odbcCloseAll()
+    return(dat)
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
 }
