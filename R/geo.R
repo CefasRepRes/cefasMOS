@@ -8,6 +8,7 @@
 #' @param labels boolean, if True labels are plotted using directlabels.
 #' @param active_only boolean, if True only current active deployments will be displayed
 #' @param zoom_to_group boolean, if True map is centred and zoomed to selected deployments, if False entire UK is used.
+#' @param point_size numeric, size of plotted points
 #' @param style character string denoting map style, default is 'gsat'
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggmap object
@@ -16,6 +17,7 @@
 deployment.map <- function(platforms = c(1, 4, 8),
                             deployment_group_id = 'ALL',
                             style = 'gsat',
+                            point_size = 5,
                             labels = TRUE,
                             active_only = TRUE,
                             zoom_to_group = TRUE,
@@ -46,11 +48,13 @@ deployment.map <- function(platforms = c(1, 4, 8),
     d$active[d$dateTo > now()] = "active"
     
     d[platform == 1, platformName := 'SmartBuoy']
-    d[platform == 1, shape := 2]
     d[platform == 4, platformName := 'Lander']
-    d[platform == 4, shape := 0]
     d[platform == 8, platformName := 'Waverider']
-    d[platform == 8, shape := 1]
+    
+    # shapes = c(24, 22, 21)    
+    # shapes = c(17, 15, 16)    
+    shapes = c(2, 0, 1)    
+    names(shapes) = c('SmartBuoy', 'Lander', 'Waverider')
     
     d = d[platform %in% platforms] # remove unwanted deployments
     if(deployment_group_id != 'ALL'){
@@ -58,23 +62,23 @@ deployment.map <- function(platforms = c(1, 4, 8),
     }
     
     if(active_only == T){
-        d = d[active == 'Current']
+        d = d[active == 'active']
     }
     
     ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8), range = c(120, 60, 30, 14, 8, 4))
     
-    if(zoom_to_group == FALSE){
-        centre.lat = 53
-        centre.lon = -2.7
-        max.range = 14
-        zoom = 6
-    }else{
+    if(zoom_to_group == TRUE){
         centre.lat = mean(range(d$lat))
         centre.lon = mean(range(d$lon))
         max.range = max(diff(range(d$lon)), diff(range(d$lat)))
         # add 5% buffer
         max.range = max.range + max.range * 0.05
         zoom = max(ranges$zoom[ranges$range >= max.range])
+    }else{
+        centre.lat = 53
+        centre.lon = -2.7
+        max.range = 14
+        zoom = 6
     }
     
     centre = c(centre.lon, centre.lat)
@@ -82,8 +86,10 @@ deployment.map <- function(platforms = c(1, 4, 8),
     if(style == 'gsat'){
     require(ggmap)
     mp = ggmap(get_map(location = centre, zoom = zoom, maptype = 'satellite'))
-    mp = mp + geom_point(data = d, aes(lon, lat, color = active, position = 'jitter', shape = as.factor(platform)), size = 2.5) +
-        scale_color_discrete('') + scale_shape_manual('', values = unique(d$shape), labels = unique(d$platformName), drop = F) +
+    mp = mp +
+        geom_point(data = d, aes(lon, lat, color = active, position = 'jitter', shape = platformName), size = point_size) +
+        scale_color_discrete('') +
+        scale_shape_manual('', values = shapes, labels = names(shapes), drop = F) +
         labs(x = 'Longitude', y = 'Latitude')
     }else{
         stop('style not implemented')
@@ -92,8 +98,9 @@ deployment.map <- function(platforms = c(1, 4, 8),
     return(list(map = mp, data = d))
 }
 
-Bathymap <- function(){
+bathymap.fetch <- function(lat, lon, bathy_file){
     # stuff
+    # should build bathymap which fits all data in
         require(raster)
         require(rgdal)
         require(mapdata)
@@ -102,7 +109,6 @@ Bathymap <- function(){
         ylim = c(centre.lat- (max.range / 2), centre.lat+ (max.range / 2))
         # make bathy
         bathy = raster(bathy_file)
-        
         bathy = crop(bathy, extent(c(xlim, ylim)))
         rtp = data.frame(rasterToPoints(bathy))
         colnames(rtp) = c('x', 'y', 'h')
