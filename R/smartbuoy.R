@@ -128,7 +128,8 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     }
     else{
         averaging_period = averaging_period*60*60 # convert to seconds
-        dat$dateTime = as.POSIXct(round(as.numeric(dat$dateTime) / averaging_period) * averaging_period, origin = '1970-01-01', tz = 'UTC')
+        dat$dateTime = as.POSIXct(round(as.numeric(dat$dateTime) / averaging_period) *
+                                      averaging_period, origin = '1970-01-01', tz = 'UTC')
         dat = dat[,.(value = mean(value), stdev = mean(stdev), n = length(value), stdev_derived = mean(stdev_derived)),
             by = list(dateTime, deployment_group, deployment, depth, sensor, par)]
         return(dat[order(dateTime),])
@@ -149,6 +150,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
 smartbuoy.fetch_burst <- function(deployment = NA,
                            parameters = NA,
                            db_name = 'smartbuoydblive'){
+    deployment = gsub('/', '_', deployment)
     deptable= paste0('[SmartBuoyUser].[Result_', deployment,']')
     depJoinQuery = paste0(deptable, '.DepSensorId = [dbo].[DeploymentSensor].DepSensorId')
     parameters_fetch = paste0("('", paste(parameters, collapse = "', '"),"')")
@@ -169,6 +171,8 @@ smartbuoy.fetch_burst <- function(deployment = NA,
     sb = odbcConnect(db_name)
     dat = data.table(sqlQuery(sb, query))
     odbcCloseAll()
+    dat[,mean := mean(Value), by = BurstNumber]
+    dat[,sd:= sd(Value), by = BurstNumber]
     return(dat)
     dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
 }
