@@ -89,3 +89,29 @@ optode.salinity_correction <- function(Sal, Temp, O2, depth = 1, optode_salinity
                  )*(1+(0.04*depth)/1000)
     return(corrected)
 }
+
+calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
+    # Adapted from marelac package by Karline Soetaert using
+    #     Fofonoff NP and Millard RC Jr, 1983. Algorithms for computation of fundamental properties of
+    #     seawater. UNESCO technical papers in marine science, 44, 53 pp.
+    #     http://unesdoc.unesco.org/images/0005/000598/059832EB.pdf
+    # cran.r-project.org/web/packages/marelac
+    #
+    # Cond in Sm-, 1 Sm = 10 mmoh/cm (Smartbuoy Unit)
+    # e.g.R = cond / 4.2914
+    # R = 0.955819857, T = 13.3208333, P = 37.38296403. -> 34.75933
+    # p = gauge pressure, i.e. reference to local (bar)
+    # P = true pressure (bar)
+    
+    R = (Cond / 10) / 4.2914 # as per UNESCO
+    P <- p # pressure from bar
+    C_P <- (2.07e-05 + (-6.37e-10 + 3.989e-15 * P) * P) * P
+    DT <- t - 15
+    R_T <- 0.6766097 + (0.0200564 + (0.0001104259 + (-6.9698e-07 + 1.0031e-09 * t) * t) * t) * t
+    A_T <- 0.4215 + -0.003107 * t
+    B_T <- 1 + (0.03426 + 0.0004464 * t) * t
+    RT <- R/(R_T * (1 + C_P/(B_T + A_T * R)))
+    RT <- sqrt(abs(RT))
+    DS <- (DT/(1 + 0.0162 * DT)) * (5e-04 + (-0.0056 + (-0.0066 + (-0.0375 + (0.0636 + -0.0144 * RT) * RT) * RT) * RT) * RT)
+    return(0.008 + (-0.1692 + (25.3851 + (14.0941 + (-7.0261 + 2.7081 * RT) * RT) * RT) * RT) * RT + DS)
+}
