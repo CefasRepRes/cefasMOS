@@ -27,8 +27,9 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
     require(RODBC)
     require(data.table)
         # boilerplate query start
-    query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as startTime,",
+    query = paste("SELECT (CAST([Start Time] AS NVARCHAR)) as startTime,",
               "[Start Time Offset (secs)] as offset,",
+              "[Site] as site,",
               "[Depth] as depth,",
               "[QA Status] as QA_level,",
               "[Result Quality] as QA_flag,",
@@ -174,10 +175,20 @@ profiler.binning <- function(x,
     dat = dat[,depth_bin := method(depth / bin_height) * bin_height]
     
     dat = dat[, list(bin_mean = mean(value), count = length(value)),
-        by = list(startTime, latitude, longitude, cruise, station, profiler, depth_bin, par)]
+        by = list(startTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par)]
     
     if(return_bin != 'all'){
         dat = dat[depth_bin == return_bin,]
     }
     return(dat)
+}
+
+profiler.ferrybox_position <- function(cruiseID = NA,
+                                       ferrybox_db_name = 'ferrybox',
+                                       smartbuoy_db_name = 'smartbuoydblive'){
+    
+    require(RODBC)
+    require(data.table)
+    fb_pos = ferrybox.position(cruiseId, db_name = ferrybox_db_name)
+    # stuff
 }
