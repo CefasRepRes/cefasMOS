@@ -103,8 +103,8 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
     # p = gauge pressure, i.e. reference to local (bar)
     # P = true pressure (bar)
     
-    R = (Cond / 10) / 4.2914 # as per UNESCO
-    P <- p # pressure from bar
+    R = (Cond / 10) / 4.2914 # as per UNESCO Cond in mmoh/cm
+    P <- p # pressure in dbar
     C_P <- (2.07e-05 + (-6.37e-10 + 3.989e-15 * P) * P) * P
     DT <- t - 15
     R_T <- 0.6766097 + (0.0200564 + (0.0001104259 + (-6.9698e-07 + 1.0031e-09 * t) * t) * t) * t
@@ -115,3 +115,6 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
     DS <- (DT/(1 + 0.0162 * DT)) * (5e-04 + (-0.0056 + (-0.0066 + (-0.0375 + (0.0636 + -0.0144 * RT) * RT) * RT) * RT) * RT)
     return(0.008 + (-0.1692 + (25.3851 + (14.0941 + (-7.0261 + 2.7081 * RT) * RT) * RT) * RT) * RT + DS)
 }
+
+# convert_RtoS((39.023/10/4.2914), t = 11.606, p = 10.86638775/10 ) # marelac version
+# calc_sal(39.023, t = 11.606, p = 10.86638775)
