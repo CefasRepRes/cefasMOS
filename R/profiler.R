@@ -183,12 +183,60 @@ profiler.binning <- function(x,
     return(dat)
 }
 
-profiler.ferrybox_position <- function(cruiseID = NA,
-                                       ferrybox_db_name = 'ferrybox',
-                                       smartbuoy_db_name = 'smartbuoydblive'){
+#' ESM2 profiler ferrybox matching
+#'
+#' Fetches and matches profiler and ferrybox data
+#'
+#' @details TODO
+#' @param cruiseID cruise ID string, e.g. "CEND_02_14"
+#' @param parameters vector of parameter code names, defaults to c('TEMP')
+#' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
+#' @param ferrybox_db_name character string matching ODBC data source name, defaults to 'ferrybox'
+#' @param smartbuoy_db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
+#' @return list containing matched data and regression ggplot
+#' @keywords profiler ctd ferrybox QA
+#' @export
+profiler.match_ferrybox <- function(cruiseID = NA,
+                                    parameters = c('TEMP'),
+                                    min_QA_reached = F,
+                                    ferrybox_db_name = 'ferrybox',
+                                    smartbuoy_db_name = 'smartbuoydblive'){
     
     require(RODBC)
     require(data.table)
-    fb_pos = ferrybox.position(cruiseId, db_name = ferrybox_db_name)
-    # stuff
+    # matching first wet times >3.5m < 4.5 up to 1min mean, match to ferrybox
+        # fetch profiler data
+    ctd = profiler.fetch(cruiseID = cruiseID, parameters = parameters,
+                         db_name = smartbuoy_db_name, min_QA_reached = min_QA_reached)
+        # filter by depth
+    ctd = ctd[depth > 3.5 & depth < 4.5]
+        # round to minute
+    ctd[,dateTime := as.POSIXct(round(as.numeric(dateTime)/60)*60,origin = '1970-01-01',  tz = 'UTC')]
+        # bin to minute
+    ctd = ctd[,.(value = mean(value)), by = list(dateTime, site, latitude, longitude, sensor, par, cruise, profiler)]
+        
+        # fetch ferrybox
+    fb = ferrybox.fetch(cruiseID = cruiseID, parameters = parameters,
+                        db_name = ferrybox_db_name, min_QA_reached = min_QA_reached)
+        # if temperature only use ADAM
+    fb =  fb[sensor == 'ADAM PT100 PRT' | par != 'TEMP']
+        # only some columns needed
+    fb = fb[,.(sensor, dateTime, latitude, longitude, ferrybox_speed = speed, value)]
+        # fast data table merge
+    setkey(fb, dateTime)
+    setkey(ctd, dateTime)
+    matched =  merge(fb, ctd, suffixes = c('_ferrybox', '_profiler'))
+    setcolorder(matched, order(colnames(matched)))
+    
+    fit = with(matched, lm(value_profiler ~ value_ferrybox))
+    plt = ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
+        geom_point() +
+        stat_smooth(method = "lm", col = "red") +
+        labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
+                           "; Intercept =",signif(fit$coef[[1]],5 ),
+                           "; Slope =",signif(fit$coef[[2]], 5),
+                           "; P =",signif(summary(fit)$coef[2,4], 5)
+                           ))
+    
+    return(list(data = matched, plot = plt))
 }

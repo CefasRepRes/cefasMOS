@@ -158,7 +158,7 @@ ferrybox.devdata <- function(devdata_folder, pivot = F){
 #' @param yr integer specifing a year to limit the search, default is 'ALL'
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return character vector of Cruise Id's
-#' @keywords ferrybox 2 query
+#' @keywords ferrybox query
 #' @export
 ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
     require(RODBC)
@@ -172,6 +172,18 @@ ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
     return(as.vector(cruiseList))
 }
 
+#' ferrybox cruise tracks
+#'
+#' Fetches position of ferrybox
+#' 
+#' @details TODO
+#' @param cruiseID optional character string matching cruise ID
+#' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
+#' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
+#' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
+#' @return data.frame (data.table) containing the ferrybox cruise track
+#' @keywords ferrybox query
+#' @export
 ferrybox.position <- function(cruiseID = NA,
                               after = NA, before = NA,
                               db_name = 'ferrybox'){

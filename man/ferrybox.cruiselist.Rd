@@ -21,7 +21,6 @@ Fetches lists of cruise id
 This function querys the Smartbuoy database and returns a list of valid cruise IDs matching the supplied critiera where ESM2
 profiler data is available. The v_CtdProfile_AllData table is used, as such private data will not be available to this function.
 }
-\keyword{2}
 \keyword{ferrybox}
 \keyword{query}
 

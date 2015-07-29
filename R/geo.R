@@ -14,7 +14,7 @@
 #' @return ggmap object
 #' @keywords SmartBuoy
 #' @export
-deployment.map <- function(platforms = c(1, 4, 8),
+smartbuoy.map <- function(platforms = c(1, 4, 8),
                             deployment_group_id = 'ALL',
                             style = 'gsat',
                             point_size = 5,
@@ -127,6 +127,5 @@ bathymap.fetch <- function(lat, lon, bathy_file){
         mp = mp + geom_point(data = d, aes(lon, lat, color = active, position = 'jitter', shape = as.factor(platform)), size = 2.5) +
             scale_color_discrete('') + scale_shape_manual('', values = unique(d$shape), labels = unique(d$platformName), drop = F) +
             labs(x = 'Longitude', y = 'Latitude')
-            
         
 }
