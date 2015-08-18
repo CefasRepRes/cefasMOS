@@ -19,4 +19,8 @@ data frame (data.table) of extracted nutrients data
 \description{
 Fetch nutrients data from LIMS (post 2013)
 }
+\details{
+parameter codes:
+Chlorophyll, TOXN, O2, SLD, SAL
+}
 
