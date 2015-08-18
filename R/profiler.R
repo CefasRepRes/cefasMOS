@@ -39,7 +39,8 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
               "[Parameter code] as par,",
               "[Station] as station,",
               "[Cruise Id] as cruise,",
-              "[Logger Id] as profiler",
+              "[Logger Id] as profiler,",
+              "[Notes] as notes",
               "FROM v_CtdProfile_AllData",
               "WHERE [Parameter code] IN")
 
@@ -94,7 +95,12 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
     sb = odbcConnect(db_name)
     dat = data.table(sqlQuery(sb, query))
     odbcCloseAll()
-    
+    # check if valid data has been returned, if not quit
+    if(nrow(dat) > 1){
+        print(paste(nrow(dat), 'rows returned'))
+    }else{
+        stop("no data returned")
+    }
 
     dat$startTime = as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
     dat$dateTime = dat$startTime + dat$offset
@@ -105,14 +111,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
         dat = dat[!(!sensor %like% ctSensors & par == 'TEMP')]
     }
-
-    # check if valid data has been returned, if not quit
-    if(nrow(dat) > 1){
-        print(paste(nrow(dat), 'rows returned'))
-        return(dat)
-    }else{
-        stop("no data returned")
-    }
+    return(dat)
 }
 
 #' ESM2 profiler cruise id queryer
@@ -221,22 +220,32 @@ profiler.match_ferrybox <- function(cruiseID = NA,
         # if temperature only use ADAM
     fb =  fb[sensor == 'ADAM PT100 PRT' | par != 'TEMP']
         # only some columns needed
-    fb = fb[,.(sensor, dateTime, latitude, longitude, ferrybox_speed = speed, value)]
+    fb = fb[,.(sensor, par, dateTime, latitude, longitude, ferrybox_speed = speed, value)]
         # fast data table merge
-    setkey(fb, dateTime)
-    setkey(ctd, dateTime)
+    setkey(fb, dateTime, par)
+    setkey(ctd, dateTime, par)
     matched =  merge(fb, ctd, suffixes = c('_ferrybox', '_profiler'))
     setcolorder(matched, order(colnames(matched)))
     
-    fit = with(matched, lm(value_profiler ~ value_ferrybox))
-    plt = ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
-        geom_point() +
-        stat_smooth(method = "lm", col = "red") +
-        labs(title = paste("Adj R2 = ",signif(summary(fit)$adj.r.squared, 5),
-                           "; Intercept =",signif(fit$coef[[1]],5 ),
-                           "; Slope =",signif(fit$coef[[2]], 5),
-                           "; P =",signif(summary(fit)$coef[2,4], 5)
-                           ))
+    lm_eqn = function(x, y){
+        m = lm(y ~ x);
+        eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
+                         list(a = format(coef(m)[1], digits = 2), 
+                              b = format(coef(m)[2], digits = 2), 
+                              r2 = format(summary(m)$r.squared, digits = 3)))
+        as.character(as.expression(eq));                 
+    }
+    eq = matched[, .(eq = lm_eqn(value_ferrybox, value_profiler),
+                     xpos = min(value_profiler) + ((max(value_profiler - min(value_profiler))/2)),
+                     ypos = max(value_ferrybox)), by = list(cruise, par)]
     
+    plt = ggplot(matched, aes(value_profiler, value_ferrybox)) +
+        geom_point() + geom_smooth(method = 'lm') +
+        geom_text(data = eq, aes(x = xpos, y = ypos, label = eq),
+                  parse = T) +
+        facet_grid(cruise ~ par, scales = 'free') +
+        theme_bw()
+    print(plt)
+            
     return(list(data = matched, plot = plt))
 }
