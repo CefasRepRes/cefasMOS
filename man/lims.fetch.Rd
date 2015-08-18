@@ -4,12 +4,14 @@
 \alias{lims.fetch}
 \title{Fetch nutrients data from LIMS (post 2013)}
 \usage{
-lims.fetch(parameters = "SAL", cruise = NA)
+lims.fetch(parameters = "SAL", cruise = NA, db_name = "lims")
 }
 \arguments{
 \item{parameters}{}
 
 \item{cruise}{}
+
+\item{db_name}{}
 }
 \value{
 data frame (data.table) of extracted nutrients data

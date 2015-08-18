@@ -2,10 +2,11 @@
 #'
 #' @param parameters 
 #' @param cruise 
+#' @param db_name
 #'
 #' @return data frame (data.table) of extracted nutrients data
 #' @export
-lims.fetch <- function(parameters = 'SAL', cruise = NA){
+lims.fetch <- function(parameters = 'SAL', cruise = NA, db_name = 'lims'){
     require(RODBC)
     require(data.table)
     
@@ -31,7 +32,6 @@ lims.fetch <- function(parameters = 'SAL', cruise = NA){
     query = paste(query, 'ORDER BY dateTime')
     print(query)
     
-    db_name = 'lims'
     lims = odbcConnect(db_name)
     dat =  data.table(sqlQuery(lims, query))
     dat[,longitude := as.numeric(as.character(longitude))] # lat and long are stored as varchar15
@@ -39,5 +39,24 @@ lims.fetch <- function(parameters = 'SAL', cruise = NA){
     dat[,value := as.numeric(as.character(value))]
     odbcCloseAll()
     return(dat)
+}
+
+#' Fetch list of cruises from LIMS
+#'
+#' @param yr 
+#' @param db_name 
+#'
+#' @return vector of cruise ids
+#' @export
+lims.cruiselist <- function(yr = 'ALL', db_name = 'lims'){
+    require(RODBC)
+    query = "SELECT DISTINCT [C_CRUISE_CODE] FROM C_NUTRIENTS_SAMPLES"
+    if(yr != 'ALL'){
+        query = paste(query, ' WHERE YEAR([C_DATE_COLLECTED]) = ', yr, sep = '')
+    }
+    sb = odbcConnect(db_name)
+    cruiseList = sqlQuery(sb, query)
+    odbcCloseAll()
+    return(as.vector(cruiseList))
 }
     
