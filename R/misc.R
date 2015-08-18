@@ -83,6 +83,7 @@ optode.fixer <- function(O2SAT, O2CONC, salinity = 0){
 }
 
 optode.salinity_correction <- function(Sal, Temp, O2, depth = 1, optode_salinity_setting = 0){
+    # o2 in mg/l
     Ts = log((298.15-Temp)/(273.15+Temp))
     corrected = (O2*(exp(Sal*(-0.00624097+-0.00693498*Ts+-0.00690358*Ts^2+-0.00429155*Ts^3)+-0.00000031168*Sal^2))/
                      (exp(optode_salinity_setting*(-0.00624097+-0.00693498*Ts+-0.00690358*Ts^2+-0.00429155*Ts^3)+-0.00000031168*optode_salinity_setting^2))

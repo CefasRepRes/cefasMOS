@@ -19,6 +19,10 @@ reads ferrybox device data files
 }
 \details{
 TODO
+Ferrybox quality codes:
+0 = good, 1 = no data, 2 = over value, 4 = under value, 8 = sensor timeout
+64 = clean cycle, 128 = standby, 256 = empty, 512 = error, 1024 = undefined, 2048 = simulation mode
+sometimes \0 characters appear in data, to sanitise run sed from a bash terminal
 }
 \keyword{ferrybox}
 
