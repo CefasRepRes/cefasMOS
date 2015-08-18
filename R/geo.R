@@ -65,27 +65,8 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
         d = d[active == 'active']
     }
     
-    ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8), range = c(120, 60, 30, 14, 8, 4))
-    
-    if(zoom_to_group == TRUE){
-        centre.lat = mean(range(d$lat))
-        centre.lon = mean(range(d$lon))
-        max.range = max(diff(range(d$lon)), diff(range(d$lat)))
-        # add 5% buffer
-        max.range = max.range + max.range * 0.05
-        zoom = max(ranges$zoom[ranges$range >= max.range])
-    }else{
-        centre.lat = 53
-        centre.lon = -2.7
-        max.range = 14
-        zoom = 6
-    }
-    
-    centre = c(centre.lon, centre.lat)
-    
     if(style == 'gsat'){
-    require(ggmap)
-    mp = ggmap(get_map(location = centre, zoom = zoom, maptype = 'satellite'))
+    mp = ggmap.fetch(d$lat, d$lon, zoom_to_group)
     mp = mp +
         geom_point(data = d, aes(lon, lat, color = active, position = 'jitter', shape = platformName), size = point_size) +
         scale_color_discrete('') +
@@ -96,6 +77,49 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
     }
     
     return(list(map = mp, data = d))
+}
+
+#' fetch localised ggmap
+#'
+#' Creates a base map centred and scaled
+#'
+#' @details TODO
+#' @param lat optional vector of decimal latitudes
+#' @param lon optional vector of decimal longitudes
+#' @param zoom_to_group boolean, if True map is centred and zoomed to input lat/long, if False entire UK is used.
+#' @param scale_factor optional integer, increase set to 1 (or more) to pad to next zoom level
+#' @param crop boolean, if True map is cropped to lat lon + crop_padding (default is False)
+#' @param crop_padding numeric scaling factor for crop (default is 5)
+#' @return ggmap object
+#' @keywords map
+#' @export
+ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F, crop_padding = 5){
+    ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8, 4), range = c(120, 60, 30, 14, 8, 4, 2))
+    if(zoom_to_group == TRUE){
+        centre.lat = mean(range(lat))
+        centre.lon = mean(range(lon))
+        max.range = max(diff(range(lon)), diff(range(lat)))
+        # add 10% buffer
+        max.range = max.range
+        zoom = max(ranges$zoom[ranges$range > max.range]) - scale_factor
+    }else{
+        centre.lat = 53
+        centre.lon = -2.7
+        max.range = 14
+        zoom = 6
+    }
+    centre = c(centre.lon, centre.lat)
+    
+    require(ggmap)
+    mp = ggmap(get_map(location = centre, zoom = zoom, maptype = 'satellite'))
+    if(crop == TRUE){
+        crop_padding = crop_padding/100
+        ymin = min(lat) + min(lat)*crop_padding
+        xmin = min(lon) + min(lon)*crop_padding
+        xmax = max(lon)
+        mp = mp + ylim(range(lat))
+    }
+    return(mp)
 }
 
 bathymap.fetch <- function(lat, lon, bathy_file){
