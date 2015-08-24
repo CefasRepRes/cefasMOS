@@ -3,7 +3,7 @@
 #'
 #' Calculates FTU value from ESM2 raw hex ADC counts
 #'
-#' @details This function querys the Smartbuoy database and returns 
+#' @details This function querys the Smartbuoy database and returns
 #' @param x vector of ESM2 hex ADC counts, each count should be 6 characters i.e. "1a13D2"
 #' @param factor channel calibration factor, specific to logger, default is 1.22
 #' @param offset channel calibration offset, default is 0.001
@@ -15,7 +15,7 @@ ftu_from_ADC<- function(x, factor = 1.22, offset = 0.001){
                "0" = 500,
                "1" = 100,
                "2" = 25,
-               "3" = 5)    
+               "3" = 5)
     }
     subfunc <- function(x){
         # TODO check valid ESM hex output
@@ -35,15 +35,15 @@ flu_from_ADC<- function(x, factor = 1.22, offset = 0.001){
     # use sapply(x, flu_from_ADC)
     if(nchar(as.character(x)) != 6){return(NA)}
     dec = as.numeric(paste0("0x", substr(x, 4, 6)))
-    
+
     which_range <- function(range){
         switch(range,
                "0" = 30,
                "1" = 10,
                "2" = 3,
-               "3" = 1)    
+               "3" = 1)
     }
-    
+
     range = which_range(as.character(substr(x, 3, 3)))   # calculate factor from range
     dec.mv = dec / 1000 # convert to mV
     dec.c = (dec.mv * factor) - (offset / 1000)  # apply channel calibrations
@@ -57,12 +57,12 @@ par_from_voltage <- function(x, factor, offset){
 
 
 optode.fixer <- function(O2SAT, O2CONC, salinity = 0){
-    # when optode not configured correctly O2CONC is actually o2 sat with o2conc cal applied, and o2sat is actually temp    
+    # when optode not configured correctly O2CONC is actually o2 sat with o2conc cal applied, and o2sat is actually temp
     TEMP = O2SAT
     O2SAT = O2CONC / 0.0319988
-    
+
     A0 = 2.00856
-    A1 = 3.224   
+    A1 = 3.224
     A2 = 3.99063
     A3 = 4.80299
     A4 = 0.978188
@@ -73,12 +73,12 @@ optode.fixer <- function(O2SAT, O2CONC, salinity = 0){
     B3 = -0.00429155
     C0 = -3.1168E-07
     Ts = log((298.15-TEMP)/(273.15+TEMP))
-    
+
     Cstar = exp(A0+(A1*Ts)+(A2*Ts^2)+
                     (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
                     salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
                     (C0*salinity^2))
-    
+
     O2CONC = ((Cstar * 44.614 * O2SAT) / 100) * 0.0319988 # mg/l
 }
 
@@ -91,6 +91,15 @@ optode.salinity_correction <- function(Sal, Temp, O2, depth = 1, optode_salinity
     return(corrected)
 }
 
+#' Calculate salinity
+#'
+#' @param Cond
+#' @param t
+#' @param p
+#' @param P
+#'
+#' @return salinity
+#' @export
 calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
     # Adapted from marelac package by Karline Soetaert using
     #     Fofonoff NP and Millard RC Jr, 1983. Algorithms for computation of fundamental properties of
@@ -103,7 +112,7 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
     # R = 0.955819857, T = 13.3208333, P = 37.38296403. -> 34.75933
     # p = gauge pressure, i.e. reference to local (bar)
     # P = true pressure (bar)
-    
+
     R = (Cond / 10) / 4.2914 # as per UNESCO Cond in mmoh/cm
     P <- p # pressure in dbar
     C_P <- (2.07e-05 + (-6.37e-10 + 3.989e-15 * P) * P) * P
@@ -119,3 +128,26 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 
 # convert_RtoS((39.023/10/4.2914), t = 11.606, p = 10.86638775/10 ) # marelac version
 # calc_sal(39.023, t = 11.606, p = 10.86638775)
+
+
+#' Find mixed layer depth
+#'
+#' @param d
+#' @param p
+#' @param threshold
+#'
+#' @return mld
+#' @export
+findMLD <- function(d, p, threshold = 0.125){
+  # simple threshold technique, mld where p +/- 0.125 of surface p
+
+  bottom = p[d == max(d)][1] # density at max d
+  top = p[d == min(d)][1]
+
+  # done this way as some dips have min density !@ surface
+  if(abs(top - bottom) > threshold){ # is there strat?
+    return(min(d[abs(p - top) > threshold]))
+  }else{
+    return(0) # fully mixed
+  }
+}
