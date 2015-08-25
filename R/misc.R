@@ -55,40 +55,58 @@ par_from_voltage <- function(x, factor, offset){
     return(factor * exp(offset * x))
 }
 
-
-optode.fixer <- function(O2SAT, O2CONC, salinity = 0){
-    # when optode not configured correctly O2CONC is actually o2 sat with o2conc cal applied, and o2sat is actually temp
-    TEMP = O2SAT
-    O2SAT = O2CONC / 0.0319988
-
-    A0 = 2.00856
-    A1 = 3.224
-    A2 = 3.99063
-    A3 = 4.80299
-    A4 = 0.978188
-    A5 = 1.71069
-    B0 = -0.00624097
-    B1 = -0.00693498
-    B2 = -0.00690358
-    B3 = -0.00429155
-    C0 = -3.1168E-07
-    Ts = log((298.15-TEMP)/(273.15+TEMP))
-
-    Cstar = exp(A0+(A1*Ts)+(A2*Ts^2)+
-                    (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
-                    salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
-                    (C0*salinity^2))
-
-    O2CONC = ((Cstar * 44.614 * O2SAT) / 100) * 0.0319988 # mg/l
+ferrybox.ADC_to_PAR <- function(y){
+    #       (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834
+    return( (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834 )
 }
 
-optode.salinity_correction <- function(Sal, Temp, O2, depth = 1, optode_salinity_setting = 0){
-    # o2 in mg/l
-    Ts = log((298.15-Temp)/(273.15+Temp))
-    corrected = (O2*(exp(Sal*(-0.00624097+-0.00693498*Ts+-0.00690358*Ts^2+-0.00429155*Ts^3)+-0.00000031168*Sal^2))/
-                     (exp(optode_salinity_setting*(-0.00624097+-0.00693498*Ts+-0.00690358*Ts^2+-0.00429155*Ts^3)+-0.00000031168*optode_salinity_setting^2))
-                 )*(1+(0.04*depth)/1000)
-    return(corrected)
+fix_par <- function(x){
+    ADC = ((log((x * 5.008332834) / (0.5301 * 3.3674))) * 3276.7) + 32770
+    PAR = (0.5301 * exp(((ADC - 32770)/3276.7) * 3.3674)) / 5.008332834
+    return(PAR)
+}
+
+process_PR_ULP <- function(f){
+    require(reshape2)
+    dat = readLines(f)
+    idLine = dat[grep("PR0",dat)]
+    timeLine = dat[max(grep("TIMESTAMP",dat))]
+    timeLine = unlist(strsplit(timeLine," "))
+    timeStamp = paste(timeLine[4],"/",timeLine[5]," ",timeLine[3],sep="")
+    timeStamp = strptime(timeStamp,format="%d/%m/%Y %H%M.%S",tz="UTC")
+    # batteryLine = dat[max(grep("BATTERY",dat))]
+    # extract sensor lines
+    # analogSENSORS = c("LICOR")
+    dataFrame = list()
+    # for(sen in analogSENSORS){
+    #     dataLine = dat[max(grep(sen,dat))]
+    #     dataLine = unlist(strsplit(dataLine,","))
+    #     rate = as.numeric(dataLine[3])/10
+    #     dataLine = as.numeric(dataLine[9:length(dataLine)])
+    #     index = seq(0,(length(dataLine)*rate)-rate,rate)
+    #     d = data.frame(index = index, value = dataLine, sensor = sen)
+    #     dataFrame = rbind(dataFrame,d)
+    # }
+    serialSENSORS = c("CH17")
+    for(sen in serialSENSORS){
+        dataLine = dat[max(grep(sen,dat))]
+        dataLine = unlist(strsplit(dataLine,","))
+        rate = as.numeric(dataLine[3])/10
+        dataLine = dataLine[9:length(dataLine)]
+        index = seq(0,(length(dataLine)*rate)-rate,rate)
+        optode = as.data.frame(do.call(rbind, strsplit(as.character(dataLine),";")))
+        colnames(optode) = c("O2CONC","O2SAT","O2TEMP")
+        optode$index = index
+        d = melt(optode,value.name="value",id.vars="index",variable.name="sensor")
+        d$value = as.numeric(d$value)
+        dataFrame = rbind(dataFrame,d)
+    }
+    dip = dcast(dataFrame, index ~ sensor)
+    # salinity
+    # dip$SAL = calc_sal(dip$"FSI,COND",dip$"FSI,TEMP",dip$PRESSURE)
+    dip$startTime = as.POSIXct(timeStamp)
+    dip$dateTime = dip$startTime + dip$index
+    return(dip)
 }
 
 #' Calculate salinity
@@ -151,3 +169,5 @@ findMLD <- function(d, p, threshold = 0.125){
     return(0) # fully mixed
   }
 }
+
+

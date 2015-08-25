@@ -22,7 +22,7 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
                             active_only = TRUE,
                             zoom_to_group = TRUE,
                             db_name = 'smartbuoydblive'){
-    
+
     require(reshape2)
     require(RODBC)
     require(ggplot2)
@@ -40,31 +40,31 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
                       FROM Deployment INNER JOIN Platform ON Deployment.PlatformId=Platform.PlatformId ")
     d = data.table(sqlQuery(sbdb, pos_query))
     odbcCloseAll()
-    
+
     d = d[platform %in% c(1, 4, 8)] # remove non-standard deployments
     d = d[!(groupId %in% c('LOWTEST', 'ESM2TEST'))] # remove test deployments
     d = d[,list(lat = median(lat), lon = median(long), dateTo = max(dateTo), platform = platform[1]), by = groupId] # group by deployment
     d$active = "inactive"
     d$active[d$dateTo > now()] = "active"
-    
+
     d[platform == 1, platformName := 'SmartBuoy']
     d[platform == 4, platformName := 'Lander']
     d[platform == 8, platformName := 'Waverider']
-    
-    # shapes = c(24, 22, 21)    
-    # shapes = c(17, 15, 16)    
-    shapes = c(2, 0, 1)    
+
+    # shapes = c(24, 22, 21)
+    # shapes = c(17, 15, 16)
+    shapes = c(2, 0, 1)
     names(shapes) = c('SmartBuoy', 'Lander', 'Waverider')
-    
+
     d = d[platform %in% platforms] # remove unwanted deployments
     if(deployment_group_id != 'ALL'){
         d = d[groupId %in% deployment_group_id]
     }
-    
+
     if(active_only == T){
         d = d[active == 'active']
     }
-    
+
     if(style == 'gsat'){
     mp = ggmap.fetch(d$lat, d$lon, zoom_to_group)
     mp = mp +
@@ -75,7 +75,7 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
     }else{
         stop('style not implemented')
     }
-    
+
     return(list(map = mp, data = d))
 }
 
@@ -89,12 +89,11 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @param zoom_to_group boolean, if True map is centred and zoomed to input lat/long, if False entire UK is used.
 #' @param scale_factor optional integer, increase set to 1 (or more) to pad to next zoom level
 #' @param crop boolean, if True map is cropped to lat lon + crop_padding (default is False)
-#' @param crop_padding numeric scaling factor for crop (default is 5)
 #' @return ggmap object
 #' @keywords map
 #' @export
-ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F, crop_padding = 5){
-    ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8, 4), range = c(120, 60, 30, 14, 8, 4, 2))
+ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F){
+    ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8, 4, 2), range = c(120, 60, 30, 14, 8, 4, 2, 1))
     if(zoom_to_group == TRUE){
         centre.lat = mean(range(lat))
         centre.lon = mean(range(lon))
@@ -109,15 +108,11 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
         zoom = 6
     }
     centre = c(centre.lon, centre.lat)
-    
+
     require(ggmap)
     mp = ggmap(get_map(location = centre, zoom = zoom, maptype = 'satellite'))
     if(crop == TRUE){
-        crop_padding = crop_padding/100
-        ymin = min(lat) + min(lat)*crop_padding
-        xmin = min(lon) + min(lon)*crop_padding
-        xmax = max(lon)
-        mp = mp + ylim(range(lat))
+        mp = mp + ylim(range(lat)) + xlim(range(lon))
     }
     return(mp)
 }
@@ -140,16 +135,28 @@ bathymap.fetch <- function(lat, lon, bathy_file){
         rtp$c = cut(rtp$h, breaks = c(1, -25, -50, -100, -200, -5000), labels = 1:5)
         # make geom
         bathy_raster = geom_raster(data = rtp, aes(x, y, fill = c))
-        
+
         coast = map_data('worldHires', xlim = xlim, ylim = ylim)
         coast.poly <- geom_polygon(data=coast, aes(x=long, y=lat, group=group), colour= "#999999", fill="#999999", lwd=0.2)
         coast.outline <- geom_path(data=coast, aes(x=long, y=lat, group=group), colour= "#999999", lwd=0.2)
-        
+
         mp = ggplot() + bathy_raster + coast.poly + coast.outline +
             coord_quickmap(xlim, ylim) +
             scale_fill_manual(values = rev(brewer.pal(5,"Blues")),name='depth', labels=rev(c('<25','25-50','50-100','100-200','>200')))
         mp = mp + geom_point(data = d, aes(lon, lat, color = active, position = 'jitter', shape = as.factor(platform)), size = 2.5) +
             scale_color_discrete('') + scale_shape_manual('', values = unique(d$shape), labels = unique(d$platformName), drop = F) +
             labs(x = 'Longitude', y = 'Latitude')
-        
+
+}
+
+#' Convert degrees + decimal minutes to decimal degrees
+#'
+#' @param degrees
+#' @param decimal_minutes
+#'
+#' @return decimal degrees
+#' @export
+convert_latlong <- function(degrees, decimal_minutes){
+  decimal_degrees = (degrees + decimal_minutes/60)
+  return(decimal_degrees)
 }
