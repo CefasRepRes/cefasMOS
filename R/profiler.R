@@ -47,7 +47,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
     parameters = paste(parameters, collapse = "', '")
     query = paste0(query, " ('", parameters, "') ")
-    
+
         # if cruise id is suppled build filter into query
     if(!is.na(cruiseID[1])){
         cruiseID = paste(cruiseID, collapse = "', '")
@@ -69,7 +69,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         stop('not yet implemented')
       }
     }
-    
+
       # if before or after is suppled build filter into query
     if(!is.na(before)){
         query = paste0(query, " AND [Date/Time] <= '", before, "'")
@@ -77,17 +77,17 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
     if(!is.na(after)){
         query = paste0(query, " AND [Date/Time] >= '", after, "'")
     }
-    
+
       # if only RQ0 data is required build filter into query
     if(RQ0 == TRUE){
       query = paste(query, "AND [Result Quality] = 0 ")
     }
-    
+
     if(min_QA_reached == TRUE){
         # TODO min QA level reached
         query = paste(query, "AND [QA Status] >= [QA Status Min Publish Level]")
     }
-    
+
     # finally
     query = paste0(query, ' ORDER BY startTime')
 
@@ -102,10 +102,10 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         stop("no data returned")
     }
 
-    dat$startTime = as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC") 
+    dat$startTime = as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC")
     dat$dateTime = dat$startTime + dat$offset
     # dat[,max_depth := max(depth), by = list(startTime, profiler)]
-    
+
         # if only CT temp wanted remove non ct data
     if(ct_temp_only == TRUE){
         ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
@@ -118,7 +118,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 #'
 #' Fetches lists of cruise id where ESM2 profiler data exists.
 #'
-#' @details This function querys the Smartbuoy database and returns a list of valid cruise IDs matching the supplied critiera where ESM2 
+#' @details This function querys the Smartbuoy database and returns a list of valid cruise IDs matching the supplied critiera where ESM2
 #' profiler data is available. The v_CtdProfile_AllData table is used, as such private data will not be available to this function.
 #' @param yr integer specifing a year to limit the search, default is 'ALL'
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
@@ -172,10 +172,11 @@ profiler.binning <- function(x,
         dat = dat[offset <= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
     }
     dat = dat[,depth_bin := method(depth / bin_height) * bin_height]
-    
+    dat[,endTime := startTime + max(offset), by = startTime]
+
     dat = dat[, list(bin_mean = mean(value), count = length(value)),
-        by = list(startTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par)]
-    
+        by = list(startTime, endTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par)]
+
     if(return_bin != 'all'){
         dat = dat[depth_bin == return_bin,]
     }
@@ -200,7 +201,7 @@ profiler.match_ferrybox <- function(cruiseID = NA,
                                     min_QA_reached = F,
                                     ferrybox_db_name = 'ferrybox',
                                     smartbuoy_db_name = 'smartbuoydblive'){
-    
+
     require(RODBC)
     require(data.table)
     # matching first wet times >3.5m < 4.5 up to 1min mean, match to ferrybox
@@ -213,7 +214,7 @@ profiler.match_ferrybox <- function(cruiseID = NA,
     ctd[,dateTime := as.POSIXct(round(as.numeric(dateTime)/60)*60,origin = '1970-01-01',  tz = 'UTC')]
         # bin to minute
     ctd = ctd[,.(value = mean(value)), by = list(dateTime, site, latitude, longitude, sensor, par, cruise, profiler)]
-        
+
         # fetch ferrybox
     fb = ferrybox.fetch(cruiseID = cruiseID, parameters = parameters,
                         db_name = ferrybox_db_name, min_QA_reached = min_QA_reached)
@@ -226,19 +227,19 @@ profiler.match_ferrybox <- function(cruiseID = NA,
     setkey(ctd, dateTime, par)
     matched =  merge(fb, ctd, suffixes = c('_ferrybox', '_profiler'))
     setcolorder(matched, order(colnames(matched)))
-    
+
     lm_eqn = function(x, y){
         m = lm(y ~ x);
-        eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2, 
-                         list(a = format(coef(m)[1], digits = 2), 
-                              b = format(coef(m)[2], digits = 2), 
+        eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(r)^2~"="~r2,
+                         list(a = format(coef(m)[1], digits = 2),
+                              b = format(coef(m)[2], digits = 2),
                               r2 = format(summary(m)$r.squared, digits = 3)))
-        as.character(as.expression(eq));                 
+        as.character(as.expression(eq));
     }
     eq = matched[, .(eq = lm_eqn(value_ferrybox, value_profiler),
                      xpos = min(value_profiler) + ((max(value_profiler - min(value_profiler))/2)),
                      ypos = max(value_ferrybox)), by = list(cruise, par)]
-    
+
     plt = ggplot(matched, aes(value_profiler, value_ferrybox)) +
         geom_point() + geom_smooth(method = 'lm') +
         geom_text(data = eq, aes(x = xpos, y = ypos, label = eq),
@@ -246,6 +247,67 @@ profiler.match_ferrybox <- function(cruiseID = NA,
         facet_grid(cruise ~ par, scales = 'free') +
         theme_bw()
     print(plt)
-            
+
     return(list(data = matched, plot = plt))
+}
+
+
+## dev
+
+profiler.salinityQA <- function(dateTime, depth, cruise, bottlesal,
+                                bin_height = 1, method = round, mode = "time_matched", station = NA, time_tolerance = 120){
+  require(ggplot2)
+  require(svDialogs)
+  require(gridExtra)
+
+  bsal = data.table(dateTime, depth, station, cruise, bottlesal)
+  bsal[, depth := method(depth)]
+    # average bottles if needed
+  bsal = bsal[,.(bottlesal = mean(bottlesal)), by = list(dateTime, depth, cruise)]
+  ctd = profiler.fetch(cruiseID = unique(bsal$cruise), parameters = "SAL", min_QA_reached = F)
+  ctd = profiler.binning(ctd, bin_height = bin_height, use_cast = "UP", method = method)
+  if(!nrow(ctd) > 1){
+    stop("No CTD data found")
+  }
+
+  matched = data.table()
+  for(b in 1:nrow(bsal)){
+    # subset to matching time ranges
+    bottle = bsal[b,]
+    if(mode == "time_matched"){
+      ctd_b = ctd[(startTime - time_tolerance) < bottle$dateTime & (endTime + time_tolerance) > bottle$dateTime]
+    }
+    if(mode == "station_matched"){
+      ctd_b = ctd[station == bottle$station]
+    }
+    bottle = merge(bottle, ctd_b[,.(depth = depth_bin, sal = bin_mean, profiler)], by = "depth", fill = T)
+    matched = rbind(matched, bottle)
+  }
+  matched[,diff := bottlesal - sal]
+  if(length(unique(matched$profiler)) > 1){
+    warning("more than one profiler in dataset!")
+  }
+  matched[,intercept := coef(lm(bottlesal ~ sal))[1]]
+  matched[,coef := coef(lm(bottlesal ~ sal))[2]]
+  matched[,R2 := summary(lm(bottlesal ~ sal))$r.squared]
+  if(length(unique(matched$cruise)) > 1){
+    matched[,c_intercept := coef(lm(bottlesal ~ sal))[1], by = list(cruise, profiler)]
+    matched[,c_coef := coef(lm(bottlesal ~ sal))[2], by = list(cruise, profiler)]
+    matched[,c_R2 := summary(lm(bottlesal ~ sal))$r.squared, by = list(cruise, profiler)]
+  }
+
+  p1 = ggplot(matched, aes(bottlesal, sal, color = cruise)) +
+    geom_point() + stat_smooth(method = "lm") +
+    labs(x = "Profiler Salinity", y = "Bottle Salinity") +
+    facet_wrap(profiler ~ cruise) +
+    coord_equal() + theme_bw() + theme(legend.position = "bottom")
+  p2 = ggplot(matched, aes(bottlesal, sal)) +
+    geom_point(aes(color = cruise)) + stat_smooth(method = "lm") +
+    labs(x = "Profiler Salinity", y = "Bottle Salinity") +
+    coord_equal() + theme_bw() + theme(legend.position = "bottom")
+  if(length(unique(matched$cruise)) > 1){
+    p = grid.arrange(p1, p2, ncol = 2)
+  }else{p = p2}
+
+  return(list("data" = matched, "plot" = p))
 }
