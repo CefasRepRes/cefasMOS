@@ -4,8 +4,7 @@
 \alias{ggmap.fetch}
 \title{fetch localised ggmap}
 \usage{
-ggmap.fetch(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
-  crop_padding = 5)
+ggmap.fetch(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F)
 }
 \arguments{
 \item{lat}{optional vector of decimal latitudes}
@@ -17,8 +16,6 @@ ggmap.fetch(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 \item{scale_factor}{optional integer, increase set to 1 (or more) to pad to next zoom level}
 
 \item{crop}{boolean, if True map is cropped to lat lon + crop_padding (default is False)}
-
-\item{crop_padding}{numeric scaling factor for crop (default is 5)}
 }
 \value{
 ggmap object
