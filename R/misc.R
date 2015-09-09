@@ -67,46 +67,35 @@ fix_par <- function(x){
 }
 
 process_PR_ULP <- function(f){
-    require(reshape2)
-    dat = readLines(f)
-    idLine = dat[grep("PR0",dat)]
-    timeLine = dat[max(grep("TIMESTAMP",dat))]
-    timeLine = unlist(strsplit(timeLine," "))
-    timeStamp = paste(timeLine[4],"/",timeLine[5]," ",timeLine[3],sep="")
-    timeStamp = strptime(timeStamp,format="%d/%m/%Y %H%M.%S",tz="UTC")
-    # batteryLine = dat[max(grep("BATTERY",dat))]
-    # extract sensor lines
-    # analogSENSORS = c("LICOR")
-    dataFrame = list()
-    # for(sen in analogSENSORS){
-    #     dataLine = dat[max(grep(sen,dat))]
-    #     dataLine = unlist(strsplit(dataLine,","))
-    #     rate = as.numeric(dataLine[3])/10
-    #     dataLine = as.numeric(dataLine[9:length(dataLine)])
-    #     index = seq(0,(length(dataLine)*rate)-rate,rate)
-    #     d = data.frame(index = index, value = dataLine, sensor = sen)
-    #     dataFrame = rbind(dataFrame,d)
-    # }
-    serialSENSORS = c("CH17")
-    for(sen in serialSENSORS){
-        dataLine = dat[max(grep(sen,dat))]
-        dataLine = unlist(strsplit(dataLine,","))
-        rate = as.numeric(dataLine[3])/10
-        dataLine = dataLine[9:length(dataLine)]
-        index = seq(0,(length(dataLine)*rate)-rate,rate)
-        optode = as.data.frame(do.call(rbind, strsplit(as.character(dataLine),";")))
-        colnames(optode) = c("O2CONC","O2SAT","O2TEMP")
-        optode$index = index
-        d = melt(optode,value.name="value",id.vars="index",variable.name="sensor")
-        d$value = as.numeric(d$value)
-        dataFrame = rbind(dataFrame,d)
-    }
-    dip = dcast(dataFrame, index ~ sensor)
-    # salinity
-    # dip$SAL = calc_sal(dip$"FSI,COND",dip$"FSI,TEMP",dip$PRESSURE)
-    dip$startTime = as.POSIXct(timeStamp)
-    dip$dateTime = dip$startTime + dip$index
-    return(dip)
+  require(reshape2)
+  require(data.table)
+
+  lines = readLines(f)
+
+  timeStamp = lines[max(grep("TIMESTAMP", lines))]
+  timeStamp = unlist(strsplit(timeStamp," "))
+  timeStamp = paste(timeStamp[4],"/",timeStamp[5]," ",timeStamp[3],sep="")
+  timeStamp = as.POSIXct(timeStamp, format="%d/%m/%Y %H%M.%S",tz="UTC")
+
+  # extract sensor lines
+  sensorStart = max(grep("CHAN", lines))
+  sensorEnd = length(lines)
+  dat = data.table()
+  for(l in (sensorStart + 1):sensorEnd){
+    dataLine = lines[l]
+    dataLine = unlist(strsplit(dataLine,","))
+    rate = as.numeric(dataLine[3])/10
+    id = dataLine[7]
+    dataLine = dataLine[9:length(dataLine)]
+    index = seq(0,(length(dataLine)*rate)-rate,rate)
+    dat0 = data.table(channel = id, index, do.call("rbind", strsplit(dataLine, ";")))
+    dat = rbind(dat, dat0, fill = T)
+  }
+  dip = melt.data.table(dat, id.var = c("channel", "index"))
+  dip$value = as.numeric(dip$value)
+  dip$startTime = timeStamp
+
+  return(dip)
 }
 
 #' Calculate salinity
@@ -170,4 +159,35 @@ findMLD <- function(d, p, threshold = 0.125){
   }
 }
 
+read.10minlat <- function(folder){
+  dat = data.table()
+  for(f in list.files(folder)){
+    if(grepl("10minfiles", f)){
+      f = paste0(folder, f)
+      print(f)
+      ln = readLines(f)
+      dateLine = grep("Date Time", ln)
+      d = fread(f, header = F, skip = dateLine + 1)[1:4]
+      d = d[,.(dateTime = V1, lat = V2, lon = V3)]
+      dat = rbind(dat, d)
+    }
+  }
+  dat[, dateTime := as.POSIXct(dateTime, format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
+  return(dat)
+}
 
+read.ULP000 <- function(file){
+  fl = readLines(file)
+  startLine = max(grep("CHAN", fl)) + 1
+  # d = read.csv(file, header = F, skip = startLine)
+  dat = data.table()
+  for(sen in fl[startLine:length(fl)] ){
+    sen = unlist(strsplit(sen, ","))
+    channel = sen[2]
+    XOPC = sen[4]
+    rate = as.numeric(sen[3])
+    d = sen[7:length(sen)]
+    index = seq(0,(length(d)*rate)-rate,rate)
+    dat = rbind(dat, data.frame(index = index, value = d, channel, XOPC))
+  }
+}
