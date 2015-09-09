@@ -40,11 +40,11 @@ ferrybox.fetch <- function(cruiseID = NA,
               "[Parameter code] as par,",
               "[Parameter Unit] as unit",
               "FROM v_FerryBox_Data")
-    
+
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
     parameters = paste(parameters, collapse = "', '")
     query = paste0(query, " WHERE [Parameter code] IN ('", parameters, "')")
-    
+
     # filter cruise ID, is.na evaluates each element of vector, so only check first one is not NA
     if(!is.na(cruiseID[1])){
         cruises = paste(cruiseID, collapse = "', '")
@@ -62,7 +62,7 @@ ferrybox.fetch <- function(cruiseID = NA,
             stop(' not implemented')
         }
     }
-    
+
       # if before or after is suppled build filter into query
     if(!is.na(before)){
         query = paste0(query, " AND [Date/Time] <= '", before, "'")
@@ -86,14 +86,14 @@ ferrybox.fetch <- function(cruiseID = NA,
     print(query)
     odbcCloseAll()
     dat = data.table(dat)
-    
+
     # check if valid data has been returned, if not quit
     if(! nrow(dat) > 1){
         stop("no data returned")
     }
 
     print(paste(nrow(dat), 'rows returned'))
-    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
     return(dat)
 }
 
@@ -118,7 +118,7 @@ ferrybox.fetch <- function(cruiseID = NA,
 ferrybox.devdata <- function(devdata_folder, pivot = F){
     require(data.table)
     require(reshape2)
-    
+
     dat = data.table()
     for(fn in list.files(devdata_folder)){
         f = paste(devdata_folder, fn, sep='/')
@@ -136,7 +136,7 @@ ferrybox.devdata <- function(devdata_folder, pivot = F){
         dat = rbind(dat, d)
     }
     dat$datetime = as.POSIXct(dat$datetime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
-    
+
     export = dat
         # reclasiffy types
     export$value = as.numeric(export$value)
@@ -158,8 +158,8 @@ ferrybox.devdata <- function(devdata_folder, pivot = F){
 #' ferrybox cruise id queryer
 #'
 #' Fetches lists of cruise id
-#' 
-#' @details This function querys the Smartbuoy database and returns a list of valid cruise IDs matching the supplied critiera where ESM2 
+#'
+#' @details This function querys the Smartbuoy database and returns a list of valid cruise IDs matching the supplied critiera where ESM2
 #' profiler data is available. The v_CtdProfile_AllData table is used, as such private data will not be available to this function.
 #' @param yr integer specifing a year to limit the search, default is 'ALL'
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
@@ -181,7 +181,7 @@ ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
 #' ferrybox cruise tracks
 #'
 #' Fetches position of ferrybox
-#' 
+#'
 #' @details TODO
 #' @param cruiseID optional character string matching cruise ID
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
@@ -200,11 +200,11 @@ ferrybox.position <- function(cruiseID = NA,
             "Course, Heading, Speed",
             "FROM [Ferrybox].[dbo].[DataHeader]",
             "INNER JOIN [FerryBox].[dbo].[DataFile]",
-            "ON [FerryBox].[dbo].[DataHeader].DataHeaderId = [FerryBox].[dbo].[DataFile].DataFileId",
+            "ON [FerryBox].[dbo].[DataHeader].DataFileId = [FerryBox].[dbo].[DataFile].DataFileId",
             "INNER JOIN [FerryBox].[dbo].[ConfigHeader]",
             "ON [FerryBox].[dbo].[DataFile].ConfigHeaderId = [FerryBox].[dbo].[ConfigHeader].ConfigHeaderId",
             "WHERE PositionQualityOk = 1 AND SatellitesVisible > 0")
-    
+
     if(!is.na(cruiseID[1])){
         query= paste0(query, " AND CruiseId IN ('", paste(cruiseID, collapse = "', '"), "')")
     }
@@ -215,10 +215,10 @@ ferrybox.position <- function(cruiseID = NA,
     if(!is.na(after)){
         query = paste0(query, " AND dateTime >= '", after, "'")
     }
-    
+
     # finally
     query = paste(query, 'ORDER BY dateTime')
-    
+
     sb = odbcConnect(db_name)
     dat = sqlQuery(sb, query)
     dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
@@ -237,7 +237,7 @@ ferrybox.position <- function(cruiseID = NA,
 #' @keywords ferrybox conlog
 #' @export
 ferrybox.conlog <- function(conlog){
-    
+
     require(stringr)
     conlog = fread(conlog)
     conlog[,Time := as.POSIXct(conlog$Time, format = '%m/%d/%Y %H:%M:%S', tz = 'UTC')]
