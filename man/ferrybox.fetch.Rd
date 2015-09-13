@@ -6,7 +6,7 @@
 \usage{
 ferrybox.fetch(cruiseID = NA, after = NA, before = NA, area = NA,
   parameters = c("TEMP", "SAL", "FTU", "O2CONC"), min_QA_reached = TRUE,
-  RQ0 = TRUE, db_name = "ferrybox")
+  RQ0 = TRUE, hull_temp_only = FALSE, db_name = "ferrybox")
 }
 \arguments{
 \item{cruiseID}{optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.}
@@ -22,6 +22,8 @@ ferrybox.fetch(cruiseID = NA, after = NA, before = NA, area = NA,
 \item{min_QA_reached}{boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.}
 
 \item{RQ0}{boolean, if True only data where result quality = 0 is returned, i.e. good data, default it TRUE}
+
+\item{hull_temp_only}{boolean, if True only temperature data from the hull temperature probe will be returned}
 
 \item{db_name}{character string matching ODBC data source name, defaults to 'ferrybox'}
 }

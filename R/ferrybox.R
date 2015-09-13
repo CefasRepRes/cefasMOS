@@ -10,6 +10,7 @@
 #' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC')
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
 #' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data, default it TRUE
+#' @param hull_temp_only boolean, if True only temperature data from the hull temperature probe will be returned
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords ferrybox query
@@ -20,6 +21,7 @@ ferrybox.fetch <- function(cruiseID = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC'),
                            min_QA_reached = TRUE,
                            RQ0 = TRUE,
+                           hull_temp_only = FALSE,
                            db_name = 'ferrybox'){
     require(RODBC)
     require(data.table)
@@ -94,6 +96,12 @@ ferrybox.fetch <- function(cruiseID = NA,
 
     print(paste(nrow(dat), 'rows returned'))
     dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
+
+    if(hull_temp_only == TRUE & 'TEMP' %in% parameters){
+        print('removing non hull temperatures')
+        dat = dat[!(!sensor %like% "ADAM PT100 PRT" & par == 'TEMP')]
+    }
+
     return(dat)
 }
 
