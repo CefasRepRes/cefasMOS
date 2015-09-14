@@ -132,19 +132,44 @@ read.ULP000 <- function(file){
   return(dat)
 }
 
+#' Ferrybox 10min file data reader
+#'
+#' reads JENA-4H 10min files
+#'
+#' @details TODO
+#' @param folder folder containing 10min files
+#' @return data.frame (data.table) of processed 10min files
+#' @keywords ferrybox 10minfile
+#' @export
 read.ferrybox.10min <- function(folder){
+  require(zoo)
+  require(stringr)
   dat = data.table()
   for(f in list.files(folder)){
     if(grepl("10minfiles", f)){
-      f = paste0(folder, f)
       print(f)
+      f = paste0(folder, f)
       ln = readLines(f)
       dateLine = grep("Date Time", ln)
-      d = fread(f, header = F, skip = dateLine + 1)[1:4]
-      d = d[,.(dateTime = V1, lat = V2, lon = V3)]
+      d = read.table(f, header = F, skip = dateLine + 1)
+      header1 = unlist(strsplit(ln[dateLine], "\t")) # split on tabs
+      header1[header1 == ""] = NA # assign NA to blanks
+      header1 = str_replace(header1, "Date Time", "Time") # remove awkward space
+      header1 = c("Date", header1) # pad for date_time
+      header1 = na.locf(header1) # pull forward into blank rows
+      header2 = c("", unlist(strsplit(ln[dateLine+1], "\t"))) # split 2nd row, pad for date_time
+      header = paste(header1, header2, sep = "~~") # combine headers
+      colnames(d) = header
+      d = data.table(d)
+      d[, dateTime := paste(d$"Date~~", d$"Time~~")]
+      d[, dateTime := as.POSIXct(dateTime, format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
+      d = suppressWarnings(melt.data.table(d[,-c("Date~~", "Time~~"), with = F],
+                          id.vars = c("dateTime", "Latitude~~Degrees",
+                                      "Longitude~~Degrees", "Course~~°",
+                                      "Heading~~Degrees", "Speed~~Knots", "Satellite~~Numbers")))
+      d[, c("variable", "unit", "telid", "serial", "stat") := tstrsplit(variable, "~~")]
       dat = rbind(dat, d)
     }
   }
-  dat[, dateTime := as.POSIXct(dateTime, format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
   return(dat)
 }

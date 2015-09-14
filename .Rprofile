@@ -5,3 +5,7 @@ require(reshape2)
 # require(plotly)
 print('MOS tools loaded')
 # plotly("TomHull", "taszfssmi1")
+Sys.setenv(https_proxy='http://localhost:80')
+# 127.0.0.1
+Sys.setenv(http_proxy='http://localhost:80')
+setwd("working/")
