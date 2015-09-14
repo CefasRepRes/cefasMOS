@@ -105,64 +105,6 @@ ferrybox.fetch <- function(cruiseID = NA,
     return(dat)
 }
 
-#' Ferrybox device data reader
-#'
-#' reads ferrybox device data files
-#'
-#' @details TODO
-#' Ferrybox quality codes:
-#' 0 = good, 1 = no data, 2 = over value, 4 = under value, 8 = sensor timeout
-#' 64 = clean cycle, 128 = standby, 256 = empty, 512 = error, 1024 = undefined, 2048 = simulation mode
-    #' sometimes \0 characters appear in data, to sanitise run sed from a bash terminal
-    # sed -i -b "s/\x0//g" *
-    # filter by files by ... *_A_Optode*
-    # -i = in place, -b = binary (keep windows line feeds)
-
-#' @param devdata_folder character string indicating path to folder containing device data files
-#' @param pivot optional boolian indicating if returned table should be recast into 'wide' format
-#' @return data.frame
-#' @keywords ferrybox
-#' @export
-ferrybox.devdata <- function(devdata_folder, pivot = F){
-    require(data.table)
-    require(reshape2)
-
-    dat = data.table()
-    for(fn in list.files(devdata_folder)){
-        f = paste(devdata_folder, fn, sep='/')
-        print(f)
-        fd = readLines(f)
-        startLine = grep("DATASETS",fd)
-        sensorLine = grep("Type", fd)
-        sensor = unlist(strsplit(fd[sensorLine], '; '))[2]
-        d = fread(f, skip = startLine, sep = '\t')
-        param = colnames(d)[2]
-        d = d[-1, c('$Timestamp', param, 'Quality', 'Longitude', 'Latitude'), with = F]
-        setnames(d, c('$Timestamp', param, 'Quality'), c('datetime', 'value', 'quality'))
-        d$sensor = sensor
-        d$param = param
-        dat = rbind(dat, d)
-    }
-    dat$datetime = as.POSIXct(dat$datetime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
-
-    export = dat
-        # reclasiffy types
-    export$value = as.numeric(export$value)
-    export$Longitude = as.numeric(export$Longitude)
-    export$Latitude = as.numeric(export$Latitude)
-
-    if(pivot == T){
-        export = dcast.data.table(export, datetime ~ param)
-        pos = dat[,.(datetime, Latitude, Longitude)]
-        pos = pos[,lapply(.SD, as.numeric), by = datetime]
-        pos = pos[,lapply(.SD, median), by = datetime]
-        export = merge(export, pos, by = 'datetime')
-        return(export)
-    }else{
-        return(export)
-    }
-}
-
 #' ferrybox cruise id queryer
 #'
 #' Fetches lists of cruise id
@@ -232,30 +174,4 @@ ferrybox.position <- function(cruiseID = NA,
     dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
     odbcCloseAll()
     return(data.table(dat))
-}
-
-#' Ferrybox conlog data reader
-#'
-#' reads DAQ server conlog data files
-#'
-#' @details TODO
-#' requires intensive string operations on many rows and thus fairly slow
-#' @param conlog character string indicating device data file
-#' @return data.frame
-#' @keywords ferrybox conlog
-#' @export
-ferrybox.conlog <- function(conlog){
-
-    require(stringr)
-    conlog = fread(conlog)
-    conlog[,Time := as.POSIXct(conlog$Time, format = '%m/%d/%Y %H:%M:%S', tz = 'UTC')]
-    parameters = "Time|Sounder|WeatherPack|GPS_GLL|MRU_3axis"
-    conlog = subset(conlog, select = colnames(conlog) %like% parameters)
-    conlog = melt(conlog, id.vars = 'Time')
-    conlog = na.omit(conlog)
-    conlog[, sensor := str_extract(variable, "\\w+")]
-    conlog[, parameter := str_extract(variable, "\\w+(?=$)")]
-    conlog$variable = NULL
-    conlog[order(Time)]
-    return(conlog)
 }

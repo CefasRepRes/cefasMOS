@@ -66,37 +66,6 @@ fix_par <- function(x){
     return(PAR)
 }
 
-process_PR_ULP <- function(f){
-  require(reshape2)
-  require(data.table)
-
-  lines = readLines(f)
-
-  timeStamp = lines[max(grep("TIMESTAMP", lines))]
-  timeStamp = unlist(strsplit(timeStamp," "))
-  timeStamp = paste(timeStamp[4],"/",timeStamp[5]," ",timeStamp[3],sep="")
-  timeStamp = as.POSIXct(timeStamp, format="%d/%m/%Y %H%M.%S",tz="UTC")
-
-  # extract sensor lines
-  sensorStart = max(grep("CHAN", lines))
-  sensorEnd = length(lines)
-  dat = data.table()
-  for(l in (sensorStart + 1):sensorEnd){
-    dataLine = lines[l]
-    dataLine = unlist(strsplit(dataLine,","))
-    rate = as.numeric(dataLine[3])/10
-    id = dataLine[7]
-    dataLine = dataLine[9:length(dataLine)]
-    index = seq(0,(length(dataLine)*rate)-rate,rate)
-    dat0 = data.table(channel = id, index, do.call("rbind", strsplit(dataLine, ";")))
-    dat = rbind(dat, dat0, fill = T)
-  }
-  dip = melt.data.table(dat, id.var = c("channel", "index"))
-  dip$value = as.numeric(dip$value)
-  dip$startTime = timeStamp
-
-  return(dip)
-}
 
 #' Calculate salinity
 #'
@@ -156,38 +125,5 @@ findMLD <- function(d, p, threshold = 0.125){
     return(min(d[abs(p - top) > threshold]))
   }else{
     return(0) # fully mixed
-  }
-}
-
-read.10minlat <- function(folder){
-  dat = data.table()
-  for(f in list.files(folder)){
-    if(grepl("10minfiles", f)){
-      f = paste0(folder, f)
-      print(f)
-      ln = readLines(f)
-      dateLine = grep("Date Time", ln)
-      d = fread(f, header = F, skip = dateLine + 1)[1:4]
-      d = d[,.(dateTime = V1, lat = V2, lon = V3)]
-      dat = rbind(dat, d)
-    }
-  }
-  dat[, dateTime := as.POSIXct(dateTime, format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
-  return(dat)
-}
-
-read.ULP000 <- function(file){
-  fl = readLines(file)
-  startLine = max(grep("CHAN", fl)) + 1
-  # d = read.csv(file, header = F, skip = startLine)
-  dat = data.table()
-  for(sen in fl[startLine:length(fl)] ){
-    sen = unlist(strsplit(sen, ","))
-    channel = sen[2]
-    XOPC = sen[4]
-    rate = as.numeric(sen[3])
-    d = sen[7:length(sen)]
-    index = seq(0,(length(d)*rate)-rate,rate)
-    dat = rbind(dat, data.frame(index = index, value = d, channel, XOPC))
   }
 }

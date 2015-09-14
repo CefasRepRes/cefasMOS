@@ -73,7 +73,8 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
         scale_shape_manual('', values = shapes, labels = names(shapes), drop = F) +
         labs(x = 'Longitude', y = 'Latitude')
     }else{
-        stop('style not implemented')
+        warning('style not implemented')
+        mp = NA
     }
 
     return(list(map = mp, data = d))
