@@ -122,19 +122,22 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 #' profiler data is available. The v_CtdProfile_AllData table is used, as such private data will not be available to this function.
 #' @param yr integer specifing a year to limit the search, default is 'ALL'
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
-#' @return character vector of Cruise Id's
+#' @return data.frame of Cruise and instrument Id's
 #' @keywords profiler ctd esm2 query
 #' @export
 profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     require(RODBC)
-    query = "SELECT DISTINCT [CruiseId] FROM CtdHeader"
+    query = paste("SELECT DISTINCT [CruiseId], [InstId]  FROM [SmartBuoy].[dbo].[CtdHeader]",
+                  "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
+                  "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
     if(yr != 'ALL'){
         query = paste(query, ' WHERE YEAR([StartDate]) = ', yr, sep = '')
     }
     sb = odbcConnect(db_name)
     cruiseList = sqlQuery(sb, query)
+    cruiseList = cruiseList[order(cruiseList$CruiseId),]
     odbcCloseAll()
-    return(as.vector(cruiseList))
+    return(data.frame(cruiseList))
 }
 
 

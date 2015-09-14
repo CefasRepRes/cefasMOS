@@ -12,7 +12,7 @@ profiler.cruiselist(yr = "ALL", db_name = "smartbuoydblive")
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }
 \value{
-character vector of Cruise Id's
+data.frame of Cruise and instrument Id's
 }
 \description{
 Fetches lists of cruise id where ESM2 profiler data exists.
