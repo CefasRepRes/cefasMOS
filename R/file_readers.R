@@ -146,7 +146,7 @@ read.ferrybox.10min <- function(folder){
   require(stringr)
   dat = data.table()
   for(f in list.files(folder)){
-    if(grepl("10minfiles", f)){
+    if(grepl("10min", f, ignore.case = T)){
       print(f)
       f = paste0(folder, f)
       ln = readLines(f)
@@ -163,12 +163,12 @@ read.ferrybox.10min <- function(folder){
       d = data.table(d)
       d[, dateTime := paste(d$"Date~~", d$"Time~~")]
       d[, dateTime := as.POSIXct(dateTime, format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
-      d = suppressWarnings(melt.data.table(d[,-c("Date~~", "Time~~"), with = F],
-                          id.vars = c("dateTime", "Latitude~~Degrees",
-                                      "Longitude~~Degrees", "Course~~°",
-                                      "Heading~~Degrees", "Speed~~Knots", "Satellite~~Numbers")))
+      d = d[,-c("Date~~", "Time~~"), with = F]
+      d = suppressWarnings(
+        melt.data.table(d, id.vars = grep("Course|Long|Lat|Satellite|Speed|Heading|dateTime", colnames(d)))
+      )
       d[, c("variable", "unit", "telid", "serial", "stat") := tstrsplit(variable, "~~")]
-      dat = rbind(dat, d)
+      dat = rbind(dat, d, fill = T)
     }
   }
   return(dat)
