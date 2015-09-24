@@ -23,11 +23,11 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
-    
+
     if(length(parcode) > 1 & style == 'dygraph'){
         stop('dygraphs can only display 1 parameter')
     }
-    
+
     smartbuoydb = odbcConnect(db_name)
     queryString = paste0("
                         SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
@@ -64,7 +64,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
     if(ct_temp_only == TRUE & 'TEMP' %in% parcode){
         dat = dat[sensor %like% ctSensors,]
     }
-    
+
     if(include_telemetry == T){
         # query telemetry table, only get data where no burstmean data
         smartbuoydb = odbcConnect(db_name)
@@ -91,14 +91,14 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
         odbcCloseAll()
         teldat$dateTime = as.POSIXct(teldat$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
         teldat = data.table(teldat)
-        
+
         if(ct_temp_only & 'TEMP' %in% parcode){
             teldat = teldat[sensor %like% ctSensors,]
         }
         teldat$deployment = paste0(teldat$deployment, '_telemetry')
         dat = rbind(dat, teldat, fill = T)
     }
-    
+
     if(night_flu_only & "FLUORS" %in% parcode){
         # stop('night_flu_only not implemented')
         print('using PAR to subset, FLUORS threshold = 1 uE m-2 s-1')
@@ -122,7 +122,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
         dat = dat[is.na(par), par := -1]
         dat = dat[par < 1,]
     }
-    
+
     dat$result = as.numeric(dat$result)
 
         # plots
@@ -132,7 +132,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
         dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + QAlevel, value.var = 'result', fun.aggregate = median)
         dts = xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
-        dg = dygraph(dts, main = title) %>% dyRangeSelector()
+        dg = dygraph(dts, main = title) %>% dyRangeSelector() %>% dyOptions(useDataTimezone = T)
         return(list('data' = dat, 'dygraph' = dg))
     }
     if(style == 'ggplot'){
