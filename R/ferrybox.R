@@ -160,10 +160,10 @@ ferrybox.position <- function(cruiseID = NA,
     }
       # if before or after is suppled build filter into query
     if(!is.na(before)){
-        query = paste0(query, " AND dateTime <= '", before, "'")
+        query = paste0(query, " AND DataHeaderTime <= '", before, "'")
     }
     if(!is.na(after)){
-        query = paste0(query, " AND dateTime >= '", after, "'")
+        query = paste0(query, " AND DataHeaderTime >= '", after, "'")
     }
 
     # finally
