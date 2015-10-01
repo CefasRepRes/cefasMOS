@@ -4,10 +4,12 @@
 \alias{read.ferrybox.10min}
 \title{Ferrybox 10min file data reader}
 \usage{
-read.ferrybox.10min(folder)
+read.ferrybox.10min(folder, save = T)
 }
 \arguments{
 \item{folder}{folder containing 10min files}
+
+\item{save}{if true tool will write to 10mindat.rdata file while reading}
 }
 \value{
 data.frame (data.table) of processed 10min files

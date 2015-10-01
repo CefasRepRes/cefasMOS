@@ -138,14 +138,16 @@ read.ULP000 <- function(file){
 #'
 #' @details TODO
 #' @param folder folder containing 10min files
+#' @param save if true tool will write to 10mindat.rdata file while reading
+#' @param recursive if true look in subfolders
 #' @return data.frame (data.table) of processed 10min files
 #' @keywords ferrybox 10minfile
 #' @export
-read.ferrybox.10min <- function(folder){
+read.ferrybox.10min <- function(folder, save = T, recursive = F){
   require(zoo)
   require(stringr)
   dat = data.table()
-  for(f in list.files(folder)){
+  for(f in list.files(folder, recursive = T)){
     if(grepl("10min", f, ignore.case = T)){
       print(f)
       f = paste0(folder, f)
@@ -169,6 +171,7 @@ read.ferrybox.10min <- function(folder){
       d = na.omit(d)
       d = dcast.data.table(d, ... ~ stat, value.var = "value")
       dat = rbind(dat, d, fill = T)
+      if(save == T){save(dat, file = "10mindat.rdata")}
     }
   }
   return(dat)
