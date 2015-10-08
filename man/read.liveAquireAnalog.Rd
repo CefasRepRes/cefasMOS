@@ -4,12 +4,12 @@
 \alias{read.liveAquireAnalog}
 \title{read analog live aquire data}
 \usage{
-read.liveAquireAnalog(file, channels_table = data.frame(channel = c(0, 1, 6),
+read.liveAquireAnalog(x, channels_table = data.frame(channel = c(0, 1, 6),
   type = c("OBS", "FLU", "OBS"), slope = c(1.22, 1.22, 1.22), offset = c(0, 0,
   0)))
 }
 \arguments{
-\item{file}{}
+\item{x}{one or more files captured from liveaquire}
 
 \item{channels_table}{}
 }
