@@ -127,7 +127,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 #' @export
 profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     require(RODBC)
-    query = paste("SELECT DISTINCT [CruiseId], [InstId]  FROM [SmartBuoy].[dbo].[CtdHeader]",
+    query = paste("SELECT DISTINCT [CruiseId], [InstId] FROM [SmartBuoy].[dbo].[CtdHeader]",
                   "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
                   "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
     if(yr != 'ALL'){
@@ -140,23 +140,37 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     return(data.frame(cruiseList))
 }
 
+profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
+    require(RODBC)
+    query = paste("SELECT [CruiseId], [InstId], [Latitude], [Longitude], [StartDate] FROM",
+                  "[SmartBuoy].[dbo].[CtdHeader]",
+                  "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
+                  "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
+    if(yr != 'ALL'){
+        query = paste(query, ' WHERE YEAR([StartDate]) = ', yr, sep = '')
+    }
+    sb = odbcConnect(db_name)
+    header = sqlQuery(sb, query)
+    header = header[order(header$CruiseId),]
+    odbcCloseAll()
+    return(data.table(header))
+}
 
 #' ESM2 profiler depth binning
 #'
 #' Binns profiler data into depth bins
 #'
-#' @details TODO
+#' @details TODO, default boxcar
 #' @param x data.frame matching output from fetch.profiler
 #' @param bin_height numeric vector determining depth binning interval, default is 0.5
-#' @param method function for binning, default is floor, ceil and round also work
-#' @param use_cast character string matching matching cast required, options are 'UP'
+#' @param method function for binning, default is round, ceiling and floor also work
+#' @param use_cast character string matching matching cast required, options are UP, DOWN and ALL
 #' @param return_bin numeric vector, only these bin depths will be returned
 #' @return character vector of Cruise Id's
 #' @keywords profiler ctd esm2 query
 #' @export
-profiler.binning <- function(x,
-                             bin_height= 1,
-                             method = floor,
+profiler.binning <- function(x, bin_height= 1,
+                             method = round,
                              use_cast = 'UP',
                              return_bin = 'all'){
     require(data.table)
@@ -174,10 +188,10 @@ profiler.binning <- function(x,
         dat = merge(dat, max_depth_offsets, by=  'startTime')
         dat = dat[offset <= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
     }
-    dat = dat[,depth_bin := method(depth / bin_height) * bin_height]
+    dat = dat[, depth_bin := method(depth / bin_height) * bin_height]
     dat[,endTime := startTime + max(offset), by = startTime]
 
-    dat = dat[, list(bin_mean = mean(value), count = length(value)),
+    dat = dat[, list(bin_mean = mean(value), count = length(value), bin_sd = sd(value)),
         by = list(startTime, endTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par)]
 
     if(return_bin != 'all'){
@@ -257,21 +271,36 @@ profiler.match_ferrybox <- function(cruiseID = NA,
 
 ## dev
 
+#' profiler salinity QA
+#'
+#' @param dateTime
+#' @param depth
+#' @param cruise
+#' @param bottlesal
+#' @param bin_height
+#' @param method
+#' @param mode
+#' @param station
+#' @param time_tolerance
+#' @param min_count
+#' @param use_cast
+#'
+#' @return list containing data and a plot
+#' @export
 profiler.salinityQA <- function(dateTime, depth, cruise, bottlesal,
-                                bin_height = 1, method = round, mode = "time_matched", station = NA, time_tolerance = 120){
-  require(ggplot2)
-  require(svDialogs)
-  require(gridExtra)
+                                bin_height = 1, method = round, mode = "time_matched",
+                                station = NA, time_tolerance = 120, min_count = 8, use_cast = "UP"){
 
   bsal = data.table(dateTime, depth, station, cruise, bottlesal)
   bsal[, depth := method(depth)]
     # average bottles if needed
   bsal = bsal[,.(bottlesal = mean(bottlesal)), by = list(dateTime, depth, cruise)]
   ctd = profiler.fetch(cruiseID = unique(bsal$cruise), parameters = "SAL", min_QA_reached = F)
-  ctd = profiler.binning(ctd, bin_height = bin_height, use_cast = "UP", method = method)
+  ctd = profiler.binning(ctd, bin_height = bin_height, use_cast = use_cast, method = method)
   if(!nrow(ctd) > 1){
     stop("No CTD data found")
   }
+  ctd = ctd[count >= min_count]
 
   matched = data.table()
   for(b in 1:nrow(bsal)){
@@ -283,16 +312,17 @@ profiler.salinityQA <- function(dateTime, depth, cruise, bottlesal,
     if(mode == "station_matched"){
       ctd_b = ctd[station == bottle$station]
     }
-    bottle = merge(bottle, ctd_b[,.(depth = depth_bin, sal = bin_mean, profiler)], by = "depth", fill = T)
+    bottle = merge(bottle, ctd_b[,.(depth = depth_bin, sal = bin_mean, profiler, station)], by = "depth", fill = T)
     matched = rbind(matched, bottle)
   }
   matched[,diff := bottlesal - sal]
   if(length(unique(matched$profiler)) > 1){
     warning("more than one profiler in dataset!")
   }
-  matched[,intercept := coef(lm(bottlesal ~ sal))[1]]
-  matched[,coef := coef(lm(bottlesal ~ sal))[2]]
-  matched[,R2 := summary(lm(bottlesal ~ sal))$r.squared]
+  # not needed?
+  #   matched[,intercept := coef(lm(bottlesal ~ sal))[1]]
+  #   matched[,coef := coef(lm(bottlesal ~ sal))[2]]
+  #   matched[,R2 := summary(lm(bottlesal ~ sal))$r.squared]
   if(length(unique(matched$cruise)) > 1){
     matched[,c_intercept := coef(lm(bottlesal ~ sal))[1], by = list(cruise, profiler)]
     matched[,c_coef := coef(lm(bottlesal ~ sal))[2], by = list(cruise, profiler)]
@@ -301,15 +331,18 @@ profiler.salinityQA <- function(dateTime, depth, cruise, bottlesal,
 
   p1 = ggplot(matched, aes(bottlesal, sal, color = cruise)) +
     geom_point() + stat_smooth(method = "lm") +
-    labs(x = "Profiler Salinity", y = "Bottle Salinity") +
+    labs(x = "Bottle Salinity", y = "Profiler Salinity") +
     facet_wrap(profiler ~ cruise) +
-    coord_equal() + theme_bw() + theme(legend.position = "bottom")
+    coord_equal() + theme_bw() + theme(legend.position = "bottom") +
+    guides(color = guide_legend(nrow=2))
+
   p2 = ggplot(matched, aes(bottlesal, sal)) +
     geom_point(aes(color = cruise)) + stat_smooth(method = "lm") +
-    labs(x = "Profiler Salinity", y = "Bottle Salinity") +
-    coord_equal() + theme_bw() + theme(legend.position = "bottom")
+    labs(x = "Bottle Salinity", y = "Profiler Salinity") +
+    coord_equal() + theme_bw() + theme(legend.position = "bottom") +
+    guides(color = guide_legend(nrow=2))
   if(length(unique(matched$cruise)) > 1){
-    p = grid.arrange(p1, p2, ncol = 2)
+    p = list(p1, p2)
   }else{p = p2}
 
   return(list("data" = matched, "plot" = p))
