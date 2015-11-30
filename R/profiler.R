@@ -9,7 +9,7 @@
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param area optional area vector consisting of 4 elements, minimum Latitude, minimum Longitude, maximum Latitude, maximum Longitude e.g. c(52, -3.5, 53, -4)
-#' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR')
+#' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR', 'FLUORS')
 #' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
 #' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
@@ -20,7 +20,7 @@
 profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            after = NA, before = NA,
                            area = NA,
-                           parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR'),
+                           parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR', 'FLUORS'),
                            RQ0 = TRUE, ct_temp_only = TRUE,
                            min_QA_reached = TRUE,
                            db_name = 'smartbuoydblive'){
@@ -140,6 +140,13 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     return(data.frame(cruiseList))
 }
 
+#' ESM2 profiler header queryer
+#'
+#' @param yr
+#' @param db_name
+#'
+#' @return data.frame of headers
+#' @export
 profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     require(RODBC)
     query = paste("SELECT [CruiseId], [InstId], [Latitude], [Longitude], [StartDate] FROM",
@@ -183,7 +190,7 @@ profiler.binning <- function(x, bin_height= 1,
         dat = dat[offset >= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
     }
     if(use_cast == 'DOWN'){
-        # subset to up cast only
+        # subset to down cast only
         max_depth_offsets =  dat[depth == max_depth, list(max_depth_offset = max(offset)), by = startTime]
         dat = merge(dat, max_depth_offsets, by=  'startTime')
         dat = dat[offset <= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
@@ -266,84 +273,4 @@ profiler.match_ferrybox <- function(cruiseID = NA,
     print(plt)
 
     return(list(data = matched, plot = plt))
-}
-
-
-## dev
-
-#' profiler salinity QA
-#'
-#' @param dateTime
-#' @param depth
-#' @param cruise
-#' @param bottlesal
-#' @param bin_height
-#' @param method
-#' @param mode
-#' @param station
-#' @param time_tolerance
-#' @param min_count
-#' @param use_cast
-#'
-#' @return list containing data and a plot
-#' @export
-profiler.salinityQA <- function(dateTime, depth, cruise, bottlesal,
-                                bin_height = 1, method = round, mode = "time_matched",
-                                station = NA, time_tolerance = 120, min_count = 8, use_cast = "UP"){
-
-  bsal = data.table(dateTime, depth, station, cruise, bottlesal)
-  bsal[, depth := method(depth)]
-    # average bottles if needed
-  bsal = bsal[,.(bottlesal = mean(bottlesal)), by = list(dateTime, depth, cruise)]
-  ctd = profiler.fetch(cruiseID = unique(bsal$cruise), parameters = "SAL", min_QA_reached = F)
-  ctd = profiler.binning(ctd, bin_height = bin_height, use_cast = use_cast, method = method)
-  if(!nrow(ctd) > 1){
-    stop("No CTD data found")
-  }
-  ctd = ctd[count >= min_count]
-
-  matched = data.table()
-  for(b in 1:nrow(bsal)){
-    # subset to matching time ranges
-    bottle = bsal[b,]
-    if(mode == "time_matched"){
-      ctd_b = ctd[(startTime - time_tolerance) < bottle$dateTime & (endTime + time_tolerance) > bottle$dateTime]
-    }
-    if(mode == "station_matched"){
-      ctd_b = ctd[station == bottle$station]
-    }
-    bottle = merge(bottle, ctd_b[,.(depth = depth_bin, sal = bin_mean, profiler, station)], by = "depth", fill = T)
-    matched = rbind(matched, bottle)
-  }
-  matched[,diff := bottlesal - sal]
-  if(length(unique(matched$profiler)) > 1){
-    warning("more than one profiler in dataset!")
-  }
-  # not needed?
-  #   matched[,intercept := coef(lm(bottlesal ~ sal))[1]]
-  #   matched[,coef := coef(lm(bottlesal ~ sal))[2]]
-  #   matched[,R2 := summary(lm(bottlesal ~ sal))$r.squared]
-  if(length(unique(matched$cruise)) > 1){
-    matched[,c_intercept := coef(lm(bottlesal ~ sal))[1], by = list(cruise, profiler)]
-    matched[,c_coef := coef(lm(bottlesal ~ sal))[2], by = list(cruise, profiler)]
-    matched[,c_R2 := summary(lm(bottlesal ~ sal))$r.squared, by = list(cruise, profiler)]
-  }
-
-  p1 = ggplot(matched, aes(bottlesal, sal, color = cruise)) +
-    geom_point() + stat_smooth(method = "lm") +
-    labs(x = "Bottle Salinity", y = "Profiler Salinity") +
-    facet_wrap(profiler ~ cruise) +
-    coord_equal() + theme_bw() + theme(legend.position = "bottom") +
-    guides(color = guide_legend(nrow=2))
-
-  p2 = ggplot(matched, aes(bottlesal, sal)) +
-    geom_point(aes(color = cruise)) + stat_smooth(method = "lm") +
-    labs(x = "Bottle Salinity", y = "Profiler Salinity") +
-    coord_equal() + theme_bw() + theme(legend.position = "bottom") +
-    guides(color = guide_legend(nrow=2))
-  if(length(unique(matched$cruise)) > 1){
-    p = list(p1, p2)
-  }else{p = p2}
-
-  return(list("data" = matched, "plot" = p))
 }
