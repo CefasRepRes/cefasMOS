@@ -136,29 +136,41 @@ bathymap <- function(lat, lon, bathy_file = NA){
   if(is.na(bathy_file)){
     data("GBbathy2014")
     bathy = GBbathy2014
+  }else{
+    # make bathy
+    bathy = raster(bathy_file)
+    bathy = crop(bathy, extent(c(xlim, ylim)))
+    rtp = data.frame(rasterToPoints(bathy))
+    colnames(rtp) = c('lon', 'lat', 'depth')
   }
+  centre.lat = mean(range(lat))
+  centre.lon = mean(range(lon))
+  max.range = max(diff(range(lon)), diff(range(lat)))
   xlim = c(centre.lon - (max.range / 2), centre.lon + (max.range / 2))
   ylim = c(centre.lat- (max.range / 2), centre.lat+ (max.range / 2))
-  # make bathy
-  bathy = raster(bathy_file)
-  bathy = crop(bathy, extent(c(xlim, ylim)))
-  rtp = data.frame(rasterToPoints(bathy))
-  colnames(rtp) = c('x', 'y', 'h')
-  # classify
-  rtp$c = cut(rtp$h, breaks = c(1, -25, -50, -100, -200, -5000), labels = 1:5)
-  # make geom
-  bathy_raster = geom_raster(data = rtp, aes(x, y, fill = c))
 
+  # classify
+  bathy$label = cut(bathy$depth, breaks = c(1, -25, -50, -100, -200, -5000),
+                    labels = rev(c('<25','25-50','50-100','100-200','>200')))
+
+  # crop
+  bathy = bathy[lon > min(xlim) & lon < max(xlim) &
+          lat > min(ylim) & lat < max(ylim)]
   coast = map_data('worldHires', xlim = xlim, ylim = ylim)
+
+  # make geom
+  bathy_raster = geom_raster(data = bathy, aes(lon, lat, fill = label))
+
   coast.poly <- geom_polygon(data=coast, aes(x=long, y=lat, group=group), colour= "#999999", fill="#999999", lwd=0.2)
   coast.outline <- geom_path(data=coast, aes(x=long, y=lat, group=group), colour= "#999999", lwd=0.2)
 
+  colorNum = length(unique(bathy$label))
+
   mp = ggplot() + bathy_raster + coast.poly + coast.outline +
       coord_quickmap(xlim, ylim) +
-      scale_fill_manual(values = rev(brewer.pal(5,"Blues")),name='depth', labels=rev(c('<25','25-50','50-100','100-200','>200')))
-  mp = mp + geom_point(data = d, aes(lon, lat, color = active, position = 'jitter', shape = as.factor(platform)), size = 2.5) +
-      scale_color_discrete('') + scale_shape_manual('', values = unique(d$shape), labels = unique(d$platformName), drop = F) +
+      scale_fill_manual(values = rev(brewer.pal(colorNum, "Blues")), name='depth') +
       labs(x = 'Longitude', y = 'Latitude')
+  return(mp)
 }
 
 #' Convert degrees + decimal minutes to decimal degrees
