@@ -156,6 +156,7 @@ bathymap <- function(lat, lon, bathy_file = NA){
   # crop
   bathy = bathy[lon > min(xlim) & lon < max(xlim) &
           lat > min(ylim) & lat < max(ylim)]
+  require(mapdata) # TODO work out how to replace this call properly
   coast = map_data('worldHires', xlim = xlim, ylim = ylim)
 
   # make geom
