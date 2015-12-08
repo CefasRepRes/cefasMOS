@@ -13,6 +13,7 @@
 #' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
 #' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
+#' @param privateData boolean, if True will return private data
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords profiler ctd esm2 query
@@ -23,6 +24,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC', 'PAR', 'FLUORS'),
                            RQ0 = TRUE, ct_temp_only = TRUE,
                            min_QA_reached = TRUE,
+                           privateData = FALSE,
                            db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
@@ -41,7 +43,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
               "[Cruise Id] as cruise,",
               "[Logger Id] as profiler,",
               "[Notes] as notes",
-              "FROM v_CtdProfile_AllData",
+              "FROM v_CtdProfile_DataComplete",
               "WHERE [Parameter code] IN")
 
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
@@ -53,10 +55,14 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         cruiseID = paste(cruiseID, collapse = "', '")
         query = paste0(query, "AND [Cruise Id] IN ('", cruiseID,"')")
     }
+        #
+    if(privateData == FALSE){
+        query = paste0(query, " AND [Is Private Data] = 0")
+    }
         # if profiler id is suppled build filter into query
     if(!is.na(profiler[1])){
         profiler = paste(profiler, collapse = "', '")
-        query = paste0(query, "AND [Logger Id] IN ('", profiler,"')")
+        query = paste0(query, " AND [Logger Id] IN ('", profiler,"')")
     }
       # if area is suppled build filter into query
       # area = c(minLat, minLon, maxLat, maxLon)
