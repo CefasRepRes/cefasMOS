@@ -173,14 +173,15 @@ profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @param method function for binning, default is round, ceiling and floor also work
 #' @param use_cast character string matching matching cast required, options are UP, DOWN and ALL
 #' @param return_bin numeric vector, only these bin depths will be returned
+#' @param O2_trim if true the first measurement in each bin is dropped, this is to give the sensor time to respond
 #' @return character vector of Cruise Id's
 #' @keywords profiler ctd esm2 query
 #' @export
 profiler.binning <- function(x, bin_height= 1,
                              method = round,
                              use_cast = 'UP',
-                             return_bin = 'all'){
-    require(data.table)
+                             return_bin = 'all',
+                             O2_trim = F){
     dat = data.table(x)     # just make sure
     dat[,max_depth := max(depth), by = startTime]
     if(use_cast == 'UP'){
@@ -198,7 +199,16 @@ profiler.binning <- function(x, bin_height= 1,
     dat = dat[, depth_bin := method(depth / bin_height) * bin_height]
     dat[,endTime := startTime + max(offset), by = startTime]
 
-    dat = dat[, list(bin_mean = mean(value), count = length(value), bin_sd = sd(value)),
+    if(O2_trim & "O2CONC" %in% dat$par){
+      print("Trimming oxygen")
+      # identify first measurement in bin to remove
+      dat[, bin_start := 0]
+      dat[par == "O2CONC",bin_start := min(offset, na.rm = T), by = list(par, startTime, depth_bin)]
+      dat = dat[bin_start != offset]
+    }
+      print(nrow(dat))
+
+    dat = dat[, list(bin_mean = mean(value, na.rm = T), count = length(value), bin_sd = sd(value, na.rm = T)),
         by = list(startTime, endTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par)]
 
     if(return_bin != 'all'){
