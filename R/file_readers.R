@@ -138,18 +138,17 @@ read.ULP000 <- function(file){
 #'
 #' @details TODO
 #' @param folder folder containing 10min files
-#' @param save if true tool will write to 10mindat.rdata file while reading
 #' @param recursive if true look in subfolders
+#' @param progress if true draw a progress bar
 #' @return data.frame (data.table) of processed 10min files
 #' @keywords ferrybox 10minfile
+#' @import zoo stringr
 #' @export
-read.ferrybox.10min <- function(folder, save = T, recursive = F){
-  require(zoo)
-  require(stringr)
-  dat = data.table()
-  for(f in list.files(folder, recursive = T)){
-    if(grepl("10min", f, ignore.case = T)){
-      print(f)
+read.ferrybox.10min <- function(folder, recursive = F, progress = T){
+  # for(f in list.files(folder, recursive = T))
+
+  read_10min <- function(f){
+    if(grepl("10minfiles", f, ignore.case = F)){
       f = paste0(folder, f)
       ln = readLines(f)
       dateLine = grep("Date Time", ln)
@@ -170,11 +169,19 @@ read.ferrybox.10min <- function(folder, save = T, recursive = F){
       colnames(d) = gsub("~~[[:alnum:]]*", "", colnames(d))
       d = na.omit(d)
       d = dcast.data.table(d, ... ~ stat, value.var = "value")
-      dat = rbind(dat, d, fill = T)
-      if(save == T){save(dat, file = "10mindat.rdata")}
+      return(d)
     }
   }
-  return(dat)
+
+  if(progress){
+    require(pbapply)
+    dat = pblapply(list.files(folder, recursive = recursive), read_10min)
+  }else{
+    dat = lapply(list.files(folder), recursive = recursive, read_10min)
+  }
+
+  dat = do.call("rbind", lapply(dat, data.frame, stringsAsFactors = FALSE))
+  return(data.table(dat))
 }
 
 #' SmartBuoy live aquire export reader
