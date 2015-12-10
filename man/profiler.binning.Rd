@@ -5,7 +5,7 @@
 \title{ESM2 profiler depth binning}
 \usage{
 profiler.binning(x, bin_height = 1, method = round, use_cast = "UP",
-  return_bin = "all")
+  return_bin = "all", O2_trim = F)
 }
 \arguments{
 \item{x}{data.frame matching output from fetch.profiler}
@@ -17,6 +17,8 @@ profiler.binning(x, bin_height = 1, method = round, use_cast = "UP",
 \item{use_cast}{character string matching matching cast required, options are UP, DOWN and ALL}
 
 \item{return_bin}{numeric vector, only these bin depths will be returned}
+
+\item{O2_trim}{if true the first measurement in each bin is dropped, this is to give the sensor time to respond}
 }
 \value{
 character vector of Cruise Id's

@@ -7,7 +7,7 @@
 profiler.fetch(cruiseID = NA, profiler = NA, after = NA, before = NA,
   area = NA, parameters = c("TEMP", "SAL", "FTU", "O2CONC", "PAR",
   "FLUORS"), RQ0 = TRUE, ct_temp_only = TRUE, min_QA_reached = TRUE,
-  db_name = "smartbuoydblive")
+  privateData = FALSE, db_name = "smartbuoydblive")
 }
 \arguments{
 \item{cruiseID}{optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.}
@@ -27,6 +27,8 @@ profiler.fetch(cruiseID = NA, profiler = NA, after = NA, before = NA,
 \item{ct_temp_only}{boolean, if True all non-FSI temperature data is discarded, default is False.}
 
 \item{min_QA_reached}{boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.}
+
+\item{privateData}{boolean, if True will return private data}
 
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }
