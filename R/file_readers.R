@@ -219,7 +219,6 @@ read.SmartBuoyLiveAquireExport <- function(file = dlgOpen(title = 'Open LiveAqui
 #'
 #' @param x one or more files captured from liveaquire
 #' @param channels_table
-#'
 #' @return processed data table
 #' @import stringr data.table
 #' @export
@@ -247,8 +246,8 @@ read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 
       obs_gain = c(500, 100, 25, 5) # obs gain settings
       flu_gain = c(30, 10, 3, 1) # flu gain settings
       dat[type == "OBS", gain := obs_gain[as.numeric(range) + 1]]
-      dat[type == "FLU", gain := obs_gain[as.numeric(range) + 1]]
-      dat[, value := (raw_value * slope) - (offset/1000) * gain]
+      dat[type == "FLU", gain := flu_gain[as.numeric(range) + 1]]
+      dat[, value := ((raw_value * slope) - (offset/1000)) * gain]
       dat = dat[order(tick)]
     }
     return(dat)
