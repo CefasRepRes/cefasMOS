@@ -34,6 +34,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
                         [Parameter Code] as parcode,
                         [Parameter Description] as pardesc,
                         [Sensor Descr] as sensor,
+                        [Sensor Serial Number] as serial,
                         [Result - Mean] as result,
                         [Depth Of Sensor] as depth,
                         [Deployment Id] as deployment,
@@ -73,6 +74,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
             [Parameter Code] as parcode,
             [Parameter Description] as pardesc,
             [Sensor Descr] as sensor,
+            [Sensor Serial Number] as serial,
             [Result - Mean] as result,
             [Depth Of Sensor] as depth,
             [Deployment Id] as deployment,
@@ -129,7 +131,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
     if(style == 'dygraph'){
         require(dygraphs)
         require(xts)
-        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + QAlevel, value.var = 'result', fun.aggregate = median)
+        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + serial + QAlevel, value.var = 'result', fun.aggregate = median)
         dts = xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
         dg = dygraph(dts, main = title) %>% dyRangeSelector() %>% dyOptions(useDataTimezone = T)
