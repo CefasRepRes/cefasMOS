@@ -4,14 +4,14 @@
 \alias{read.ferrybox.10min}
 \title{Ferrybox 10min file data reader}
 \usage{
-read.ferrybox.10min(folder, save = T, recursive = F)
+read.ferrybox.10min(folder, recursive = F, print_file = T)
 }
 \arguments{
 \item{folder}{folder containing 10min files}
 
-\item{save}{if true tool will write to 10mindat.rdata file while reading}
-
 \item{recursive}{if true look in subfolders}
+
+\item{print_file}{if true filenames are printed as processed}
 }
 \value{
 data.frame (data.table) of processed 10min files

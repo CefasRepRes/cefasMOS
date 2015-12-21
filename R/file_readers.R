@@ -139,18 +139,19 @@ read.ULP000 <- function(file){
 #' @details TODO
 #' @param folder folder containing 10min files
 #' @param recursive if true look in subfolders
-#' @param progress if true draw a progress bar
+#' @param print_file if true filenames are printed as processed
 #' @return data.frame (data.table) of processed 10min files
 #' @keywords ferrybox 10minfile
-#' @import zoo stringr
+#' @import zoo stringr pbapply
 #' @export
-read.ferrybox.10min <- function(folder, recursive = F, progress = T){
+read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
   # for(f in list.files(folder, recursive = T))
 
-  read_10min <- function(f){
+  read_10min <- function(f, print_file = F){
     if(grepl("10minfiles", f, ignore.case = F)){
       f = paste0(folder, f)
       ln = readLines(f)
+      if(print_file){print(f)}
       dateLine = grep("Date Time", ln)
       d = read.table(f, sep = "\t", header = F, skip = dateLine + 1, fill = F)
       header1 = unlist(strsplit(ln[dateLine], "\t")) # split on tabs
@@ -173,14 +174,16 @@ read.ferrybox.10min <- function(folder, recursive = F, progress = T){
     }
   }
 
-  if(progress){
-    require(pbapply)
-    dat = pblapply(list.files(folder, recursive = recursive), read_10min)
+  if(print_file){
+    dat = lapply(list.files(folder, recursive = recursive), read_10min, print_file = T)
+    print("now rbinding...")
+    dat = do.call("rbind", pblapply(dat, data.frame, stringsAsFactors = FALSE))
   }else{
-    dat = lapply(list.files(folder), recursive = recursive, read_10min)
+    dat = pblapply(list.files(folder, recursive = recursive), read_10min)
+    print("now rbinding...")
+    dat = do.call("rbind", pblapply(dat, data.frame, stringsAsFactors = FALSE))
   }
 
-  dat = do.call("rbind", lapply(dat, data.frame, stringsAsFactors = FALSE))
   return(data.table(dat))
 }
 
