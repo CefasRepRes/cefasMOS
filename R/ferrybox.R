@@ -175,3 +175,17 @@ ferrybox.position <- function(cruiseID = NA,
     odbcCloseAll()
     return(data.table(dat))
 }
+
+
+#' Ferrybox error codes
+#'
+#' @param x error code
+#'
+#' @return codes used in composite
+#' @export
+ferrybox.errorcode <- function(x){
+  if(!exists("cds_table")){
+    data("cds_table")
+  }
+  return(cds_table[as.character(x)])
+}

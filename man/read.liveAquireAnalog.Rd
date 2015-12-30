@@ -10,8 +10,6 @@ read.liveAquireAnalog(x, channels_table = data.frame(channel = c(0, 1, 6),
 }
 \arguments{
 \item{x}{one or more files captured from liveaquire}
-
-\item{channels_table}{}
 }
 \value{
 processed data table
