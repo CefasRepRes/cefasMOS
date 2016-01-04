@@ -180,12 +180,21 @@ ferrybox.position <- function(cruiseID = NA,
 #' Ferrybox error codes
 #'
 #' @param x error code
+#' @param collapse_vector if true single element vector will be returned with ";" seperators
 #'
 #' @return codes used in composite
 #' @export
-ferrybox.errorcode <- function(x){
+ferrybox.errorcode <- function(x, collapse_vector = T){
   if(!exists("cds_table")){
     data("cds_table")
   }
-  return(cds_table[as.character(x)])
+  x = as.character(x)
+  if(collapse_vector){
+    out = unlist(lapply(cds_table[x], paste, collapse = "; "), use.names = F)
+  }
+  else{
+    out = unlist(cds_table[x], use.names = F)
+  }
+  return(out)
 }
+

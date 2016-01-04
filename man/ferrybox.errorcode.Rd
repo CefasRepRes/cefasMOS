@@ -4,10 +4,12 @@
 \alias{ferrybox.errorcode}
 \title{Ferrybox error codes}
 \usage{
-ferrybox.errorcode(x)
+ferrybox.errorcode(x, collapse_vector = T)
 }
 \arguments{
 \item{x}{error code}
+
+\item{collapse_vector}{if true single element vector will be returned with ";" seperators}
 }
 \value{
 codes used in composite
