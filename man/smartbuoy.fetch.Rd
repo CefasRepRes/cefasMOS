@@ -29,7 +29,7 @@ smartbuoy.fetch(deployment = NA, deployment_group = NA, after = NA,
 
 \item{averaging_period, }{integer matching length in hours of averaging interval, i.e. 24 for daily means}
 
-\item{night_flu_only}{optional boolean, if True (default) only quenched flu data will be removed}
+\item{night_flu_only}{optional boolean, if True (default) only night flu data will be returned}
 
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }

@@ -2,7 +2,7 @@
 #'
 #' Fetches SmartBuoy data
 #'
-#' @details This function querys the Smartbuoy database and returns 
+#' @details This function querys the Smartbuoy database and returns
 #' @param deployment optional string matching smartbuoy deployment
 #' @param deployment_group optional string matching smartbuoy deployment_group
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
@@ -12,7 +12,7 @@
 #' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
 #' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param averaging_period, integer matching length in hours of averaging interval, i.e. 24 for daily means
-#' @param night_flu_only optional boolean, if True (default) only quenched flu data will be removed
+#' @param night_flu_only optional boolean, if True (default) only night flu data will be returned
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
@@ -27,12 +27,14 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                            db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
-    
+
     if(min_QA_reached == TRUE){
         # boilerplate query start
         query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
                   "[Deployment Id] as deployment,",
                   "[Deployment Group Id] as deployment_group,",
+                  "[Deployment Latitude] as lat,",
+                  "[Deployment Longitude] as lon,",
                   "[Depth Of Sensor] as depth,",
                   "[Result - mean] as value,",
                   "[Result - Std Dev] as stdev,",
@@ -46,6 +48,8 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
         query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
                   "[Deployment Id] as deployment,",
                   "[Deployment Group Id] as deployment_group,",
+                  "[Deployment Latitude] as lat,",
+                  "[Deployment Longitude] as lon,",
                   "[Depth Of Sensor] as depth,",
                   "[QA Level] as QA_level,",
                   "[Result Quality Flag] as QA_flag,",
@@ -57,16 +61,10 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                   "[Parameter Code] as par",
                   "FROM AdHocRetrieval_BurstMeanResults")
     }
-    
+
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
     parameters_fetch = paste(parameters, collapse = "', '")
-    
-        # make sure we fetch PAR if needed
-    if(night_flu_only & "FLUORS" %in% parameters & !('PAR' %in% parameters)){
-        print('also fetching PAR to filter FLUORS')
-        parameters_fetch = paste(parameters_fetch, "', 'PAR")
-    }
-        
+
     query = paste0(query, " WHERE [Parameter code] IN ('", parameters_fetch, "')")
 
     # filter deployments, is.na evaluates each element of vector, so only check first one is not NA
@@ -82,7 +80,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     if(RQ0 == TRUE & min_QA_reached != TRUE){
         query = paste(query, "AND [Result Quality Flag] = 0")
     }
-    
+
       # if before or after is suppled build filter into query
     if(!is.na(before)){
         query = paste0(query, " AND [Date/Time] <= '", before, "'")
@@ -90,34 +88,31 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     if(!is.na(after)){
         query = paste0(query, " AND [Date/Time] >= '", after, "'")
     }
-    
+
     # finaly
     query = paste(query, 'ORDER BY dateTime')
-    
+
     print(query)
     sb = odbcConnect(db_name)
     dat = data.table(sqlQuery(sb, query))
     odbcCloseAll()
-    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
-    
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
+
     # check if valid data has been returned, if not quit
     if(! nrow(dat) > 1){
         stop("no data returned")
     }
-    
+
     if(night_flu_only & "FLUORS" %in% parameters){
-        print('using PAR to subset, FLUORS threshold = 1 uE m-2 s-1')
-        PAR = dat[par == 'PAR', .(dateTime, PAR = value)]
-        dat = merge(dat, PAR, by = 'dateTime', all = T, allow.cartesian = T) # allow.cartesian needed for duplicate timestamps
-        dat = dat[is.na(PAR), PAR := -1]
-        dat = dat[PAR < 1,]
-            # tidy up if we fetched PAR and don't want it anymore
-        if(!('PAR' %in% parameters)){
-            print('removing PAR records')
-            dat = dat[par != 'PAR']
-        }
+      require(insol)
+      require(lubridate)
+      dat[, sunrise := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunrise]
+      dat[, sunset := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunset]
+      dat[, dhour := hour(dateTime) + (minute(dateTime)/60)]
+      dat = dat[(par == "FLUORS" & (dhour < sunrise | dhour > sunset)) | par != "FLUORS",]
+      dat = dat[,!c("sunrise", "sunset", "dhour"), with = F]
     }
-    
+
     if(ct_temp_only == TRUE & 'TEMP' %in% parameters){
         ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird|Waverider'
         print('removing non CT temperatures')
@@ -140,7 +135,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
 #'
 #' Fetches burst level SmartBuoy data
 #'
-#' @details This function querys the Smartbuoy database and returns 
+#' @details This function querys the Smartbuoy database and returns
 #' @param deployment optional string matching smartbuoy deployment
 #' @param parameters vector of parameter code names, defaults to c('TEMP', 'SAL', 'FTU', 'O2CONC', 'FLUORS')
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
@@ -174,7 +169,7 @@ smartbuoy.fetch_burst <- function(deployment = NA,
     dat[,mean := mean(Value), by = BurstNumber]
     dat[,sd:= sd(Value), by = BurstNumber]
     return(dat)
-    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC") 
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
 }
 
 #' SmartBuoy T/S plots
@@ -191,7 +186,7 @@ smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
     require(ggplot2)
-    
+
     smartbuoydb = odbcConnect(db_name)
     queryString = paste0("
                         SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
