@@ -6,7 +6,7 @@
 \usage{
 smartbuoy.timeseries(deploymentGroup, parcode, yr = year(Sys.time()),
   ct_temp_only = TRUE, style = "dygraph", include_telemetry = TRUE,
-  night_flu_only = FALSE, db_name = "smartbuoydblive")
+  night_flu_only = TRUE, db_name = "smartbuoydblive")
 }
 \arguments{
 \item{deploymentGroup}{character string matching SmartBuoy deployment group (case sensitive)}

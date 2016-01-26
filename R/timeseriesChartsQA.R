@@ -19,7 +19,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       ct_temp_only = TRUE,
                       style = 'dygraph',
                       include_telemetry = TRUE,
-                      night_flu_only = FALSE,
+                      night_flu_only = TRUE,
                       db_name = 'smartbuoydblive'){
     require(RODBC)
     require(data.table)
@@ -48,6 +48,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
                         AND [Result Quality Flag] = 0
                         ORDER BY dateTime
                         ")
+    print(queryString)
     dat = sqlQuery(smartbuoydb, queryString)
     odbcCloseAll()
         # check data is valid
@@ -101,28 +102,14 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
         dat = rbind(dat, teldat, fill = T)
     }
 
-    if(night_flu_only & "FLUORS" %in% parcode){
-        # stop('night_flu_only not implemented')
-        print('using PAR to subset, FLUORS threshold = 1 uE m-2 s-1')
-        smartbuoydb = odbcConnect(db_name)
-        PARquery = paste0("
-                            SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
-                            [Result - Mean] as par
-                            FROM AdHocRetrieval_BurstMeanResults
-                            WHERE [Parameter Code] = 'PAR'
-                            AND [Depth Of Sensor] = 0
-                            AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
-                            AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
-                            AND [Result Quality Flag] = 0
-                            ORDER BY dateTime
-                            ")
-        par = sqlQuery(smartbuoydb, PARquery)
-        odbcCloseAll()
-        par$dateTime = as.POSIXct(par$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
-        par = data.table(par)
-        dat = merge(dat, par, by = 'dateTime', all = T, allow.cartesian = T) # allow.cartesian needed for duplicate timestamps
-        dat = dat[is.na(par), par := -1]
-        dat = dat[par < 1,]
+    if(night_flu_only & "FLUORS" %in% parameters){
+      require(insol)
+      require(lubridate)
+      dat[, sunrise := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunrise]
+      dat[, sunset := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunset]
+      dat[, dhour := hour(dateTime) + (minute(dateTime)/60)]
+      dat = dat[(par == "FLUORS" & (dhour < sunrise | dhour > sunset)) | par != "FLUORS",]
+      dat = dat[,!c("sunrise", "sunset", "dhour"), with = F]
     }
 
     dat$result = as.numeric(dat$result)
