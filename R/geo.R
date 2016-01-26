@@ -91,11 +91,12 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @param zoom_to_group boolean, if True map is centred and zoomed to input lat/long, if False entire UK is used.
 #' @param scale_factor optional integer, increase set to 1 (or more) to pad to next zoom level
 #' @param crop boolean, if True map is cropped to lat lon + crop_padding (default is False)
+#' @param maptype string of either "satellite", "terrain", "terrain-background", "hybrid"
 #' @return ggmap object
 #' @keywords map
 #' @import ggmap
 #' @export
-ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F){
+ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F, maptype = "satellite"){
     ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8, 4, 2), range = c(120, 60, 30, 14, 8, 4, 2, 1))
     if(zoom_to_group == TRUE){
         centre.lat = mean(range(lat))
@@ -113,7 +114,7 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F)
     centre = c(centre.lon, centre.lat)
 
     require(ggmap)
-    mp = ggmap(get_map(location = centre, zoom = zoom, maptype = 'satellite'))
+    mp = ggmap(get_map(location = centre, zoom = zoom, maptype = maptype))
     if(crop == TRUE){
         mp = mp + ylim(range(lat)) + xlim(range(lon))
     }
