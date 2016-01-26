@@ -29,25 +29,25 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
     }
 
     smartbuoydb = odbcConnect(db_name)
-    queryString = paste0("
-                        SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
-                        [Parameter Code] as parcode,
-                        [Parameter Description] as pardesc,
-                        [Sensor Descr] as sensor,
-                        [Sensor Serial Number] as serial,
-                        [Result - Mean] as result,
-                        [Depth Of Sensor] as depth,
-                        [Deployment Id] as deployment,
-                        [Deployment Group Id] as site,
-                        [QA Level] as QAlevel
-                        FROM AdHocRetrieval_BurstMeanResults
-                        WHERE
-                        ([Parameter Code] IN ('", paste(parcode, collapse = "', '"), "'))
-                        AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
-                        AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
-                        AND [Result Quality Flag] = 0
-                        ORDER BY dateTime
-                        ")
+    queryString = paste0(
+"SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
+[Parameter Code] as parcode,
+[Parameter Description] as pardesc,
+[Sensor Descr] as sensor,
+[Sensor Serial Number] as serial,
+[Result - Mean] as result,
+[Depth Of Sensor] as depth,
+[Deployment Id] as deployment,
+[Deployment Group Id] as site,
+[QA Level] as QAlevel
+FROM AdHocRetrieval_BurstMeanResults
+WHERE
+([Parameter Code] IN ('", paste(parcode, collapse = "', '"), "'))
+AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
+AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
+AND [Result Quality Flag] = 0
+ORDER BY dateTime
+")
     print(queryString)
     dat = sqlQuery(smartbuoydb, queryString)
     odbcCloseAll()
@@ -102,7 +102,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
         dat = rbind(dat, teldat, fill = T)
     }
 
-    if(night_flu_only & "FLUORS" %in% parameters){
+    if(night_flu_only & "FLUORS" %in% parcode){
       require(insol)
       require(lubridate)
       dat[, sunrise := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunrise]
