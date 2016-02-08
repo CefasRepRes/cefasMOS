@@ -183,6 +183,9 @@ bathymap <- function(lat, lon, bathy_file = NA){
 #' @return decimal degrees
 #' @export
 convert_latlong <- function(degrees, decimal_minutes){
+  if(degrees < 0){
+    decimal_minutes = decimal_minutes * -1
+  }
   decimal_degrees = (degrees + decimal_minutes/60)
   return(decimal_degrees)
 }
