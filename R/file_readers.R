@@ -257,3 +257,49 @@ read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 
   }
  return(do.call(rbind, lapply(x, rlaq, channels_table)))
 }
+
+
+#' Read BODC CTD ascii (lst) files
+#'
+#' Reads ascii CTD files from BODC, attempts to extract metadata
+#'
+#' @param file
+#' @param stripAgg
+#'
+#' @return data.frame (data.table)
+#' @export
+#' @usage
+#' x = lapply(list.files(folder, full.names = T, pattern = "*.lst"), read.BODC_ctd_asci)
+#' d = rbindlist(x, fill = T)
+read.BODC_ctd_ascii <- function(file, stripAgg = T){
+  require(stringr)
+  ln = readLines(file, warn = F)
+  dataStart = max(grep("Cycle", ln))
+  id = ln[min(grep("Id ", ln))]
+  id = str_extract(id, "[\\w]+(?= Unit)")
+  startTime = ln[min(grep("start:", ln))]
+  startTime = str_extract(startTime, "(?<=start:)[\\d]+")
+  latLon = ln[(min(grep("start:", ln)))]
+  latLon = str_extract(latLon, "^\\S+")
+  latLon.n =  as.numeric(unlist(str_extract_all(latLon, "[\\d\\.]+")))
+  latLon.sign =  unlist(str_extract_all(latLon, "[NESW]"))
+  if(latLon.sign[2] == "W"){latLon.n[3] = latLon.n[3]*(-1)}
+  lat = convert_latlong(latLon.n[1], latLon.n[2])
+  lon = convert_latlong(latLon.n[3], latLon.n[4])
+
+  parmNames = unlist(str_extract_all(ln[dataStart], "\\w+"))
+  if(stripAgg){
+    parmNames2 = gsub("\\d{2}\\b", "", parmNames, perl = T)
+    if(anyDuplicated(parmNames2) != 0){stop("aggregation needed")}
+    parmNames = parmNames2
+  }
+  dat = data.table(read.table(file, skip = dataStart+1, stringsAsFactors = F))
+  dat = suppressWarnings(dat[, lapply(.SD, as.numeric)])
+  colnames(dat) = parmNames
+  dat$Cycle = NULL
+  dat$dateTime = as.POSIXct(startTime, format = "%Y%m%d%H%M%S", tz = "UTC")
+  dat$id = id
+  dat$lat = lat
+  dat$lon = lon
+  return(data.table(dat))
+}
