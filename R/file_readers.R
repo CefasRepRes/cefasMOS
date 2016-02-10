@@ -30,26 +30,29 @@ read.ferrybox.devdata <- function(devdata_folder, pivot = F){
         sensor = unlist(strsplit(fd[sensorLine], '; '))[2]
         d = fread(f, skip = startLine, sep = '\t')
         param = colnames(d)[2]
-        d = d[-1, c('$Timestamp', param, 'Quality', 'Longitude', 'Latitude'), with = F]
-        setnames(d, c('$Timestamp', param, 'Quality'), c('datetime', 'value', 'quality'))
+        d = d[-1, c('$Timestamp', param, 'Quality', 'Variance', 'MeasCount', 'Longitude', 'Latitude'), with = F]
+        setnames(d, c('$Timestamp', param, 'Quality', 'Variance', 'MeasCount', 'Longitude', 'Latitude'),
+                 c('dateTime', 'value', 'quality', 'variance', 'count', 'lat', 'lon'))
         d$sensor = sensor
         d$param = param
         dat = rbind(dat, d)
     }
-    dat$datetime = as.POSIXct(dat$datetime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
+    dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
 
     export = dat
         # reclasiffy types
     export$value = as.numeric(export$value)
-    export$Longitude = as.numeric(export$Longitude)
-    export$Latitude = as.numeric(export$Latitude)
+    export$variance = as.numeric(export$variance)
+    export$count = as.numeric(export$count)
+    export$lon = as.numeric(export$lon)
+    export$lat = as.numeric(export$lat)
 
     if(pivot == T){
-        export = dcast.data.table(export, datetime ~ param)
-        pos = dat[,.(datetime, Latitude, Longitude)]
-        pos = pos[,lapply(.SD, as.numeric), by = datetime]
-        pos = pos[,lapply(.SD, median), by = datetime]
-        export = merge(export, pos, by = 'datetime')
+        export = dcast.data.table(export, dateTime ~ param)
+        pos = dat[,.(dateTime, lat, lon)]
+        pos = pos[,lapply(.SD, as.numeric), by = dateTime]
+        pos = pos[,lapply(.SD, median), by = dateTime]
+        export = merge(export, pos, by = 'dateTime')
         return(export)
     }else{
         return(export)
