@@ -1,0 +1,58 @@
+---
+title: "Using the cefasMOS package"
+author: "Tom Hull"
+date: "`r Sys.Date()`"
+output: 
+  pdf_document: 
+    highlight: espresso
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# How to install and use the `cefasMOS` package
+
+## Installing
+
+The `cefasMOS` package is in development and has not been submitted to CRAN.
+You can install it directly from bitbucket (A github analog) using the `devtools` package.
+
+The package does not handle all of it's dependencies at the moment so it is best to install the core ones first:
+Other rarely used functions may require additional packages, install these later if you have problems.
+
+
+```{r install, eval=F}
+install.packages("devtools")
+
+
+install.packages(c("ggplot2", "lubridate", "RODBC", "dygraphs", "data.table", "insol"))
+
+devtools::install_bitbucket("betascoo8/cefasmos")
+```
+```{r load, results='asis', warning=F}
+library("cefasMOS") # load the package
+sessionInfo("cefasMOS")$otherPkgs
+```
+
+## Extracting SmartBuoy data
+
+The `smartbuoy.timeseries` will draw a single parameter with a zoomable timeseries plot.
+It will also by default fetch telemetry data when available.
+See `?smartbuoy.timeseries` for more information.
+
+```{r timeseries, cache = T, warning=F}
+x = smartbuoy.timeseries("TH1", "TEMP", yr = 2012:2014)
+head(x$data)
+  # x$dygraph
+```
+
+To extract QC'd data or raw data use the `smartbuoy.fetch` function.
+By default only data where min QC level has been reached is returned, this can be overridden.
+
+```{r extract, cache = T}
+lbdat = smartbuoy.fetch(deployment_group = "LIVBAY", after = "2014-01-01", parameters = c("FLUORS", "TOXN"))
+
+  # save the data
+write.csv(lbdat, file = "lbdat.csv", row.names = F) # row names not needed
+```

@@ -1,0 +1,8 @@
+```{r}
+require(cefasMOS)
+folder = "../HIGHROC/CEND_03_16_turb/"
+f = "../HIGHROC/CEND_03_16_turb/SeapointTurb_A_Turbidity_20160111.txt"
+x = read.ferrybox.devdata(folder, pivot = F)
+
+
+```
