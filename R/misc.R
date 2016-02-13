@@ -113,6 +113,7 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' @param threshold
 #'
 #' @return mld
+#' @import data.table
 #' @export
 findMLD <- function(d, p, threshold = 0.125){
   # simple threshold technique, mld where p +/- 0.125 of surface p
@@ -126,4 +127,23 @@ findMLD <- function(d, p, threshold = 0.125){
   }else{
     return(0) # fully mixed
   }
+}
+
+#' yday with decimal time
+#'
+#' @description converts POSIXct to day of year with decimal time.
+#' @details The first day of the year is treated as zero, i.e. midday on Jan 1st will return 0.5.
+#' This differs from the value provided by the `yday` lubridate  function
+#'
+#' @param x as POSIXct vector
+#'
+#' @return numeric vector of day of the year with decimal time
+#' @export
+ydaytime <- function(x){
+  if(!is.POSIXct(x)){stop("input is not valid POSIXct!")}
+  n = as.numeric(x)
+  yr = lubridate::year(x)
+  o = as.numeric(as.POSIXct(paste0(yr,"-01-01"), format = "%Y-%m-%d", tz = "UTC"))
+  r = (n - o) / (60 * 60 * 24)
+  return(r)
 }
