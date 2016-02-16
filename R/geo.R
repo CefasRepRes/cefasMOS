@@ -13,6 +13,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggmap object
 #' @keywords SmartBuoy
+#' @import ggplot2 data.table RODBC
 #' @export
 smartbuoy.map <- function(platforms = c(1, 4, 8),
                             deployment_group_id = 'ALL',
@@ -23,13 +24,7 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
                             zoom_to_group = TRUE,
                             db_name = 'smartbuoydblive'){
 
-    require(reshape2)
-    require(RODBC)
-    require(ggplot2)
-    require(data.table)
-    require(lubridate)
-
-    sbdb= odbcConnect("SmartbuoydbLive")
+    sbdb = odbcConnect(db_name)
 
     pos_query = paste("SELECT
                       Deployment.[DepLocLat] as lat, Deployment.[DepLocLong] as long,
@@ -94,7 +89,6 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @param maptype string of either "satellite", "terrain", "terrain-background", "hybrid"
 #' @return ggmap object
 #' @keywords map
-#' @import ggmap
 #' @export
 ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F, maptype = "satellite"){
     ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8, 4, 2), range = c(120, 60, 30, 14, 8, 4, 2, 1))
@@ -114,7 +108,7 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
     centre = c(centre.lon, centre.lat)
 
     require(ggmap)
-    mp = ggmap(get_map(location = centre, zoom = zoom, maptype = maptype))
+    mp = ggmap::ggmap(ggmap::get_map(location = centre, zoom = zoom, maptype = maptype))
     if(crop == TRUE){
         mp = mp + ylim(range(lat)) + xlim(range(lon))
     }
@@ -128,20 +122,21 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @param bathy_file
 #'
 #' @return ggplot
-#' @import raster rgdal mapdata RColorBrewer
+#' @import ggplot2
 #' @export
 #'
 bathymap <- function(lat, lon, bathy_file = NA){
     # stuff
+    # ? require rgdal
     # should build bathymap which fits all data in
   if(is.na(bathy_file)){
     data("GBbathy2014")
     bathy = GBbathy2014
   }else{
     # make bathy
-    bathy = raster(bathy_file)
-    bathy = crop(bathy, extent(c(xlim, ylim)))
-    rtp = data.frame(rasterToPoints(bathy))
+    bathy = raster::raster(bathy_file)
+    bathy = raster::crop(bathy, raster::extent(c(xlim, ylim)))
+    rtp = data.frame(raster::rasterToPoints(bathy))
     colnames(rtp) = c('lon', 'lat', 'depth')
   }
   centre.lat = mean(range(lat))
@@ -151,14 +146,13 @@ bathymap <- function(lat, lon, bathy_file = NA){
   ylim = c(centre.lat- (max.range / 2), centre.lat+ (max.range / 2))
 
   # classify
-  bathy$label = cut(bathy$depth, breaks = c(1, -25, -50, -100, -200, -5000),
+  bathy$label = raster::cut(bathy$depth, breaks = c(1, -25, -50, -100, -200, -5000),
                     labels = rev(c('<25','25-50','50-100','100-200','>200')))
 
   # crop
   bathy = bathy[lon > min(xlim) & lon < max(xlim) &
           lat > min(ylim) & lat < max(ylim)]
-  require(mapdata) # TODO work out how to replace this call properly
-  coast = map_data('worldHires', xlim = xlim, ylim = ylim)
+  coast = mapdata::map_data('worldHires', xlim = xlim, ylim = ylim)
 
   # make geom
   bathy_raster = geom_raster(data = bathy, aes(lon, lat, fill = label))
@@ -170,7 +164,7 @@ bathymap <- function(lat, lon, bathy_file = NA){
 
   mp = ggplot() + bathy_raster + coast.poly + coast.outline +
       coord_quickmap(xlim, ylim) +
-      scale_fill_manual(values = rev(brewer.pal(colorNum, "Blues")), name='depth') +
+      scale_fill_manual(values = rev( RColorBrewer::brewer.pal(colorNum, "Blues")), name='depth') +
       labs(x = 'Longitude', y = 'Latitude')
   return(mp)
 }

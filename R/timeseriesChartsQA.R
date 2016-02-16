@@ -13,6 +13,7 @@
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return dygraph or ggplot object depending on style, or if return_data is True a data.table for the timeseries.
 #' @keywords profiler ctd esm2
+#' @import data.table RODBC
 #' @export
 smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       yr = year(Sys.time()),
@@ -21,33 +22,31 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       include_telemetry = TRUE,
                       night_flu_only = TRUE,
                       db_name = 'smartbuoydblive'){
-    require(RODBC)
-    require(data.table)
 
     if(length(parcode) > 1 & style == 'dygraph'){
         stop('dygraphs can only display 1 parameter')
     }
 
-    smartbuoydb = odbcConnect(db_name)
+    smartbuoydb = RODBC::odbcConnect(db_name)
     queryString = paste0(
-"SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
-[Parameter Code] as parcode,
-[Parameter Description] as pardesc,
-[Sensor Descr] as sensor,
-[Sensor Serial Number] as serial,
-[Result - Mean] as result,
-[Depth Of Sensor] as depth,
-[Deployment Id] as deployment,
-[Deployment Group Id] as site,
-[QA Level] as QAlevel
-FROM AdHocRetrieval_BurstMeanResults
-WHERE
-([Parameter Code] IN ('", paste(parcode, collapse = "', '"), "'))
-AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
-AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
-AND [Result Quality Flag] = 0
-ORDER BY dateTime
-")
+      "SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
+      [Parameter Code] as parcode,
+      [Parameter Description] as pardesc,
+      [Sensor Descr] as sensor,
+      [Sensor Serial Number] as serial,
+      [Result - Mean] as result,
+      [Depth Of Sensor] as depth,
+      [Deployment Id] as deployment,
+      [Deployment Group Id] as site,
+      [QA Level] as QAlevel
+      FROM AdHocRetrieval_BurstMeanResults
+      WHERE
+      ([Parameter Code] IN ('", paste(parcode, collapse = "', '"), "'))
+      AND [Deployment Group Id] IN ('", paste(deploymentGroup, collapse = "', '"), "')
+      AND YEAR([Date/Time]) IN (", paste(yr, collapse = ", "),")
+      AND [Result Quality Flag] = 0
+      ORDER BY dateTime"
+      )
     print(queryString)
     dat = sqlQuery(smartbuoydb, queryString)
     odbcCloseAll()
@@ -69,7 +68,7 @@ ORDER BY dateTime
 
     if(include_telemetry == T){
         # query telemetry table, only get data where no burstmean data
-        smartbuoydb = odbcConnect(db_name)
+        smartbuoydb = RODBC::odbcConnect(db_name)
         telequery= paste0("
             SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,
             [Parameter Code] as parcode,
@@ -103,10 +102,8 @@ ORDER BY dateTime
     }
 
     if(night_flu_only & "FLUORS" %in% parcode){
-      require(insol)
-      require(lubridate)
-      dat[, sunrise := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunrise]
-      dat[, sunset := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunset]
+      dat[, sunrise := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunrise]
+      dat[, sunset := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunset]
       dat[, dhour := hour(dateTime) + (minute(dateTime)/60)]
       dat = dat[(par == "FLUORS" & (dhour < sunrise | dhour > sunset)) | par != "FLUORS",]
       dat = dat[,!c("sunrise", "sunset", "dhour"), with = F]
@@ -116,24 +113,11 @@ ORDER BY dateTime
 
         # plots
     if(style == 'dygraph'){
-        require(dygraphs)
-        require(xts)
         dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + serial + QAlevel, value.var = 'result', fun.aggregate = median)
-        dts = xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
+        dts = xts::xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
-        dg = dygraph(dts, main = title) %>% dyRangeSelector() %>% dyOptions(useDataTimezone = T)
+        dg = dygraphs::dygraph(dts, main = title) %>% dyRangeSelector() %>% dyOptions(useDataTimezone = T)
         return(list('data' = dat, 'dygraph' = dg))
-    }
-    if(style == 'ggplot'){
-        require(ggplot2)
-        print('ggplot not yet implemented')
-        return(dat)
-        dep_label = dat[,list(x = median(dateTime), y = mean(result), lim = min(dateTime)), by = list(deployment, pardesc)]
-        gp = ggplot(dat) + geom_line(aes(dateTime, result, colour = pardesc, group = deployment)) +
-            geom_text(data = dep_label, aes(x, y, label = deployment), alpha = 0.8) +
-            facet_grid(pardesc ~ ., scales = 'free_y') +
-            theme_bw()
-        return(list('data' = dat, 'ggplot' = gp))
     }else{ print('style not implemented') }
 }
 

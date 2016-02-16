@@ -16,6 +16,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
+#' @import data.table RODBC
 #' @export
 smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                            after = NA, before = NA,
@@ -25,8 +26,6 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                            averaging_period = NA,
                            night_flu_only = FALSE,
                            db_name = 'smartbuoydblive'){
-    require(RODBC)
-    require(data.table)
 
     if(min_QA_reached == TRUE){
         # boilerplate query start
@@ -104,10 +103,8 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     }
 
     if(night_flu_only & "FLUORS" %in% parameters){
-      require(insol)
-      require(lubridate)
-      dat[, sunrise := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunrise]
-      dat[, sunset := as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunset]
+      dat[, sunrise := as.data.frame(insol::daylength(lat, lon, daydoy(dateTime), 0))$sunrise]
+      dat[, sunset := as.data.frame(insol::daylength(lat, lon, daydoy(dateTime), 0))$sunset]
       dat[, dhour := hour(dateTime) + (minute(dateTime)/60)]
       dat = dat[(par == "FLUORS" & (dhour < sunrise | dhour > sunset)) | par != "FLUORS",]
       dat = dat[,!c("sunrise", "sunset", "dhour"), with = F]
@@ -141,6 +138,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
+#' @import data.table RODBC
 #' @export
 smartbuoy.fetch_burst <- function(deployment = NA,
                            parameters = NA,
@@ -181,11 +179,9 @@ smartbuoy.fetch_burst <- function(deployment = NA,
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggplot object
 #' @keywords esm2
+#' @import ggplot2 data.table RODBC
 #' @export
 smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
-    require(RODBC)
-    require(data.table)
-    require(ggplot2)
 
     smartbuoydb = odbcConnect(db_name)
     queryString = paste0("

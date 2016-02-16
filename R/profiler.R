@@ -17,6 +17,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords profiler ctd esm2 query
+#' @import data.table RODBC
 #' @export
 profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            after = NA, before = NA,
@@ -26,8 +27,6 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            min_QA_reached = TRUE,
                            privateData = FALSE,
                            db_name = 'smartbuoydblive'){
-    require(RODBC)
-    require(data.table)
         # boilerplate query start
     query = paste("SELECT (CAST([Start Time] AS NVARCHAR)) as startTime,",
               "[Start Time Offset (secs)] as offset,",
@@ -130,9 +129,9 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame of Cruise and instrument Id's
 #' @keywords profiler ctd esm2 query
+#' @import data.table RODBC
 #' @export
 profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
-    require(RODBC)
     query = paste("SELECT DISTINCT [CruiseId], [InstId] FROM [SmartBuoy].[dbo].[CtdHeader]",
                   "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
                   "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
@@ -152,9 +151,9 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @param db_name
 #'
 #' @return data.frame of headers
+#' @import data.table RODBC
 #' @export
 profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
-    require(RODBC)
     query = paste("SELECT [CruiseId], [InstId], [Latitude], [Longitude], [StartDate] FROM",
                   "[SmartBuoy].[dbo].[CtdHeader]",
                   "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
@@ -182,6 +181,7 @@ profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @param O2_trim if true the first measurement in each bin is dropped, this is to give the sensor time to respond
 #' @return character vector of Cruise Id's
 #' @keywords profiler ctd esm2 query
+#' @import data.table
 #' @export
 profiler.binning <- function(x, bin_height= 1,
                              method = round,
@@ -235,6 +235,7 @@ profiler.binning <- function(x, bin_height= 1,
 #' @param smartbuoy_db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return list containing matched data and regression ggplot
 #' @keywords profiler ctd ferrybox QA
+#' @import data.table
 #' @export
 profiler.match_ferrybox <- function(cruiseID = NA,
                                     parameters = c('TEMP'),
@@ -242,8 +243,6 @@ profiler.match_ferrybox <- function(cruiseID = NA,
                                     ferrybox_db_name = 'ferrybox',
                                     smartbuoy_db_name = 'smartbuoydblive'){
 
-    require(RODBC)
-    require(data.table)
     # matching first wet times >3.5m < 4.5 up to 1min mean, match to ferrybox
         # fetch profiler data
     ctd = profiler.fetch(cruiseID = cruiseID, parameters = parameters,

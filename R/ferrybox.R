@@ -14,17 +14,17 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords ferrybox query
+#' @import data.table RODBC
 #' @export
 ferrybox.fetch <- function(cruiseID = NA,
                            after = NA, before = NA,
                            area = NA,
                            parameters = c('TEMP', 'SAL', 'FTU', 'O2CONC'),
                            min_QA_reached = TRUE,
+                           most_recent = NA,
                            RQ0 = TRUE,
                            hull_temp_only = FALSE,
                            db_name = 'ferrybox'){
-    require(RODBC)
-    require(data.table)
         # boilerplate query start
     query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
               "[Cruise Id] as cruise,",
@@ -73,6 +73,10 @@ ferrybox.fetch <- function(cruiseID = NA,
         query = paste0(query, " AND [Date/Time] >= '", after, "'")
     }
 
+    if(!is.na(most_recent)){
+        query = paste0(query, " AND [Date/Time] = ( SELECT MAX([Date/Time]) FROM ferrybox.dbo.v_FerryBox_Data)")
+    }
+
         # if only RQ0 data is required build filter into query
     if(RQ0 == TRUE){
         query = paste0(query, " AND [Result - Quality] = 0")
@@ -117,14 +121,13 @@ ferrybox.fetch <- function(cruiseID = NA,
 #' @keywords ferrybox query
 #' @export
 ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
-    require(RODBC)
     query = "SELECT DISTINCT [CruiseId] FROM ConfigHeader"
     if(yr != 'ALL'){
         query = paste(query, ' WHERE YEAR([StartTime]) = ', yr, sep = '')
     }
-    sb = odbcConnect(db_name)
-    cruiseList = sqlQuery(sb, query)
-    odbcCloseAll()
+    sb = RODBC::odbcConnect(db_name)
+    cruiseList = RODBC::sqlQuery(sb, query)
+    RODBC::odbcCloseAll()
     return(as.vector(cruiseList))
 }
 
@@ -138,12 +141,12 @@ ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return data.frame (data.table) containing the ferrybox cruise track
+#' @import data.table RODBC
 #' @keywords ferrybox query
 #' @export
 ferrybox.position <- function(cruiseID = NA,
                               after = NA, before = NA,
                               db_name = 'ferrybox'){
-    require(RODBC)
         query = paste(
             "SELECT CruiseId, DataHeaderTime as dateTime,",
             "Latitude as latitude, Longitude as longitude,",
@@ -171,8 +174,8 @@ ferrybox.position <- function(cruiseID = NA,
 
     sb = odbcConnect(db_name)
     dat = sqlQuery(sb, query)
-    dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
     odbcCloseAll()
+    dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
     return(data.table(dat))
 }
 
