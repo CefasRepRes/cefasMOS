@@ -25,7 +25,6 @@ Other rarely used functions may require additional packages, install these later
 ```{r install, eval=F}
 install.packages("devtools")
 
-
 install.packages(c("ggplot2", "lubridate", "RODBC", "dygraphs", "data.table", "insol"))
 
 devtools::install_bitbucket("betascoo8/cefasmos")
@@ -55,4 +54,23 @@ lbdat = smartbuoy.fetch(deployment_group = "LIVBAY", after = "2014-01-01", param
 
   # save the data
 write.csv(lbdat, file = "lbdat.csv", row.names = F) # row names not needed
+```
+
+When pivoting (dcast), make sure to use the data.table version to preserve the data.table and for speed.
+from data.table v1.9.6 dcast is a S3 method, i.e. you can use `dcast` rather than `dcast.data.table`.
+When there are multiple measurements for the same parameter at the same dateTime we have two options.
+pass `fun.aggregate = mean` to average the values, for example take the mean temperature from the optode and FSI.
+Alternativlty we can keep the duplicates, but we need to add an identifiying column first.
+
+```{r data.table_pivot}
+wp = smartbuoy.fetch(deployment = "DOWSING/038", ct_temp_only = F)
+  # aggregation not specified so default "length" used.
+dcast.data.table(wp, dateTime + deployment ~ par, value.var = "value")
+
+  # taking the mean
+dcast.data.table(wp, dateTime + deployment ~ par, value.var = "value", fun.aggregate = mean)
+
+  # keeping the values
+wp[,sen := length(value), by = list(dateTime, deployment, par)]
+dcast.data.table(wp, dateTime + deployment + sen ~ par, value.var = "value")
 ```
