@@ -15,10 +15,9 @@
 #' @param pivot optional boolian indicating if returned table should be recast into 'wide' format
 #' @return data.frame
 #' @keywords ferrybox
+#' @import data.table
 #' @export
 read.ferrybox.devdata <- function(devdata_folder, pivot = F){
-    require(data.table)
-    require(reshape2)
 
     dat = data.table()
     for(fn in list.files(devdata_folder)){
@@ -68,10 +67,11 @@ read.ferrybox.devdata <- function(devdata_folder, pivot = F){
 #' @param conlog character string indicating device data file
 #' @return data.frame
 #' @keywords ferrybox conlog
+#' @import data.table
+#' @importFrom stringr str_extract
 #' @export
 read.ferrybox.conlog <- function(conlog){
 
-    require(stringr)
     conlog = fread(conlog)
     conlog[,Time := as.POSIXct(conlog$Time, format = '%m/%d/%Y %H:%M:%S', tz = 'UTC')]
     parameters = "Time|Sounder|WeatherPack|GPS_GLL|MRU_3axis"
@@ -86,9 +86,6 @@ read.ferrybox.conlog <- function(conlog){
 }
 
 read.profiler.ULP <- function(f){
-  require(reshape2)
-  require(data.table)
-
   lines = readLines(f)
 
   timeStamp = lines[max(grep("TIMESTAMP", lines))]
@@ -144,8 +141,8 @@ read.ULP000 <- function(file){
 #' @param recursive if true look in subfolders
 #' @param print_file if true filenames are printed as processed
 #' @return data.frame (data.table) of processed 10min files
+#' @import data.table
 #' @keywords ferrybox 10minfile
-#' @import zoo stringr pbapply
 #' @export
 read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
   # for(f in list.files(folder, recursive = T))
@@ -159,7 +156,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       d = read.table(f, sep = "\t", header = F, skip = dateLine + 1, fill = F)
       header1 = unlist(strsplit(ln[dateLine], "\t")) # split on tabs
       header1[header1 == ""] = NA # assign NA to blanks
-      header1 = na.locf(header1) # pull forward into blank rows
+      header1 = zoo::na.locf(header1) # pull forward into blank rows
       header2 = unlist(strsplit(ln[dateLine+1], "\t")) # split 2nd row, pad for date_time
       header = paste(header1, header2, sep = "~~") # combine headers
       colnames(d) = gsub("[^[:alnum:]~/]", "", header) # apply headers after removing bad chars
@@ -180,11 +177,11 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
   if(print_file){
     dat = lapply(list.files(folder, recursive = recursive), read_10min, print_file = T)
     print("now rbinding...")
-    dat = do.call("rbind", pblapply(dat, data.frame, stringsAsFactors = FALSE))
+    dat = do.call("rbind", pbapply:pblapply(dat, data.frame, stringsAsFactors = FALSE))
   }else{
-    dat = pblapply(list.files(folder, recursive = recursive), read_10min)
+    dat = pbapply::pblapply(list.files(folder, recursive = recursive), read_10min)
     print("now rbinding...")
-    dat = do.call("rbind", pblapply(dat, data.frame, stringsAsFactors = FALSE))
+    dat = do.call("rbind", pbapply::pblapply(dat, data.frame, stringsAsFactors = FALSE))
   }
 
   return(data.table(dat))
@@ -200,15 +197,14 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
 #' @keywords smartbuoy esm2
 #' @import ggplot2
 #' @export
-read.SmartBuoyLiveAquireExport <- function(file = dlgOpen(title = 'Open LiveAquire file...')$res){
+read.SmartBuoyLiveAquireExport <- function(file = svDialogs::dlgOpen(title = 'Open LiveAquire file...')$res){
   warning("This tool can not be considered 'robust'!")
-   # stringr svDialogs data.table reshape2
     x = fread(file)     # read in file
     x = x[,lapply(.SD, as.numeric)]     # convert all columns to numeric
     x = melt(x, id.vars = 'Seconds Elapsed')
     setnames(x, 'Seconds Elapsed', 'time')
-    x[,depth := as.numeric(str_extract(variable, '\\d+.\\d(?=m)')), by = variable]
-    x[,serial := str_extract(variable, '\\d+(?=,)'), by = variable]
+    x[,depth := as.numeric(stringr::str_extract(variable, '\\d+.\\d(?=m)')), by = variable]
+    x[,serial := stringr::str_extract(variable, '\\d+(?=,)'), by = variable]
     x[,channel := unlist(strsplit(as.character(variable), split = ':', fixed = T))[1], by = variable]
     x[,subchannel := unlist(strsplit(as.character(channel), split = '.', fixed = T))[2], by = variable]
     x[,par := unlist(strsplit(as.character(variable), split = ' ', fixed = T))[2], by = variable]
@@ -226,7 +222,7 @@ read.SmartBuoyLiveAquireExport <- function(file = dlgOpen(title = 'Open LiveAqui
 #' @param x one or more files captured from liveaquire
 #' @param channels_table
 #' @return processed data table
-#' @import stringr data.table
+#' @import data.table
 #' @export
 #'
 read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 1, 6),
@@ -238,7 +234,7 @@ read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 
     if(!any(str_detect(ln, "(\\d[as]\\d\\w{3})"))){
       warning(paste("no data found in file ", file, "skipping...")); return(NULL)
       }
-    ex = str_extract_all(ln, "(\\d[as]\\d\\w{3})")
+    ex = stringr::str_extract_all(ln, "(\\d[as]\\d\\w{3})")
     ticks = 1:length(ex[lapply(ex, length) >0]) # number of lines where values
     ex = unlist(ex)
     dat = data.table("tick" = 1:length(ex), "reading" = ex)
@@ -271,11 +267,11 @@ read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 
 #'
 #' @return data.frame (data.table)
 #' @export
+#' @importFrom stringr str_extract_all str_extract
 #' @usage
 #' x = lapply(list.files(folder, full.names = T, pattern = "*.lst"), read.BODC_ctd_asci)
 #' d = rbindlist(x, fill = T)
 read.BODC_ctd_ascii <- function(file, stripAgg = T){
-  require(stringr)
   ln = readLines(file, warn = F)
   dataStart = max(grep("Cycle", ln))
   id = ln[min(grep("Id ", ln))]
