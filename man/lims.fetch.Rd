@@ -6,13 +6,6 @@
 \usage{
 lims.fetch(parameters = "SAL", cruise = NA, db_name = "lims")
 }
-\arguments{
-\item{parameters}{}
-
-\item{cruise}{}
-
-\item{db_name}{}
-}
 \value{
 data frame (data.table) of extracted nutrients data
 }

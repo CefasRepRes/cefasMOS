@@ -7,8 +7,6 @@
 lims.cruiselist(yr = "ALL", db_name = "lims")
 }
 \arguments{
-\item{yr}{}
-
 \item{db_name}{}
 }
 \value{

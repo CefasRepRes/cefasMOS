@@ -7,8 +7,6 @@
 lims.fetch.historic(parameters = "SAL", db_name = "lims")
 }
 \arguments{
-\item{parameters}{}
-
 \item{db_name}{}
 }
 \value{

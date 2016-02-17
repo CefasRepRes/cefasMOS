@@ -4,7 +4,7 @@
 \alias{read.SmartBuoyLiveAquireExport}
 \title{SmartBuoy live aquire export reader}
 \usage{
-read.SmartBuoyLiveAquireExport(file = dlgOpen(title =
+read.SmartBuoyLiveAquireExport(file = svDialogs::dlgOpen(title =
   "Open LiveAquire file...")$res)
 }
 \arguments{
