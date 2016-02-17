@@ -20,7 +20,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       ct_temp_only = TRUE,
                       style = 'dygraph',
                       include_telemetry = TRUE,
-                      night_flu_only = TRUE,
+                      night_flu_only = FALSE,
                       db_name = 'smartbuoydblive'){
 
     if(length(parcode) > 1 & style == 'dygraph'){
