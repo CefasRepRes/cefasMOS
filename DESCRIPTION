@@ -1,29 +1,29 @@
 Package: cefasMOS
-Title: Provides tools for Cefas MOS data activities
-Version: 0.1
+Title: Provides tools for Cefas MOS activities
+Version: 0.2
 Date: 2015-04-15
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
-Description: Provides tools for Cefas MOS data activities
+Description: Provides tools for Cefas MOS activities
 Depends:
     R (>= 3.0.0),
     data.table (>= 1.9.5),
-Imports:
     ggplot2,
     reshape2,
+Imports:
+    lubridate,
     RColorBrewer,
     dygraphs,
     xts,
     stringr,
     svDialogs,
-    lubridate,
-Suggests:
     RODBC,
     mapdata,
     raster,
     rgdal,
-    ggmap,,
+    ggmap,
     knitr,
-    rmarkdown
+    rmarkdown,
+Suggests:
 License: GPL-2
 RoxygenNote: 5.0.1
 VignetteBuilder: knitr
