@@ -31,7 +31,7 @@ read.ferrybox.devdata <- function(devdata_folder, pivot = F){
         param = colnames(d)[2]
         d = d[-1, c('$Timestamp', param, 'Quality', 'Variance', 'MeasCount', 'Longitude', 'Latitude'), with = F]
         setnames(d, c('$Timestamp', param, 'Quality', 'Variance', 'MeasCount', 'Longitude', 'Latitude'),
-                 c('dateTime', 'value', 'quality', 'variance', 'count', 'lat', 'lon'))
+                 c('dateTime', 'value', 'quality', 'variance', 'count', 'lon', 'lat'))
         d$sensor = sensor
         d$param = param
         dat = rbind(dat, d)
