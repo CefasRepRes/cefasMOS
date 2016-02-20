@@ -171,15 +171,21 @@ bathymap <- function(lat, lon, bathy_file = NA){
 
 #' Convert degrees + decimal minutes to decimal degrees
 #'
-#' @param degrees
+#' @param degrees if negative will convert
 #' @param decimal_minutes
+#' @param polarity optional "E, W, N, S"
 #'
 #' @return decimal degrees
 #' @export
-convert_latlong <- function(degrees, decimal_minutes){
-  if(degrees < 0){
-    decimal_minutes = decimal_minutes * -1
+convert_latlong <- function(degrees, decimal_minutes, polarity = NA){
+  degrees = as.numeric(degrees)
+  decimal_minutes = as.numeric(decimal_minutes)
+  # if(is.na(degrees) | is.na(decimal_minutes)){return(NA)}
+  if((min(degrees, na.rm = T) < 0) & !is.na(polarity[1])){
+    stop("polarity supplied for negative decimal value")
   }
+  decimal_minutes[degrees < 0 & !is.na(degrees)] = decimal_minutes[degrees < 0 & !is.na(degrees)] * -1
   decimal_degrees = (degrees + decimal_minutes/60)
+  decimal_degrees[grepl("[sSwW]", polarity)] = decimal_degrees[grep("[sSwW]", polarity)] * -1 # apply polarity
   return(decimal_degrees)
 }

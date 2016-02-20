@@ -4,10 +4,12 @@
 \alias{convert_latlong}
 \title{Convert degrees + decimal minutes to decimal degrees}
 \usage{
-convert_latlong(degrees, decimal_minutes)
+convert_latlong(degrees, decimal_minutes, polarity = NA)
 }
 \arguments{
-\item{decimal_minutes}{}
+\item{degrees}{if negative will convert}
+
+\item{polarity}{optional "E, W, N, S"}
 }
 \value{
 decimal degrees
