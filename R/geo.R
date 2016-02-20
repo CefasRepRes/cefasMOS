@@ -93,8 +93,8 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F, maptype = "satellite"){
     ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8, 4, 2), range = c(120, 60, 30, 14, 8, 4, 2, 1))
     if(zoom_to_group == TRUE){
-        centre.lat = mean(range(lat))
-        centre.lon = mean(range(lon))
+        centre.lat = mean(range(lat, na.rm = T))
+        centre.lon = mean(range(lon, na.rm = T))
         max.range = max(diff(range(lon)), diff(range(lat)))
         # add 10% buffer
         max.range = max.range
