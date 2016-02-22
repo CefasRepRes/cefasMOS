@@ -147,3 +147,29 @@ ydaytime <- function(x){
   r = (n - o) / (60 * 60 * 24)
   return(r)
 }
+
+
+#' Fast fuzzy dateTime matcher
+#' j
+#' @details finded closest timestamp in `reference`.
+#'
+#' @param dat data.table of variables you want to look up, must contain a POSIXct "dateTime" column
+#' @param reference  data.table of variable you want to search against, must contain a POSIXct "dateTime" column
+#' @param varname  column name in `reference` you want to add to `dat`
+#' @param max_dT integer value in seconds for maximum permissible gap between lookup value
+#'
+#' @return dat data.table with added variable column and dateTimes from `reference`
+#' @import data.table
+#' @export
+#'
+dTmatch <- function(dat, reference, varname, max_dT = Inf){
+
+  setkey(reference, dateTime)
+  i = reference[dat, varname, by = dateTime, roll = "nearest", with = F]
+  d = reference[dat, "dateTime", by = dateTime, roll = "nearest", with = F]
+
+  # update `data` by reference
+  dat[, varname := indx, with = F]
+  dat[, "dT" := d]
+  return(copy(dat[ abs(dateTime - dT) < max_dT ]))
+}

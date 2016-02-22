@@ -3,6 +3,7 @@
 export(bathymap)
 export(calc_sal)
 export(convert_latlong)
+export(dTmatch)
 export(ferrybox.cruiselist)
 export(ferrybox.errorcode)
 export(ferrybox.fetch)
