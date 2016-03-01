@@ -27,7 +27,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                            night_flu_only = FALSE,
                            db_name = 'smartbuoydblive'){
 
-    if(min_QA_reached == TRUE){
+    if(min_QA_reached == TRUE & RQ0 == TRUE){
         # boilerplate query start
         query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
                   "[Deployment Id] as deployment,",
@@ -103,8 +103,8 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     }
 
     if(night_flu_only & "FLUORS" %in% parameters){
-      dat[, sunrise := as.data.frame(insol::daylength(lat, lon, daydoy(dateTime), 0))$sunrise]
-      dat[, sunset := as.data.frame(insol::daylength(lat, lon, daydoy(dateTime), 0))$sunset]
+      dat[, sunrise := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunrise]
+      dat[, sunset := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunset]
       dat[, dhour := hour(dateTime) + (minute(dateTime)/60)]
       dat = dat[(par == "FLUORS" & (dhour < sunrise | dhour > sunset)) | par != "FLUORS",]
       dat = dat[,!c("sunrise", "sunset", "dhour"), with = F]
