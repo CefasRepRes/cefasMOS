@@ -231,7 +231,7 @@ read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 
                                                                     offset = c(0, 0, 0))){
   rlaq <- function(file, channels_table){
     ln = readLines(file, warn = F)
-    if(!any(str_detect(ln, "(\\d[as]\\d\\w{3})"))){
+    if(!any(stringr::str_detect(ln, "(\\d[as]\\d\\w{3})"))){
       warning(paste("no data found in file ", file, "skipping...")); return(NULL)
       }
     ex = stringr::str_extract_all(ln, "(\\d[as]\\d\\w{3})")
