@@ -169,7 +169,7 @@ dTmatch <- function(dat, reference, varname, max_dT = Inf){
   d = reference[dat, "dateTime", by = dateTime, roll = "nearest", with = F]
 
   # update `data` by reference
-  dat[, varname := indx, with = F]
+  dat[, varname := i, with = F]
   dat[, "dT" := d]
-  return(copy(dat[ abs(dateTime - dT) < max_dT ]))
+  return(copy(dat[ abs(as.numeric(dateTime) - as.numeric(dT)) < max_dT ]))
 }
