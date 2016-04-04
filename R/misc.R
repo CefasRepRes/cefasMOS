@@ -108,24 +108,28 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 
 #' Find mixed layer depth
 #'
-#' @param d
-#' @param p
+#' @description  simple threshold technique, mld where p +/- 0.125 of surface p
+#' @details returns max depth is no stratification found
+#' @param depth
+#' @param density
 #' @param threshold
 #'
 #' @return mld
 #' @import data.table
 #' @export
-findMLD <- function(d, p, threshold = 0.125){
-  # simple threshold technique, mld where p +/- 0.125 of surface p
+findMLD <- function(depth, density, threshold = 0.125){
 
-  bottom = p[d == max(d)][1] # density at max d
-  top = p[d == min(d)][1]
+  if(anyNA(depth)){ warning("NA's found in depth record") }
+  if(anyNA(density)){ warning("NA's found in density record") }
+
+  bottom = density[match(max(depth, na.rm = T), depth)] # density at max depth
+  top = density[match(min(depth, na.rm = T), depth)] # density at min depth
 
   # done this way as some dips have min density !@ surface
   if(abs(top - bottom) > threshold){ # is there strat?
-    return(min(d[abs(p - top) > threshold]))
+    return(min(depth[abs(density - top) > threshold], na.rm = T))
   }else{
-    return(0) # fully mixed
+    return(max(depth, na.rm = T)) # fully mixed
   }
 }
 

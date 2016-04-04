@@ -4,7 +4,7 @@
 \alias{findMLD}
 \title{Find mixed layer depth}
 \usage{
-findMLD(d, p, threshold = 0.125)
+findMLD(depth, density, threshold = 0.125)
 }
 \arguments{
 \item{threshold}{}
@@ -13,6 +13,9 @@ findMLD(d, p, threshold = 0.125)
 mld
 }
 \description{
-Find mixed layer depth
+simple threshold technique, mld where p +/- 0.125 of surface p
+}
+\details{
+returns max depth is no stratification found
 }
 
