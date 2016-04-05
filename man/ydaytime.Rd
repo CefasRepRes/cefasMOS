@@ -4,16 +4,19 @@
 \alias{ydaytime}
 \title{yday with decimal time}
 \usage{
-ydaytime(x)
+ydaytime(x, from = "year")
 }
 \arguments{
 \item{x}{as POSIXct vector}
+
+\item{from}{either "year" or "start" see details. "year is default"}
 }
 \value{
 numeric vector of day of the year with decimal time
 }
 \description{
-converts POSIXct to day of year with decimal time.
+converts POSIXct to decimal day of year with decimal time.
+ or optionally, decimal day since start
 }
 \details{
 The first day of the year is treated as zero, i.e. midday on Jan 1st will return 0.5.
