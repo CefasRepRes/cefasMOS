@@ -170,21 +170,28 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       colnames(d) = gsub("~~[[:alnum:]]*", "", colnames(d))
       d = na.omit(d)
       d = dcast.data.table(d, ... ~ stat, value.var = "value")
-      return(d)
+      return(data.frame(d))
     }
+  }
+  rbind.named.fill <- function(x) {
+    nam <- sapply(x, names)
+    unam <- unique(unlist(nam))
+    len <- sapply(x, length)
+    out <- vector("list", length(len))
+    for (i in seq_along(len)) {
+      out[[i]] <- unname(x[[i]])[match(unam, nam[[i]])]
+    }
+    setNames(as.data.frame(do.call(rbind, out), stringsAsFactors=FALSE), unam)
   }
 
   if(print_file){
     dat = lapply(list.files(folder, recursive = recursive), read_10min, print_file = T)
-    print("now rbinding...")
-    dat = do.call("rbind", pbapply::pblapply(dat, data.frame, stringsAsFactors = FALSE))
+    dat = rbindlist(dat, fill = T)
   }else{
     dat = pbapply::pblapply(list.files(folder, recursive = recursive), read_10min)
-    print("now rbinding...")
-    dat = do.call("rbind", pbapply::pblapply(dat, data.frame, stringsAsFactors = FALSE))
+    dat = rbindlist(dat, fill = T)
   }
-
-  return(data.table(dat))
+  return(dat)
 }
 
 #' SmartBuoy live aquire export reader

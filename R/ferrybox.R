@@ -234,7 +234,7 @@ ferrybox.speed <- function(dateTime, lat, lon, threshold = 120){
 #' @export
 #'
 ferrybox.heading <- function(dateTime, lat, lon, threshold = 120){
-  dat = data.table(dateTime, lat, lon)[order(dateTime)]
+  dat = data.table(dateTime, lat, lon)
   dat[, diff := c(NA, diff(dateTime))]
   dat[, lats := data.table::shift(dat$lat, type = "lag")]
   dat[, lons := data.table::shift(dat$lon, type = "lag")]
