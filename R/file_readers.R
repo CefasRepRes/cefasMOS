@@ -177,7 +177,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
   if(print_file){
     dat = lapply(list.files(folder, recursive = recursive), read_10min, print_file = T)
     print("now rbinding...")
-    dat = do.call("rbind", pbapply:pblapply(dat, data.frame, stringsAsFactors = FALSE))
+    dat = do.call("rbind", pbapply::pblapply(dat, data.frame, stringsAsFactors = FALSE))
   }else{
     dat = pbapply::pblapply(list.files(folder, recursive = recursive), read_10min)
     print("now rbinding...")
