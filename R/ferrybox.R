@@ -201,3 +201,45 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
   return(out)
 }
 
+#' calculate speed from GPS
+#'
+#' @param dateTime in POSIXct
+#' @param lat in decimal degrees
+#' @param lon
+#' @param threshold maximum time interval between gps points (seconds)
+#'
+#' @return vector of speeds
+#' @export
+#'
+ferrybox.speed <- function(dateTime, lat, lon, threshold = 120){
+  dat = data.table(dateTime, lat, lon)
+  dat[, diff := c(NA, diff(dateTime))]
+  dat[, lats := data.table::shift(dat$lat, type = "lag")]
+  dat[, lons := data.table::shift(dat$lon, type = "lag")]
+  dat[, dist := geosphere::distHaversine(cbind(lons, lats), cbind(lon, lat))]
+  dat[, speed := (dist / diff) / 0.51444] # knots
+  dat[diff > threshold | speed > 22, speed := NA]
+  return(dat$speed)
+}
+
+
+#' Calculate heading from GPS
+#'
+#' @param dateTime in POSIXct
+#' @param lat in decimal degrees
+#' @param lon
+#' @param threshold maximum time interval between gps points (seconds)
+#'
+#' @return vector of headings
+#' @export
+#'
+ferrybox.heading <- function(dateTime, lat, lon, threshold = 120){
+  dat = data.table(dateTime, lat, lon)[order(dateTime)]
+  dat[, diff := c(NA, diff(dateTime))]
+  dat[, lats := data.table::shift(dat$lat, type = "lag")]
+  dat[, lons := data.table::shift(dat$lon, type = "lag")]
+  dat[, heading := geosphere::bearing(cbind(lons, lats), cbind(lon, lat))]
+  dat[diff >= threshold, heading := NA]
+  return(dat$heading)
+}
+
