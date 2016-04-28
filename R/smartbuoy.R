@@ -149,10 +149,12 @@ smartbuoy.fetch_burst <- function(deployment = NA,
     parameters_fetch = paste0("('", paste(parameters, collapse = "', '"),"')")
     # stuff
         query = paste(
-            "SELECT (CAST([ResultTime] AS NVARCHAR)) as dateTime,",
+            "SELECT [ResultTime] as dateTime,",
             "BurstNumber, ResultFlag, ResultQuality,",
-            "SerialNumber as serial," ,
-            "ResultValue as Value" ,
+            "SerialNumber as serial,",
+            "Parcode as parameter,",
+            "ResultValue,",
+            "ResultValueQA",
                   "FROM", deptable,
             "INNER JOIN [dbo].[DeploymentSensor]",
             "ON", depJoinQuery,
@@ -162,12 +164,12 @@ smartbuoy.fetch_burst <- function(deployment = NA,
             "ORDER BY [ResultTime]" )
     print(query)
     sb = odbcConnect(db_name)
-    dat = data.table(sqlQuery(sb, query))
+    dat = data.table(sqlQuery(sb, query, as.is = T))
     odbcCloseAll()
-    dat[,mean := mean(Value), by = BurstNumber]
-    dat[,sd:= sd(Value), by = BurstNumber]
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%Y-%m-%d %H:%M:%S", tz="UTC")
+    dat[, ResultValue := as.numeric(ResultValue)]
+    dat[, ResultValueQA := as.numeric(ResultValueQA)]
     return(dat)
-    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
 }
 
 #' SmartBuoy T/S plots
