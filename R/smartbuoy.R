@@ -149,7 +149,7 @@ smartbuoy.fetch_burst <- function(deployment = NA,
     parameters_fetch = paste0("('", paste(parameters, collapse = "', '"),"')")
     # stuff
         query = paste(
-            "SELECT ResultTime as dateTime,",
+            "SELECT (CAST([ResultTime] AS NVARCHAR)) as dateTime,",
             "BurstNumber, ResultFlag, ResultQuality,",
             "SerialNumber as serial," ,
             "ResultValue as Value" ,
