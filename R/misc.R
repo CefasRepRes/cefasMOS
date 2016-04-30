@@ -1,3 +1,24 @@
+#' Round dateTime to x minutes
+#'
+#' @param x
+#' @param minutes
+#'
+#' @return
+#' @export
+round_minute <- function(x, minutes = 30){
+  rt = minutes * 60
+  if(lubridate::is.POSIXct(x)){
+    return(
+      as.POSIXct(round(as.numeric(x)/rt)*rt,
+                 origin = "1970-01-01", tz = "UTC")
+    )
+
+  }else{
+    stop("x is not POSIXct!")
+  }
+}
+
+
 # TODO vectorise me!
 #' ftu from ADC
 #'
@@ -113,11 +134,12 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' @param depth
 #' @param density
 #' @param threshold
+#' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #'
 #' @return mld
 #' @import data.table
 #' @export
-findMLD <- function(depth, density, threshold = 0.125){
+findMLD <- function(depth, density, threshold = 0.125, surface = T){
 
   if(anyNA(depth)){ warning("NA's found in depth record") }
   if(anyNA(density)){ warning("NA's found in density record") }
@@ -125,13 +147,24 @@ findMLD <- function(depth, density, threshold = 0.125){
   bottom = density[match(max(depth, na.rm = T), depth)] # density at max depth
   top = density[match(min(depth, na.rm = T), depth)] # density at min depth
 
-  # done this way as some dips have min density !@ surface
-  if(abs(top - bottom) > threshold){ # is there strat?
-    return(min(depth[abs(density - top) > threshold], na.rm = T))
-  }else{
-    return(max(depth, na.rm = T)) # fully mixed
+  if(surface == T){
+    # done this way as some dips have min density !@ surface
+    if(abs(top - bottom) > threshold){ # is there strat?
+      return(min(depth[abs(density - top) > threshold], na.rm = T))
+    }else{
+      return(max(depth, na.rm = T)) # fully mixed
+    }
+  }
+  if(surface == F){
+    # done this way as some dips have min density !@ surface
+    if(abs(top - bottom) > threshold){ # is there strat?
+      return(max(depth[abs(density - bottom) > threshold], na.rm = T))
+    }else{
+      return(max(depth, na.rm = T)) # fully mixed
+    }
   }
 }
+
 
 #' yday with decimal time
 #'

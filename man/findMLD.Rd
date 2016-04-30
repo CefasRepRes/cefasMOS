@@ -4,10 +4,10 @@
 \alias{findMLD}
 \title{Find mixed layer depth}
 \usage{
-findMLD(depth, density, threshold = 0.125)
+findMLD(depth, density, threshold = 0.125, surface = T)
 }
 \arguments{
-\item{threshold}{}
+\item{surface}{default is true, set to false for bottom mixed layer threshold (base of gradient)}
 }
 \value{
 mld
