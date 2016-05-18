@@ -122,11 +122,12 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @param bathy_file
 #'
 #' @return ggplot
-#' @import ggplot2
+#' @import ggplot2 mapdata
 #' @export
 #'
 bathymap <- function(lat, lon, bathy_file = NA){
     # stuff
+  require(mapdata)
     # ? require rgdal
     # should build bathymap which fits all data in
   if(is.na(bathy_file)){
@@ -152,7 +153,7 @@ bathymap <- function(lat, lon, bathy_file = NA){
   # crop
   bathy = bathy[lon > min(xlim) & lon < max(xlim) &
           lat > min(ylim) & lat < max(ylim)]
-  coast = mapdata::map_data('worldHires', xlim = xlim, ylim = ylim)
+  coast = ggplot2::map_data('worldHires', xlim = xlim, ylim = ylim)
 
   # make geom
   bathy_raster = geom_raster(data = bathy, aes(lon, lat, fill = label))
