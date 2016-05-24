@@ -289,3 +289,54 @@ profiler.match_ferrybox <- function(cruiseID = NA,
 
     return(list(data = matched, plot = plt))
 }
+
+#' Estimate Kd from profile
+#'
+#' @description Estimates Kd PAR from downwelling PAR and depth using log par method.
+#' @param depth
+#' @param par
+#'
+#' @return kd (m-1)
+#' @export
+profiler.kd <- function(depth, par){
+  #
+  lm(log(par)~depth)$coefficients[2]
+}
+
+
+#' Estimate optical depths from PAR profile
+#'
+#' @param depth
+#' @param par
+#'
+#' @return vector of optical depth zone for each depth
+#' @export
+profiler.odz <- function(depth, par){
+  kd <- meankd(depth, par)
+  odstart <- 0.1
+  odstep <- 1
+  odmax <- min(depth)*kd
+  ztop = odstart/kd
+  inc = abs(odstep/kd)
+  brks <- c(0,seq(ztop,max(abs(depth)),inc),999)
+  cut(abs(depth),brks,labels = 1:(length(brks)-1)-1)
+}
+
+
+#' estimate euphotic depth from PAR profile
+#'
+#' @param depth
+#' @param par
+#' @param surf_par if not supplied attempts to find PAR at 0m depth
+#'
+#' @return euphotic depth (m)
+#' @export
+profiler.eu_depth <- function(depth, par, surf_par = NA){
+  # 1 % of surface value
+  if(is.na(surf_par)){
+    surf_par = mean(par[depth < 0.1 & depth > -0.1])
+  }
+  if(is.nan(surf_par)){stop("no surface PAR detected")}
+  depth[par <= (surf_par/100)]
+}
+
