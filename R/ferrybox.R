@@ -179,7 +179,6 @@ ferrybox.position <- function(cruiseID = NA,
     return(data.table(dat))
 }
 
-
 #' Ferrybox error codes
 #'
 #' @param x error code
@@ -188,9 +187,7 @@ ferrybox.position <- function(cruiseID = NA,
 #' @return codes used in composite
 #' @export
 ferrybox.errorcode <- function(x, collapse_vector = T){
-  if(!exists("cds_table")){
-    data("cds_table")
-  }
+  # devtools::use_data(cds_table, internal = T)
   x = as.character(x)
   if(collapse_vector){
     out = unlist(lapply(cds_table[x], paste, collapse = "; "), use.names = F)
@@ -200,6 +197,7 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
   }
   return(out)
 }
+
 
 #' calculate speed from GPS
 #'
@@ -211,35 +209,45 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
 #' @return vector of speeds
 #' @export
 #'
-ferrybox.speed <- function(dateTime, lat, lon, threshold = 120){
+ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
   dat = data.table(dateTime, lat, lon)
-  dat[, diff := c(NA, diff(dateTime))]
+  dat[, diff := c(NA, diff(as.numeric(dateTime)))]
   dat[, lats := data.table::shift(dat$lat, type = "lag")]
   dat[, lons := data.table::shift(dat$lon, type = "lag")]
   dat[, dist := geosphere::distHaversine(cbind(lons, lats), cbind(lon, lat))]
   dat[, speed := (dist / diff) / 0.51444] # knots
   dat[diff > threshold | speed > 22, speed := NA]
+  dat[lats == lat & lons == lon, speed := NA]
   return(dat$speed)
 }
 
 
-#' Calculate heading from GPS
+#' Calculate course from GPS
 #'
 #' @param dateTime in POSIXct
 #' @param lat in decimal degrees
 #' @param lon
 #' @param threshold maximum time interval between gps points (seconds)
 #'
-#' @return vector of headings
+#' @return vector of courses
 #' @export
 #'
-ferrybox.heading <- function(dateTime, lat, lon, threshold = 120){
+ferrybox.course <- function(dateTime, lat, lon, threshold = 65){
   dat = data.table(dateTime, lat, lon)
-  dat[, diff := c(NA, diff(dateTime))]
+  dat[, diff := c(NA, diff(as.numeric(dateTime)))] #ensure we're talking about seconds
   dat[, lats := data.table::shift(dat$lat, type = "lag")]
   dat[, lons := data.table::shift(dat$lon, type = "lag")]
-  dat[, heading := geosphere::bearing(cbind(lons, lats), cbind(lon, lat))]
-  dat[diff >= threshold, heading := NA]
-  return(dat$heading)
+  dat[, course := geosphere::bearing(cbind(lons, lats), cbind(lon, lat))]
+  dat[diff >= threshold, course := NA]
+  dat[lats == lat & lons == lon, course := NA]
+  dat[course < 0, course := course + 360] # geosphere method goes 0 to 180/-180 rather than 360
+  return(dat$course)
 }
+
+
+# telids
+# 1098 = optode temp
+# 1190 = seabird temp
+# 2001 = ph temp
+# 2064 = ADAM PRT
 
