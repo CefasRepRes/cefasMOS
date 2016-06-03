@@ -76,6 +76,43 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
     return(list(map = mp, data = d))
 }
 
+#' Deployment Map
+#'
+#' Creates a map of MOS deployment sites
+#'
+#' @details 1 for SmartBuoy, 4 = Lander, 8 = Waverider
+#' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
+#' @return data.table of positions
+#' @keywords SmartBuoy
+#' @import data.table RODBC
+#' @export
+smartbuoy.positions <- function(db_name = 'smartbuoydblive'){
+    sbdb = odbcConnect(db_name)
+
+    pos_query = paste("SELECT
+                      Deployment.[DepLocLat] as lat, Deployment.[DepLocLong] as long,
+                      Deployment.[DepGroupId] as groupId, Deployment.[DepDateFrom] as dateFrom,
+                      Deployment.[DepDateTo] as dateTo, Deployment.[DepDescr] as description,
+                      Deployment.[DepId] as dep, Platform.[PlatformId] as platformId,
+                      Platform.[PlatformTypeId] as platform
+                      FROM Deployment INNER JOIN Platform ON Deployment.PlatformId=Platform.PlatformId ")
+    d = data.table(sqlQuery(sbdb, pos_query))
+    odbcCloseAll()
+
+    d = d[platform %in% c(1, 4, 8)] # remove non-standard deployments
+    d = d[!(groupId %in% c('LOWTEST', 'ESM2TEST'))] # remove test deployments
+    d = d[,list(lat = median(lat), lon = median(long),
+                dateTo = max(dateTo), dateFrom = min(dateFrom),
+                platform = platform[1]), by = groupId] # group by deployment
+    d$active = "inactive"
+    d$active[d$dateTo > lubridate::now()] = "active"
+
+    d[platform == 1, platformName := 'SmartBuoy']
+    d[platform == 4, platformName := 'Lander']
+    d[platform == 8, platformName := 'Waverider']
+    return(d[,.(deployment = groupId, lat, lon, dateFrom, dateTo, platform = platformName, active)])
+}
+
 #' fetch localised ggmap
 #'
 #' Creates a base map centred and scaled
@@ -120,12 +157,13 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @param lat
 #' @param lon
 #' @param bathy_file
+#' @param breaks
 #'
 #' @return ggplot
 #' @import ggplot2 mapdata
 #' @export
 #'
-bathymap <- function(lat, lon, bathy_file = NA){
+bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
     # stuff
   require(mapdata)
     # ? require rgdal
@@ -144,11 +182,16 @@ bathymap <- function(lat, lon, bathy_file = NA){
   centre.lon = mean(range(lon))
   max.range = max(diff(range(lon)), diff(range(lat)))
   xlim = c(centre.lon - (max.range / 2), centre.lon + (max.range / 2))
-  ylim = c(centre.lat- (max.range / 2), centre.lat+ (max.range / 2))
+  ylim = c(centre.lat - (max.range / 2), centre.lat+ (max.range / 2))
 
   # classify
-  bathy$label = raster::cut(bathy$depth, breaks = c(1, -25, -50, -100, -200, -5000),
-                    labels = rev(c('<25','25-50','50-100','100-200','>200')))
+  if(breaks == T){
+    bathy$label = raster::cut(bathy$depth, breaks = c(1, -25, -50, -100, -200, -5000),
+                      labels = rev(c('<25','25-50','50-100','100-200','>200')))
+  }else{
+    bathy$label = bathy$depth*-1
+    bathy$label[bathy$label < 0] = 0
+  }
 
   # crop
   bathy = bathy[lon > min(xlim) & lon < max(xlim) &
@@ -161,12 +204,17 @@ bathymap <- function(lat, lon, bathy_file = NA){
   coast.poly <- geom_polygon(data=coast, aes(x=long, y=lat, group=group), colour= "#999999", fill="#999999", lwd=0.2)
   coast.outline <- geom_path(data=coast, aes(x=long, y=lat, group=group), colour= "#999999", lwd=0.2)
 
-  colorNum = length(unique(bathy$label))
 
   mp = ggplot() + bathy_raster + coast.poly + coast.outline +
       coord_quickmap(xlim, ylim) +
-      scale_fill_manual(values = rev( RColorBrewer::brewer.pal(colorNum, "Blues")), name='depth') +
-      labs(x = 'Longitude', y = 'Latitude')
+      labs(x = '', y = '')
+  if(breaks == T){
+    colorNum = length(unique(bathy$label))
+    mp = mp +  scale_fill_manual(values = rev( RColorBrewer::brewer.pal(colorNum, "Blues")), name='depth')
+  }else{
+    mp = mp +  scale_fill_gradient(name = "depth", high = "#132B43", low = "#56B1F7")
+  }
+  mp = mp + theme_bw()
   return(mp)
 }
 
