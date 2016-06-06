@@ -4,10 +4,10 @@
 \alias{bathymap}
 \title{GEBCO Bathimity base map}
 \usage{
-bathymap(lat, lon, bathy_file = NA)
+bathymap(lat, lon, bathy_file = NA, breaks = T)
 }
 \arguments{
-\item{bathy_file}{}
+\item{breaks}{}
 }
 \value{
 ggplot

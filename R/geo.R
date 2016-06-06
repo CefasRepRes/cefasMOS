@@ -196,7 +196,7 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
   # crop
   bathy = bathy[lon > min(xlim) & lon < max(xlim) &
           lat > min(ylim) & lat < max(ylim)]
-  coast = ggplot2::map_data('worldHires', xlim = xlim, ylim = ylim)
+  coast = ggplot2::map_data('worldHires', region = c("UK", "IRELAND", "FRANCE"))
 
   # make geom
   bathy_raster = geom_raster(data = bathy, aes(lon, lat, fill = label))
@@ -210,11 +210,13 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
       labs(x = '', y = '')
   if(breaks == T){
     colorNum = length(unique(bathy$label))
-    mp = mp +  scale_fill_manual(values = rev( RColorBrewer::brewer.pal(colorNum, "Blues")), name='depth')
+    mp = mp +  scale_fill_manual(values = rev( RColorBrewer::brewer.pal(colorNum, "Blues")), name='Depth')
   }else{
-    mp = mp +  scale_fill_gradient(name = "depth", high = "#132B43", low = "#56B1F7")
+    mp = mp +  scale_fill_gradient(name = "Depth", high = "#132B43", low = "#56B1F7")
   }
-  mp = mp + theme_bw()
+  mp = mp + theme_bw() +
+    scale_x_continuous(expand=c(0, 0)) +
+    scale_y_continuous(expand=c(0, 0))
   return(mp)
 }
 
