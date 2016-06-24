@@ -217,3 +217,11 @@ dTmatch <- function(dat, reference, varname, max_dT = Inf){
   dat[, "dT" := d]
   return(copy(dat[ abs(as.numeric(dateTime) - as.numeric(dT)) < max_dT ]))
 }
+
+update_telid <- function(){
+  query = "SELECT [TelemetrySensorType] ,[TelemetrySensorDescr] FROM [SmartBuoy].[dbo].[TelemetrySensorType] ORDER BY [TelemetrySensorType]"
+  sb = RODBC::odbcConnect("smartbuoydblive")
+  telids = data.table(RODBC::sqlQuery(sb, query))
+  RODBC::odbcCloseAll()
+  save(telids, file = "data/telids.rdata")
+}
