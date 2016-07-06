@@ -65,13 +65,18 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
     }
       # if area is suppled build filter into query
       # area = c(minLat, minLon, maxLat, maxLon)
-    if(!is.na(area)){
+    if(!is.na(area[1])){
       # check if area contains 4 elements
       if(!length(area) == 4){
         stop('area does not have 4 elements')
       }else{
         # TODO between code
-        stop('not yet implemented')
+        query = paste0(query,
+                       " AND [Latitude] >= ", area[1],
+                       " AND [Latitude] <= ", area[3],
+                       " AND [Longitude] >= ", area[2],
+                       " AND [Longitude] <= ", area[4]
+                       )
       }
     }
 
