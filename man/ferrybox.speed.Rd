@@ -4,7 +4,7 @@
 \alias{ferrybox.speed}
 \title{calculate speed from GPS}
 \usage{
-ferrybox.speed(dateTime, lat, lon, threshold = 120)
+ferrybox.speed(dateTime, lat, lon, threshold = 65)
 }
 \arguments{
 \item{dateTime}{in POSIXct}

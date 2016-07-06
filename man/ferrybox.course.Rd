@@ -4,7 +4,7 @@
 \alias{ferrybox.course}
 \title{Calculate course from GPS}
 \usage{
-ferrybox.course(dateTime, lat, lon, threshold = 120)
+ferrybox.course(dateTime, lat, lon, threshold = 65)
 }
 \arguments{
 \item{dateTime}{in POSIXct}
