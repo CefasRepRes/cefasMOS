@@ -225,3 +225,73 @@ update_telid <- function(){
   RODBC::odbcCloseAll()
   save(telids, file = "data/telids.rdata")
 }
+
+
+
+#' ggplot biwavelet
+#'
+#' Plots a biwavelet wt object with sensible defaults
+#'
+#' @param wt a wavelet object created with biwavelet::wt
+#' @param base log scale to use
+#' @param colors either "viridis" (default), "inferno" or "jet"
+#' @param isPOSIXct if True (default), assume time is in seconds
+#' @param yscale if ifPOSIXct is True set this to "hours" (default), "seconds" or "days"
+#'
+#' @return ggplot
+#' @export
+#'
+ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = "hours"){
+  require(scales)
+
+  if(colors == "viridis"){
+    fill.cols = viridis::viridis(256)
+    }
+  if(colors == "inferno"){
+    fill.cols = viridis::inferno(256)
+    }
+  if(colors == "jet"){
+    fill.cols = c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000")
+    }
+
+  reverselog_trans <- function(base = exp(1)) {
+    trans <- function(x) -log(x, base)
+    inv <- function(x) base^(-x)
+    trans_new(paste0("reverselog-", format(base)), trans, inv,
+              log_breaks(base = base),
+              domain = c(1e-100, Inf))
+  }
+
+  time = wt$t
+  if(isPOSIXct){time = as.POSIXct(time, origin = "1970-01-01", tz = "UTC")}
+  period = wt$period
+  power = melt(wt$power.corr, varnames = c("period", "time"), value.name = "power")
+  wave = melt(wt$wave, varnames = c("period", "time"), value.name = "wave")
+  signif = melt(wt$signif, varnames = c("period", "time"), value.name = "signif")
+  x = merge(power, wave, by = c("time", "period"))
+  x = merge(x, signif, by = c("time", "period"))
+  # coi = data.frame(x = c(time, rev(time)), y = c(wt$coi, rep(max(wt$coi, na.rm = TRUE), length(wt$coi))))
+  coi = data.frame(x = time, y = wt$coi)
+  coi$y[coi$y < min(period)] = 0
+  # coi = subset(coi, y > min(period))
+  if(isPOSIXct){
+    if(yscale == "hours"){
+      period = period / (60*60)
+      coi$y = coi$y / (60*60)
+      }
+    if(yscale == "days"){
+      period = period / (60*60*24)
+      coi$y = coi$y / (60*60*24)
+      }
+  }
+  x$time = time[x$time]
+  x$period = period[x$period]
+  p1 =  ggplot(x) +
+    geom_raster(aes(time, period, fill = power)) +
+    scale_y_continuous(trans = reverselog_trans(base)) +
+    scale_fill_gradientn(colors = fill.cols) +
+    geom_contour(aes(time, period, z = signif), color = "black", breaks = 1, size = 1) +
+    geom_line(data = coi, aes(x = x, y = y), color = "white") +
+    theme_bw()
+  return(p1)
+}
