@@ -237,11 +237,11 @@ update_telid <- function(){
 #' @param colors either "viridis" (default), "inferno" or "jet"
 #' @param isPOSIXct if True (default), assume time is in seconds
 #' @param yscale if ifPOSIXct is True set this to "hours" (default), "seconds" or "days"
+#' @param ylim optional, two element vector containing limits of y in units of yscale
 #'
 #' @return ggplot
-#' @export
 #'
-ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = "hours"){
+ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = "hours", ylim = NA){
   require(scales)
 
   if(colors == "viridis"){
@@ -288,7 +288,7 @@ ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = 
   x$period = period[x$period]
   p1 =  ggplot(x) +
     geom_raster(aes(time, period, fill = power)) +
-    scale_y_continuous(trans = reverselog_trans(base)) +
+    scale_y_continuous(trans = reverselog_trans(base), limits = ylim) +
     scale_fill_gradientn(colors = fill.cols) +
     geom_contour(aes(time, period, z = signif), color = "black", breaks = 1, size = 1) +
     geom_line(data = coi, aes(x = x, y = y), color = "white") +
