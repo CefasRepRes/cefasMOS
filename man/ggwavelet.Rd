@@ -5,7 +5,7 @@
 \title{ggplot biwavelet}
 \usage{
 ggwavelet(wt, base = 2, colors = "viridis", isPOSIXct = T,
-  yscale = "hours")
+  yscale = "hours", ylim = NA)
 }
 \arguments{
 \item{wt}{a wavelet object created with biwavelet::wt}
@@ -17,6 +17,8 @@ ggwavelet(wt, base = 2, colors = "viridis", isPOSIXct = T,
 \item{isPOSIXct}{if True (default), assume time is in seconds}
 
 \item{yscale}{if ifPOSIXct is True set this to "hours" (default), "seconds" or "days"}
+
+\item{ylim}{optional, two element vector containing limits of y in units of yscale}
 }
 \value{
 ggplot
