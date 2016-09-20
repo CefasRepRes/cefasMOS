@@ -141,6 +141,9 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' @export
 findMLD <- function(depth, density, threshold = 0.125, surface = T){
 
+  depth = depth[order(depth)]
+  density = density[order(depth)]
+
   if(anyNA(depth)){ warning("NA's found in depth record") }
   if(anyNA(density)){ warning("NA's found in density record") }
 
@@ -294,4 +297,23 @@ ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = 
     geom_line(data = coi, aes(x = x, y = y), color = "white") +
     theme_bw()
   return(p1)
+}
+
+#' Calculate day or night
+#'
+#' @param dateTime
+#' @param lat
+#' @param lon
+#'
+#' @return vector of "day" or "night" character values
+#' @export
+markday <- function(dateTime, lat, lon){
+  require(insol)
+  sunrise = as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunrise
+  sunset = as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunset
+  sunrise = as.POSIXct(sunrise*60*60, origin = as.Date(dateTime), tz = "UTC")
+  sunset = as.POSIXct(sunset*60*60, origin = as.Date(dateTime), tz = "UTC")
+  output = rep("day", length(dateTime))
+  output[(dateTime < sunrise | dateTime > sunset)] = "night"
+  return(output)
 }
