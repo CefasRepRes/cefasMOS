@@ -114,10 +114,23 @@ read.profiler.ULP <- function(f){
   return(dip)
 }
 
+#' Process ESM2 .000 files
+#'
+#' Process ESM2 .000 files
+#'
+#' @param file
+#'
+#' @return data.table
+#' @export
 read.ULP000 <- function(file){
   fl = readLines(file)
+  id = fl[max(grep("ID", fl)+1)]
+  id = unlist(strsplit(id, ","))
+  startTime = fl[max(grep("TIMESTAMP", fl))]
+  startTime = unlist(strsplit(startTime, " "))
+  startTime = paste(startTime[5], startTime[4], startTime[3])
+  startTime = as.POSIXct(startTime, format = "%Y %d/%m %H%M.%S", tz = "UTC")
   startLine = max(grep("CHAN", fl)) + 1
-  # d = read.csv(file, header = F, skip = startLine)
   dat = data.table()
   for(sen in fl[startLine:length(fl)] ){
     sen = unlist(strsplit(sen, ","))
@@ -128,7 +141,8 @@ read.ULP000 <- function(file){
     index = seq(0,(length(d)*rate)-rate,rate)
     dat = rbind(dat, data.frame(index = index, value = d, channel, XOPC))
   }
-  dat[, c(range)]
+  dat[, burst := id[6]]
+  dat[, time := startTime + (index/10)]
   return(dat)
 }
 
