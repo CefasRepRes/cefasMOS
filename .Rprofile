@@ -1,7 +1,1 @@
 require(cefasMOS)
-print('MOS tools loaded')
-Sys.setenv("plotly_username" = "TomHull")
-Sys.setenv("plotly_api_key" = "taszfssmi1")
-require(plotly)
-Sys.setenv(https_proxy='http://localhost:80')
-Sys.setenv(http_proxy='http://localhost:80')
