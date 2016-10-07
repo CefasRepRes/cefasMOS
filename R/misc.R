@@ -226,7 +226,23 @@ update_telid <- function(){
   sb = RODBC::odbcConnect("smartbuoydblive")
   telids = data.table(RODBC::sqlQuery(sb, query))
   RODBC::odbcCloseAll()
+  colnames(telids) = c("telid", "sensor_parameter")
+  telids[, telid := as.character(telid)]
   save(telids, file = "data/telids.rdata")
+}
+
+
+#' Telemetry id lookup function
+#'
+#' @param x a vector of telemetry ids
+#'
+#' @return a vector of matching sensor parameter names
+#' @export
+smartbuoy.telid <- function(x){
+  # if(!is.na(telids)){ }
+  x = as.character(x)
+  data("telids")
+  return(telids[telid %in% x]$sensor_parameter)
 }
 
 
