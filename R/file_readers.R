@@ -183,7 +183,9 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       d[, c("variable", "unit", "telid", "serial", "stat") := tstrsplit(variable, "~~")]
       colnames(d) = gsub("~~[[:alnum:]]*", "", colnames(d))
       d = na.omit(d)
-      d = dcast.data.table(d, ... ~ stat, value.var = "value")
+      if(anyDuplicated(d) > 0){ warning(paste("duplicates found in", f)) }
+      d = dcast.data.table(d, ... ~ stat, value.var = "value", fun.aggregate = mean)
+      d[, Quality := as.character(Quality)]
       return(data.frame(d))
     }
   }
