@@ -196,7 +196,9 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
   # crop
   bathy = bathy[lon > min(xlim) & lon < max(xlim) &
           lat > min(ylim) & lat < max(ylim)]
-  coast = ggplot2::map_data('worldHires', region = c("UK", "IRELAND", "FRANCE"))
+  coast = ggplot2::map_data('worldHires', region = c("UK", "Ireland", "France", "Wales", "Germany",
+                                                     "Belgium", "Netherlands", "Norway",
+                                                     "Isle of Wight", "Isle of Man"))
 
   # make geom
   bathy_raster = geom_raster(data = bathy, aes(lon, lat, fill = label))
