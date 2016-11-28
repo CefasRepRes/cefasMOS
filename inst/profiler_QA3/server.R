@@ -9,36 +9,36 @@ shinyServer(function(input, output, session) {
   prdata = reactiveValues(cruiseList = NULL)
 
   observeEvent(input$select_year, {
-    # prdata$cruiseList = data.table(profiler.cruiselist(yr = input$select_year))
-    print(input$select_year)
-      load("cruiseList.rdata")
-      prdata$cruiseList = data.table(cruiseList)
-      #
-    prdata$cruiseList$name = paste(cruiseList$CruiseId, cruiseList$InstId)
+    prdata$cruiseList = data.table(profiler.cruiselist(yr = input$select_year))
+    prdata$cruiseList$name = paste(prdata$cruiseList$CruiseId, prdata$cruiseList$InstId)
     updateSelectInput(session, "select_cruiseID", choices = c("Select cruise" = "", prdata$cruiseList$name))
   })
 
   observe({
     if(input$select_cruiseID != ""){
       selected = prdata$cruiseList[name == input$select_cruiseID]
-      print("fetching")
-      dat = profiler.fetch(cruiseID = selected$CruiseId,
-                           profiler = selected$InstId,
-                           min_QA_reached = F, parameters = c("SAL", "O2CONC"))
-      prdata$data = dat
+      withProgress(message = 'Fetching data', value = 0, {
+        dat = profiler.fetch(cruiseID = selected$CruiseId,
+                             profiler = selected$InstId,
+                             min_QA_reached = F, parameters = c("SAL", "O2CONC"))
+      })
+      prdata$data[[input$select_cruiseID]] = dat
+      updateSelectInput(session, "select_profile", choices = unique(prdata$data[[input$select_cruiseID]]$startTime))
+      updateSelectInput(session, "select_variable", choices = unique(prdata$data[[input$select_cruiseID]]$par))
     }
-    updateSelectInput(session, "select_profile", choices = unique(prdata$data$startTime))
-    updateSelectInput(session, "select_variable", choices = unique(prdata$data$par))
   })
 
   observe(
     if(input$select_profile != ""){
-      prdata$subset = prdata$data[startTime == as.POSIXct(input$select_profile, tz = "UTC") & par == input$select_variable]
+      prdata$subset = subset(prdata$data[[input$select_cruiseID]],
+                             startTime == as.POSIXct(input$select_profile, tz = "UTC") &
+                               par == input$select_variable)
     }
   )
 
   observeEvent(input$mark_btn, {
-    prdata$marks[[input$select_variable]] = rbind(prdata$marks[[input$select_variable]], prdata$newmark, fill = T)
+    prdata$marks[[input$select_cruiseID]][[input$select_variable]] = rbind(prdata$marks[[input$select_cruiseID]][[input$select_variable]],
+                                                                           prdata$newmark, fill = T)
   })
 
   output$bottle_plot = renderPlot({
@@ -68,7 +68,7 @@ shinyServer(function(input, output, session) {
   })
 
   output$marks = renderRHandsontable({
-    mrk = data.table(prdata$marks[[input$select_variable]])
+    mrk = data.table(prdata$marks[[input$select_cruiseID]][[input$select_variable]])
     rhandsontable(mrk, readOnly = T, highlightRow = T, digits = 6) %>%
       hot_col(c("niskin"), readOnly = F, format = "0.0000") %>%
       hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE)
@@ -85,5 +85,4 @@ shinyServer(function(input, output, session) {
         ) +
       theme_bw()
   })
-
 })
