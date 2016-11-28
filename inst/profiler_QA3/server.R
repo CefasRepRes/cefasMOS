@@ -23,17 +23,15 @@ shinyServer(function(input, output, session) {
                              min_QA_reached = F, parameters = c("SAL", "O2CONC"))
         incProgress(1)
       })
-      prdata$data[[input$select_cruiseID]] = dat
-      updateSelectInput(session, "select_profile", choices = unique(prdata$data[[input$select_cruiseID]]$startTime))
-      updateSelectInput(session, "select_variable", choices = unique(prdata$data[[input$select_cruiseID]]$par))
+      prdata$data = dat
+      updateSelectInput(session, "select_profile", choices = unique(prdata$data$startTime))
+      updateSelectInput(session, "select_variable", choices = unique(prdata$data$par))
     }
   })
 
   observe(
     if(input$select_profile != ""){
-      prdata$subset = subset(prdata$data[[input$select_cruiseID]],
-                             startTime == as.POSIXct(input$select_profile, tz = "UTC") &
-                               par == input$select_variable)
+      prdata$subset = prdata$data[startTime == as.POSIXct(input$select_profile, tz = "UTC") & par == input$select_variable]
     }
   )
 
@@ -68,7 +66,6 @@ shinyServer(function(input, output, session) {
     newdata[, offset := niskin - mean_val]
     prdata$marks[[input$select_cruiseID]][[input$select_variable]] = newdata
   })
-
 
   output$marks = renderRHandsontable({
     mrk = prdata$marks[[input$select_cruiseID]][[input$select_variable]]
