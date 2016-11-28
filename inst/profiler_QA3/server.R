@@ -70,7 +70,7 @@ shinyServer(function(input, output, session) {
   output$marks = renderRHandsontable({
     mrk = data.table(prdata$marks[[input$select_cruiseID]][[input$select_variable]])
     rhandsontable(mrk, readOnly = T, highlightRow = T, digits = 6) %>%
-      hot_col(c("niskin"), readOnly = F, format = "0.0000") %>%
+      hot_col(c("niskin", "mean_value"), readOnly = F, format = "0.000") %>%
       hot_context_menu(allowRowEdit = FALSE, allowColEdit = FALSE)
   })
 
