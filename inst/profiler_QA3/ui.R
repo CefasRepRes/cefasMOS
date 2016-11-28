@@ -11,7 +11,7 @@ shinyUI(fluidPage(
     column(3, selectInput('select_profile', "Select Profile", choices = "")),
     column(3, selectInput('select_variable', "Select Variable", choices = ""))
   ),
-  plotOutput("bottle_plot", brush = brushOpts("scan_brush", direction = "x"), width = "100%"),
+  plotOutput("scan_plot", brush = brushOpts("scan_brush", direction = "x"), width = "100%"),
   fluidRow(
     column(6, align = "left",
      wellPanel( textOutput("mark_text") )
@@ -21,6 +21,5 @@ shinyUI(fluidPage(
   wellPanel(
     rHandsontableOutput("marks")
   ),
-  plotOutput("regression", width = "100%"),
-  tableOutput("debug")
+  plotOutput("regression", width = "100%")
 ))
