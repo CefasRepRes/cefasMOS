@@ -4,7 +4,7 @@
 \alias{rinko_o2}
 \title{Calculate RINKO oxygen from voltage}
 \usage{
-rinko_o2(V, t, oC = list(A = -42.34162, B = +127.6475, C = -0.3677435, D =
+rinko_o2(V, t, S, oC = list(A = -42.34162, B = +127.6475, C = -0.3677435, D =
   +0.01137, E = +0.0046, F = +7.57e-05), p = 0.1, G = 0, H = 1)
 }
 \arguments{

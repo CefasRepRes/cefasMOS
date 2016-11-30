@@ -97,7 +97,7 @@ rinko_temp <- function(V, tC = list(A = -5.326887e+00, B = +1.663288e+01, C = -2
 #'
 #' @return
 #' @export
-rinko_o2 <- function(V, t, oC = list(A = -4.234162e+01,
+rinko_o2 <- function(V, t, S, oC = list(A = -4.234162e+01,
                                      B = +1.276475e+02,
                                      C = -3.677435e-01,
                                      D = +1.137000e-02,
@@ -121,6 +121,28 @@ rinko_o2 <- function(V, t, oC = list(A = -4.234162e+01,
     # pressure correction
   d = p * 0.01 # convert from decibar to MPa
   DO = DO * (1 + oC$E * d)
+
+  # from garcia and gordon
+    A0 = 2.00856
+    A1 = 3.224
+    A2 = 3.99063
+    A3 = 4.80299
+    A4 = 0.978188
+    A5 = 1.71069
+    B0 = -0.00624097
+    B1 = -0.00693498
+    B2 = -0.00690358
+    B3 = -0.00429155
+    C0 = -3.1168E-07
+    Ts = log((298.15-t)/(273.15+t))
+
+    Cstar = exp(A0+(A1*Ts)+(A2*Ts^2)+
+                    (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
+                    S*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
+                    (C0*S^2))
+
+    DO = ((Cstar * 44.614 * DO) / 100) * 0.0319988 # mg/l
+    DO = (DO/31.9988) * 1000 # mg/l to mmol m-3
 
   return(DO)
 }
