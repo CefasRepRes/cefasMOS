@@ -16,6 +16,6 @@ mld
 simple threshold technique, mld where p +/- 0.125 of surface p
 }
 \details{
-returns max depth is no stratification found
+returns max depth if threshold not met
 }
 

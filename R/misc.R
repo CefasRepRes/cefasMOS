@@ -19,7 +19,6 @@ round_minute <- function(x, minutes = 30){
 }
 
 
-# TODO vectorise me!
 #' ftu from ADC
 #'
 #' Calculates FTU value from ESM2 raw hex ADC counts
@@ -30,7 +29,7 @@ round_minute <- function(x, minutes = 30){
 #' @param offset channel calibration offset, default is 0.001
 #' @return vector of calibrated FTU values
 #' @keywords esm2
-ftu_from_ADC<- function(x, factor = 1.22, offset = 0.001){
+esm2.FTU_from_ADC<- function(x, factor = 1.22, offset = 0.001){
     which_range <- function(range){
         switch(range,
                "0" = 500,
@@ -39,24 +38,27 @@ ftu_from_ADC<- function(x, factor = 1.22, offset = 0.001){
                "3" = 5)
     }
     subfunc <- function(x){
-        # TODO check valid ESM hex output
-        # if(nchar(x) != 6){return(NA)}
+        if(nchar(x) != 6){return(NA)}
         dec = as.numeric(paste0("0x", substr(x, 4, 6)))
         range = which_range(as.character(substr(x, 3, 3)))   # calculate factor from range
         dec.mv = dec / 1000 # convert to mV
         dec.c = (dec.mv * factor) - (offset / 1000)  # apply channel calibrations
         return(dec.c * range) # apply gain factor
     }
-    ftu = subfunc(x)
-    return(ftu)
+    return(sapply(x, subfunc))
 }
 
-flu_from_ADC<- function(x, factor = 1.22, offset = 0.001){
-        # check valid ESM hex output
-    # use sapply(x, flu_from_ADC)
-    if(nchar(as.character(x)) != 6){return(NA)}
-    dec = as.numeric(paste0("0x", substr(x, 4, 6)))
-
+#' FLUORS from ADC
+#'
+#' Calculates FLUORS value from ESM2 raw hex ADC counts
+#'
+#' @details This function querys the Smartbuoy database and returns
+#' @param x vector of ESM2 hex ADC counts, each count should be 6 characters i.e. "1a13D2"
+#' @param factor channel calibration factor, specific to logger, default is 1.22
+#' @param offset channel calibration offset, default is 0.001
+#' @return vector of calibrated FTU values
+#' @keywords esm2
+esm2.FLUORS_from_ADC<- function(x, factor = 1.22, offset = 0.001){
     which_range <- function(range){
         switch(range,
                "0" = 30,
@@ -64,19 +66,34 @@ flu_from_ADC<- function(x, factor = 1.22, offset = 0.001){
                "2" = 3,
                "3" = 1)
     }
-
-    range = which_range(as.character(substr(x, 3, 3)))   # calculate factor from range
-    dec.mv = dec / 1000 # convert to mV
-    dec.c = (dec.mv * factor) - (offset / 1000)  # apply channel calibrations
-    flu = dec.c * range # apply gain factor
-    return(flu)
+    subfunc <- function(x){
+        if(nchar(x) != 6){return(NA)}
+        dec = as.numeric(paste0("0x", substr(x, 4, 6)))
+        range = which_range(as.character(substr(x, 3, 3)))   # calculate factor from range
+        dec.mv = dec / 1000 # convert to mV
+        dec.c = (dec.mv * factor) - (offset / 1000)  # apply channel calibrations
+        return(dec.c * range) # apply gain factor
+    }
+    return(sapply(x, subfunc))
 }
 
-par_from_voltage <- function(x, factor, offset){
+#' Calculate Cefas LiCor PAR from voltage
+#'
+#' @description Calculates PAR from Licor Li-198 sensors
+#'  fitted with Cefas inline low-light amplifier.
+#'  Refer to calibration documents for factor and offset.
+#'
+#' @param x
+#' @param factor
+#' @param offset
+#'
+#' @return
+#' @export
+PAR_from_Voltage <- function(x, factor, offset){
     return(factor * exp(offset * x))
 }
 
-ferrybox.ADC_to_PAR <- function(y){
+ferrybox.PAR_from_ADC <- function(y){
     #       (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834
     return( (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834 )
 }
@@ -90,19 +107,22 @@ fix_par <- function(x){
 
 #' Calculate salinity
 #'
-#' @param Cond
-#' @param t
-#' @param p
-#' @param P
+#' @description calculate salinity from conductivity, temperature and depth.
+#' Adapted from marelac package by Karline Soetaert using
+#' Fofonoff NP and Millard RC Jr, 1983. Algorithms for computation of fundamental properties of
+#' seawater. UNESCO technical papers in marine science, 44, 53 pp.
+#' http://unesdoc.unesco.org/images/0005/000598/059832EB.pdf
+#' cran.r-project.org/web/packages/marelac
+#'
+#' @param Cond Conductivity in Sm, (SmartBuoy = mmoh/cm = 0.1 Sm)
+#' @param t temperature
+#' @param p gauge pressure in bar (reference to ambient)
+#' @param P true pressure in bar
 #'
 #' @return salinity
+#' @keywords salinity conductivity CTD
 #' @export
-calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
-    # Adapted from marelac package by Karline Soetaert using
-    #     Fofonoff NP and Millard RC Jr, 1983. Algorithms for computation of fundamental properties of
-    #     seawater. UNESCO technical papers in marine science, 44, 53 pp.
-    #     http://unesdoc.unesco.org/images/0005/000598/059832EB.pdf
-    # cran.r-project.org/web/packages/marelac
+SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
     #
     # Cond in Sm-, 1 Sm = 10 mmoh/cm (Smartbuoy Unit)
     # e.g.R = cond / 4.2914
@@ -123,14 +143,10 @@ calc_sal <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
     return(0.008 + (-0.1692 + (25.3851 + (14.0941 + (-7.0261 + 2.7081 * RT) * RT) * RT) * RT) * RT + DS)
 }
 
-# convert_RtoS((39.023/10/4.2914), t = 11.606, p = 10.86638775/10 ) # marelac version
-# calc_sal(39.023, t = 11.606, p = 10.86638775)
-
-
 #' Find mixed layer depth
 #'
 #' @description  simple threshold technique, mld where p +/- 0.125 of surface p
-#' @details returns max depth is no stratification found
+#' @details returns max depth if threshold not met
 #' @param depth
 #' @param density
 #' @param threshold
