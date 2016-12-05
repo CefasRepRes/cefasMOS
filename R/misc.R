@@ -29,6 +29,7 @@ round_minute <- function(x, minutes = 30){
 #' @param offset channel calibration offset, default is 0.001
 #' @return vector of calibrated FTU values
 #' @keywords esm2
+#' @export
 esm2.FTU_from_ADC<- function(x, factor = 1.22, offset = 0.001){
     which_range <- function(range){
         switch(range,
@@ -58,6 +59,7 @@ esm2.FTU_from_ADC<- function(x, factor = 1.22, offset = 0.001){
 #' @param offset channel calibration offset, default is 0.001
 #' @return vector of calibrated FTU values
 #' @keywords esm2
+#' @export
 esm2.FLUORS_from_ADC<- function(x, factor = 1.22, offset = 0.001){
     which_range <- function(range){
         switch(range,
