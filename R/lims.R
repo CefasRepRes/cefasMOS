@@ -9,7 +9,7 @@
 #' @return data frame (data.table) of extracted nutrients data
 #' @import RODBC data.table
 #' @export
-lims.fetch <- function(parameters = 'SAL', cruise = NA, db_name = 'lims'){
+lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2'), cruise = NA, db_name = 'lims'){
 
         query = paste("SELECT [C_DATE_COLLECTED] as dateTime,",
                   "[C_LATITUDE] as latitude,",
@@ -56,12 +56,10 @@ lims.fetch <- function(parameters = 'SAL', cruise = NA, db_name = 'lims'){
 #' @return data frame (data.table) of extracted nutrients data
 #' @import data.table RODBC
 #' @export
-lims.fetch.historic <- function(parameters = 'SAL', db_name = 'lims'){
+lims.fetch.historic <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2'), db_name = 'lims'){
 
         query = paste("SELECT [date_collected] as dateTime,",
-                  "[latitude] as latitude,",
-                  "[longitude] as longitude,",
-                  "[station] as station,",
+                  "[latitude], [longitude], [station],",
                   "[ParamId] as par,",
                   "[EnteredUnits] as unit,",
                   "[EnteredValue] as value,",
@@ -72,6 +70,7 @@ lims.fetch.historic <- function(parameters = 'SAL', db_name = 'lims'){
     parameters_fetch = paste(parameters, collapse = "', '")
     query = paste0(query, " WHERE [ParamId] IN ('", parameters_fetch, "')")
 
+    query = paste(query, 'AND [EnteredValue] IS NOT NULL')
     query = paste(query, 'ORDER BY dateTime')
     print(query)
 
@@ -82,9 +81,6 @@ lims.fetch.historic <- function(parameters = 'SAL', db_name = 'lims'){
     if(! nrow(dat) > 1){
         stop("no data returned")
     }
-#     dat[,longitude := as.numeric(as.character(longitude))] # lat and long are stored as varchar15
-#     dat[,latitude := as.numeric(as.character(latitude))]
-#     dat[,value := as.numeric(as.character(value))]
     return(dat)
 
 }

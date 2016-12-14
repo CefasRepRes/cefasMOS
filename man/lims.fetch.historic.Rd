@@ -4,7 +4,8 @@
 \alias{lims.fetch.historic}
 \title{Fetch nutrients data from LIMS (pre 2013)}
 \usage{
-lims.fetch.historic(parameters = "SAL", db_name = "lims")
+lims.fetch.historic(parameters = c("SAL", "CHLOROPHYLL", "SLD", "TOXN", "O2"),
+  db_name = "lims")
 }
 \arguments{
 \item{db_name}{}
