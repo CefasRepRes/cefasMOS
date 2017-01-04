@@ -225,3 +225,53 @@ smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
     gp = ggplot(dat) + geom_point(aes(SAL, TEMP, colour = day)) + theme_bw() + scale_color_gradientn(colours = rainbow(7))
     return(list('data' = dat, 'ggplot' = gp))
 }
+
+
+#' Sensor calibration query
+#'
+#' Tool for fetching serial numbers and calibration dates for SmartBuoy sensor
+#'
+#' @param deployment optional string vector denoting deployment names e.g. "DOWSING/042"
+#' @param deployment_group optional string vector denoting deployment group names e.g. "DOWSING"
+#' @param parameters parameter codes to match sensors by e.g. c("FLUORS", "FTU")
+#' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
+#'
+#' @return data.table containing query results
+#' @import data.table RODBC
+#' @export
+smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
+                                 parameters = c("FLUORS"),
+                                 db_name = "smartbuoydblive"){
+  query= paste0("
+  SELECT DISTINCT DepGroupId, Deployment.DepId, SensorDescr,
+  SerialNumber, ParCode, StartDate as LastCalDate, Sensor.CurrentRecord
+  FROM Deployment
+  INNER JOIN DeploymentSensor
+  ON Deployment.DepId = DeploymentSensor.DepId
+  INNER JOIN Sensor
+  ON DeploymentSensor.SensorId = Sensor.SensorId
+  INNER JOIN SensorParameter
+  ON Sensor.SensorId = SensorParameter.SensorId
+  INNER JOIN SensorCalibration
+  ON SensorParameter.SensorParameterId = SensorCalibration.SensorParameterId
+  WHERE EndDate IS NULL
+  ")
+  # collapse down parameters vector and wrap with quotes to work with IN (xxx)
+  parameters_fetch = paste(parameters, collapse = "', '")
+  query = paste0(query, " AND ParCode IN ('", parameters_fetch, "')")
+  # filter deployments, is.na evaluates each element of vector, so only check first one is not NA
+  if(!is.na(deployment[1])){
+    deployment = paste(deployment, collapse = "', '")
+    query = paste0(query, " AND DepId IN ('", deployment, "')")
+  }
+  if(!is.na(deployment_group[1])){
+    deployment_group = paste(deployment_group, collapse = "', '")
+    query = paste0(query, " AND DepGroupId IN ('", deployment_group, "')")
+  }
+  sb = odbcConnect(db_name)
+  dat = data.table(sqlQuery(sb, query, as.is = T))
+  dat[,LastCalDate := as.POSIXct(LastCalDate, tz = "UTC")]
+  odbcCloseAll()
+  return(dat)
+}
+
