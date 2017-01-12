@@ -166,13 +166,17 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       f = paste0(folder, f)
       ln = readLines(f)
       if(print_file){print(f)}
-      dateLine = grep("Date Time", ln)
+      dateLine = grep("Date[ /]Time", ln, perl = T)
       d = read.table(f, sep = "\t", header = F, skip = dateLine + 1, fill = F)
+      cruise = strsplit(ln[2], "\t")[[1]][2]
+      SIC = strsplit(ln[3], "\t")[[1]][2]
+      comment = strsplit(ln[6], "\t")[[1]][2]
       header1 = unlist(strsplit(ln[dateLine], "\t")) # split on tabs
       header1[header1 == ""] = NA # assign NA to blanks
       header1 = zoo::na.locf(header1) # pull forward into blank rows
       header2 = unlist(strsplit(ln[dateLine+1], "\t")) # split 2nd row, pad for date_time
       header = paste(header1, header2, sep = "~~") # combine headers
+      header = gsub("Date/Time", "DateTime", header)
       colnames(d) = gsub("[^[:alnum:]~/]", "", header) # apply headers after removing bad chars
       d = data.table(d)
       d[, dateTime := as.POSIXct(d$"DateTime~~", format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
@@ -186,6 +190,9 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       if(anyDuplicated(d) > 0){ warning(paste("duplicates found in", f)) }
       d = dcast.data.table(d, ... ~ stat, value.var = "value", fun.aggregate = mean)
       d[, Quality := as.character(Quality)]
+      d[, Cruise := cruise]
+      d[, SIC := SIC]
+      d[, Comment := comment]
       return(data.frame(d))
     }
   }
