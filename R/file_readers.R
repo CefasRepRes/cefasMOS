@@ -177,7 +177,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       header2 = unlist(strsplit(ln[dateLine+1], "\t")) # split 2nd row, pad for date_time
       header = paste(header1, header2, sep = "~~") # combine headers
       header = gsub("Date/Time", "DateTime", header)
-      colnames(d) = gsub("[^[:alnum:]~/]", "", header) # apply headers after removing bad chars
+      colnames(d) = gsub("[^[:alnum:]~/]", "", header[1:length(colnames(d))]) # apply headers after removing bad chars
       d = data.table(d)
       d[, dateTime := as.POSIXct(d$"DateTime~~", format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
       d = d[,-c("DateTime~~"), with = F]
