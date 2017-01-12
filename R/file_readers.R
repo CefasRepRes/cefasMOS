@@ -166,7 +166,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       f = paste0(folder, f)
       ln = readLines(f)
       if(print_file){print(f)}
-      dateLine = grep("Date[ /]Time", ln, perl = T)
+      dateLine = grep("Date[ /\t]Time", ln, perl = T)
       d = read.table(f, sep = "\t", header = F, skip = dateLine + 1, fill = F)
       cruise = strsplit(ln[2], "\t")[[1]][2]
       SIC = strsplit(ln[3], "\t")[[1]][2]
@@ -179,6 +179,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       header = gsub("Date/Time", "DateTime", header)
       colnames(d) = gsub("[^[:alnum:]~/]", "", header[1:length(colnames(d))]) # apply headers after removing bad chars
       d = data.table(d)
+      if("Date~~" %in% header){d[, "DateTime~~" := paste(`Date~~`, `Time~~`)]}
       d[, dateTime := as.POSIXct(d$"DateTime~~", format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
       d = d[,-c("DateTime~~"), with = F]
       d = suppressWarnings(
@@ -187,8 +188,8 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       d[, c("variable", "unit", "telid", "serial", "stat") := tstrsplit(variable, "~~")]
       colnames(d) = gsub("~~[[:alnum:]]*", "", colnames(d))
       d = na.omit(d)
-      if(anyDuplicated(d) > 0){ warning(paste("duplicates found in", f)) }
-      d = dcast.data.table(d, ... ~ stat, value.var = "value", fun.aggregate = mean)
+      if(anyDuplicated(d) > 0){ warning(paste("duplicates found and removed", f)) }
+      d = dcast.data.table(unique(d), ... ~ stat, value.var = "value")
       d[, Quality := as.character(Quality)]
       d[, Cruise := cruise]
       d[, SIC := SIC]
@@ -208,6 +209,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
   }
 
   if(print_file){
+    recursive = T
     dat = lapply(list.files(folder, recursive = recursive), read_10min, print_file = T)
     dat = rbindlist(dat, fill = T)
   }else{
