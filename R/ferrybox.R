@@ -215,8 +215,8 @@ ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
   dat[, lats := data.table::shift(dat$lat, type = "lag")]
   dat[, lons := data.table::shift(dat$lon, type = "lag")]
   dat[, dist := geosphere::distHaversine(cbind(lons, lats), cbind(lon, lat))]
-  dat[, speed := (dist / diff) / 0.51444] # knots
-  dat[diff > threshold | speed > 22, speed := NA]
+  dat[, speed := abs((dist / diff) / 0.51444)] # knots
+  dat[diff > threshold | speed > 24, speed := NA]
   dat[lats == lat & lons == lon, speed := NA]
   return(dat$speed)
 }
