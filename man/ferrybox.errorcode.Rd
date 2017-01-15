@@ -15,6 +15,19 @@ ferrybox.errorcode(x, collapse_vector = T)
 codes used in composite
 }
 \description{
-Ferrybox error codes
+Flags are:
+0 = no flag, good data
+1 = Bad or missing data (general flag)
+2 = flow rate too high
+4 = flow rate too low
+8 = timeout
+16 = standby, fb loop not running
+32 = wrong channel
+64 = value during cleaning
+128 = value during standby
+256 = value during empty
+512 = value during general error
+1024 = undefined
+2048 = value is simulated
 }
 
