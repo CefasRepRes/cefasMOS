@@ -19,6 +19,23 @@ round_minute <- function(x, minutes = 30){
 }
 
 
+#' Calculate rate of change
+#'
+#' Calculates rate of change given datetime and value
+#'
+#' @param dateTime POSIXct vector
+#' @param value  numeric vector
+#'
+#' @return vector of rate of change in unit/second
+#' @export
+rate_of_change <- function(dateTime, value){
+  dt = as.numeric(dateTime) - shift(as.numeric(dateTime))
+  dV = value - shift(value)
+  return(dV/dt)
+}
+
+
+
 #' ftu from ADC
 #'
 #' Calculates FTU value from ESM2 raw hex ADC counts
