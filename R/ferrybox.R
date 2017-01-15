@@ -181,6 +181,21 @@ ferrybox.position <- function(cruiseID = NA,
 
 #' Ferrybox error codes
 #'
+#' Flags are:
+#' 0 = no flag, good data
+#' 1 = Bad or missing data (general flag)
+#' 2 = flow rate too high
+#' 4 = flow rate too low
+#' 8 = timeout
+#' 16 = standby, fb loop not running
+#' 32 = wrong channel
+#' 64 = value during cleaning
+#' 128 = value during standby
+#' 256 = value during empty
+#' 512 = value during general error
+#' 1024 = undefined
+#' 2048 = value is simulated
+#'
 #' @param x error code
 #' @param collapse_vector if true single element vector will be returned with ";" seperators
 #'
@@ -243,11 +258,3 @@ ferrybox.course <- function(dateTime, lat, lon, threshold = 65){
   dat[course < 0, course := course + 360] # geosphere method goes 0 to 180/-180 rather than 360
   return(dat$course)
 }
-
-
-# telids
-# 1098 = optode temp
-# 1190 = seabird temp
-# 2001 = ph temp
-# 2064 = ADAM PRT
-
