@@ -134,15 +134,15 @@ read.ULP000 <- function(file){
   dat = data.table()
   for(sen in fl[startLine:length(fl)] ){
     sen = unlist(strsplit(sen, ","))
-    channel = sen[2]
-    XOPC = sen[4]
+    channel = as.numeric(sen[2])
     rate = as.numeric(sen[3])
     d = sen[7:length(sen)]
     index = seq(0,(length(d)*rate)-rate,rate)
-    dat = rbind(dat, data.frame(index = index, value = d, channel, XOPC))
+    dat = rbind(dat, data.frame(index = index, value = d, channel))
   }
   dat[, burst := id[6]]
   dat[, time := startTime + (index/10)]
+  dat[, id := id[1]]
   return(dat)
 }
 
