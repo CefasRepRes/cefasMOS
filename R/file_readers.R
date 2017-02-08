@@ -347,7 +347,7 @@ read.BODC_ctd_ascii <- function(file, stripAgg = T){
 #' @export
 read.nutrients_xlsx <- function(filename){
   print(paste("reading", filename))
-  cruiseId = stringr::str_extract(filename, "(?<=\\d{3}_)\\w+")
+  cruiseId = filename
   r = openxlsx::read.xlsx(filename, sheet="Samples", detectDates=F, startRow=2, colNames=F)
   header = data.table(r[1:3,])
   dat = data.table(r[4:nrow(r),])
