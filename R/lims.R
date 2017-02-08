@@ -9,14 +9,17 @@
 #' @return data frame (data.table) of extracted nutrients data
 #' @import RODBC data.table
 #' @export
-lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2'), cruise = NA, db_name = 'lims'){
+lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2'),
+                       cruise = NA,
+                       after = NA, before = NA,
+                       db_name = 'lims'){
 
         query = paste("SELECT [C_DATE_COLLECTED] as dateTime,",
                   "[C_LATITUDE] as latitude,",
                   "[C_LONGITUDE] as longitude,",
                   "[C_CRUISE_CODE] as cruise,",
                   "[C_STATION] as station,",
-                  "[NAME] as par,",
+                  "[NAME] as variable,",
                   "[UNITS] as unit,",
                   "[ENTRY] as value,",
                   "[C_SAMPLE_DEPTH] as depth",
@@ -30,6 +33,12 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2')
     if(!is.na(cruise[1])){
         cruise = paste(cruise, collapse = "', '")
         query = paste0(query, " AND [C_CRUISE_CODE] IN ('", cruise, "')")
+    }
+    if(!is.na(before)){
+        query = paste0(query, " AND [C_DATE_COLLECTED] <= '", before, "'")
+    }
+    if(!is.na(after)){
+        query = paste0(query, " AND [C_DATE_COLLECTED] >= '", after, "'")
     }
 
     query = paste(query, 'ORDER BY dateTime')
