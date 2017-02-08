@@ -2,17 +2,28 @@
 % Please edit documentation in R/geo.R
 \name{bathymap}
 \alias{bathymap}
-\title{GEBCO Bathimity base map}
+\title{GEBCO Bathymetry base map}
 \usage{
 bathymap(lat, lon, bathy_file = NA, breaks = T)
 }
 \arguments{
-\item{breaks}{}
+\item{lat}{vector of latitude coordinates for calculating map extent}
+
+\item{lon}{as above for longitude}
+
+\item{bathy_file}{optional bathymetry raster file}
+
+\item{breaks}{if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins}
 }
 \value{
 ggplot
 }
 \description{
-GEBCO Bathimity base map
+GEBCO Bathymetry base map
+}
+\references{
+GEBCO data from GEBCO 2014
+
+Coastlines from maps::worldHires CIA World Data Bank II (2003)
 }
 

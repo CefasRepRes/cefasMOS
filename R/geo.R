@@ -152,21 +152,21 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
     return(mp)
 }
 
-#' GEBCO Bathimity base map
+#' GEBCO Bathymetry base map
 #'
-#' @param lat
-#' @param lon
-#' @param bathy_file
-#' @param breaks
+#' @param lat vector of latitude coordinates for calculating map extent
+#' @param lon as above for longitude
+#' @param bathy_file optional bathymetry raster file
+#' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
+#'
+#' @references GEBCO data from GEBCO 2014
+#' @references Coastlines from maps::worldHires CIA World Data Bank II (2003)
 #'
 #' @return ggplot
 #' @import ggplot2 mapdata
 #' @export
 #'
 bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
-    # stuff
-  require(mapdata)
-    # ? require rgdal
     # should build bathymap which fits all data in
   if(is.na(bathy_file)){
     data("GBbathy2014")
@@ -178,9 +178,9 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
     rtp = data.frame(raster::rasterToPoints(bathy))
     colnames(rtp) = c('lon', 'lat', 'depth')
   }
-  centre.lat = mean(range(lat))
-  centre.lon = mean(range(lon))
-  max.range = max(diff(range(lon)), diff(range(lat)))
+  centre.lat = mean(range(lat, na.rm=T))
+  centre.lon = mean(range(lon, na.rm=T))
+  max.range = max(diff(range(lon, na.rm=T)), diff(range(lat, na.rm=T)))
   xlim = c(centre.lon - (max.range / 2), centre.lon + (max.range / 2))
   ylim = c(centre.lat - (max.range / 2), centre.lat+ (max.range / 2))
 
@@ -196,9 +196,9 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
   # crop
   bathy = bathy[lon > min(xlim) & lon < max(xlim) &
           lat > min(ylim) & lat < max(ylim)]
-  coast = ggplot2::map_data('worldHires', region = c("UK", "Ireland", "France", "Wales", "Germany",
-                                                     "Belgium", "Netherlands", "Norway",
-                                                     "Isle of Wight", "Isle of Man"))
+    # regions not used, minimal overhead compared to GEBCO data
+  regions = c("UK", "Ireland", "France", "Wales", "Germany", "Belgium", "Netherlands", "Norway", "Isle of Wight", "Isle of Man")
+  coast = ggplot2::map_data('worldHires')
 
   # make geom
   bathy_raster = geom_raster(data = bathy, aes(lon, lat, fill = label))
@@ -210,6 +210,7 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
   mp = ggplot() + bathy_raster + coast.poly + coast.outline +
       coord_quickmap(xlim, ylim) +
       labs(x = '', y = '')
+
   if(breaks == T){
     colorNum = length(unique(bathy$label))
     mp = mp +  scale_fill_manual(values = rev( RColorBrewer::brewer.pal(colorNum, "Blues")), name='Depth')
