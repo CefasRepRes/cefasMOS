@@ -5,7 +5,7 @@
 \title{Fetch nutrients data from LIMS (post 2013)}
 \usage{
 lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SLD", "TOXN", "O2"),
-  cruise = NA, db_name = "lims")
+  cruise = NA, after = NA, before = NA, db_name = "lims")
 }
 \value{
 data frame (data.table) of extracted nutrients data
