@@ -334,3 +334,34 @@ read.BODC_ctd_ascii <- function(file, stripAgg = T){
   dat$lon = lon
   return(data.table(dat))
 }
+
+
+#' Read LIMS style nutrients excel spreadsheet
+#'
+#' Tool to parse the "Samples" sheet from a modern nutrients lab spreadsheet (.xlsx only)
+#'
+#' @param filename single xlsx filename
+#'
+#' @return long format data.table
+#' @import openxlsx data.table stringr
+#' @export
+read.nutrients_xlsx <- function(filename){
+  print(paste("reading", filename))
+  cruiseId = stringr::str_extract(filename, "(?<=\\d{3}_)\\w+")
+  r = openxlsx::read.xlsx(filename, sheet="Samples", detectDates=F, startRow=2, colNames=F)
+  header = data.table(r[1:3,])
+  dat = data.table(r[4:nrow(r),])
+  header = header[, lapply(.SD, function(x) {paste(na.omit(x), collapse=" ")})]
+  colnames(dat) = unlist(header)
+  dat = melt.data.table(dat, id.vars=1:8)
+  colnames(dat) = c("stn", "depth", "LSN", "date", "time", "lat",
+                    "lon", "comment", "id", "value")
+  dat[, depth := as.numeric(depth)]
+  dat$dateTime = as.numeric(dat$date) + as.numeric(dat$time)
+  dat[, lat := as.numeric(lat)]
+  dat[, lon := as.numeric(lon)]
+  dat[, value := as.numeric(value)]
+  dat[, dateTime := openxlsx::convertToDateTime(dat$dateTime)]
+  dat = dat[!is.na(value),.(dateTime, cruise=cruiseId, stn, depth, LSN, lat, lon, comment, id, value)]
+  return(dat)
+}
