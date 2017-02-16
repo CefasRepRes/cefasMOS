@@ -86,7 +86,7 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @keywords SmartBuoy
 #' @import data.table RODBC
 #' @export
-smartbuoy.positions <- function(db_name = 'smartbuoydblive'){
+smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
     sbdb = odbcConnect(db_name)
 
     pos_query = paste("SELECT
@@ -101,9 +101,15 @@ smartbuoy.positions <- function(db_name = 'smartbuoydblive'){
 
     d = d[platform %in% c(1, 4, 8)] # remove non-standard deployments
     d = d[!(groupId %in% c('LOWTEST', 'ESM2TEST'))] # remove test deployments
-    d = d[,list(lat = median(lat), lon = median(long),
-                dateTo = max(dateTo), dateFrom = min(dateFrom),
-                platform = platform[1]), by = groupId] # group by deployment
+    if(group){
+      d = d[,list(lat = median(lat), lon = median(long),
+                  dateTo = max(dateTo), dateFrom = min(dateFrom),
+                  platform = platform[1]), by = groupId] # group by deployment group
+    }else{
+      d = d[,list(lat = median(lat), lon = median(long),
+                  dateTo = max(dateTo), dateFrom = min(dateFrom),
+                  platform = platform[1]), by = dep] # group by deployment
+    }
     d$active = "inactive"
     d$active[d$dateTo > lubridate::now()] = "active"
 
