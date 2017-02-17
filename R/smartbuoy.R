@@ -1,3 +1,6 @@
+# Functions which interface with the Smartbuoy database for buoy data
+
+
 #' SmartBuoy data query tool
 #'
 #' Fetches SmartBuoy data
@@ -273,5 +276,86 @@ smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
   dat[,LastCalDate := as.POSIXct(LastCalDate, tz = "UTC")]
   odbcCloseAll()
   return(dat)
+}
+
+
+#' Query smartbuoy deployment position from telemetry messages
+#'
+#' @param deployment
+#'
+#' @return data.table of lat-long from telemetry messages
+#' @export
+#'
+smartbuoy.telemetry_position <- function(deployment, db_name = "smartbuoydblive"){
+  query= paste0("
+  SELECT DeploymentInstrument.DepId as deployment
+  ,[DepGroupId] as deployment_group
+  ,[SequenceNumber]
+  ,[TelTime]
+  ,[TelLocLat] as lat
+  ,[TelLocLong] as lon
+  FROM [SmartBuoy].[dbo].[TelemetryHeader]
+  INNER JOIN DeploymentInstrument ON
+  TelemetryHeader.DepInstId = DeploymentInstrument.DepInstId
+  INNER JOIN Deployment ON
+  DeploymentInstrument.DepId = Deployment.DepId
+  WHERE
+  SequenceNumber > 60")
+  deployment = paste(deployment, collapse = "', '")
+  query = paste0(query, " AND Deployment.DepId IN ('", deployment, "')")
+  sb = odbcConnect(db_name)
+  dat = data.table(sqlQuery(sb, query, as.is = T))
+  odbcCloseAll()
+  dep_check = deployment %in% dat$deployment
+  dat[, lat := as.numeric(lat)]
+  dat[, lon := as.numeric(lon)]
+  if(FALSE %in% dep_check){ # not working correctly
+    warning(paste(deployment[!dep_check], "has no telemetry data"))
+  }
+  return(dat[order(deployment)])
+}
+
+
+#' SmartBuoy positions
+#'
+#' Fetches median positions of deployments
+#'
+#' @param group if True (default) aggregates position by deployment group
+#' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
+#' @return data.table of positions
+#' @keywords SmartBuoy
+#' @import data.table RODBC
+#' @export
+smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
+    sbdb = odbcConnect(db_name)
+
+    pos_query = paste("SELECT
+                      Deployment.[DepLocLat] as lat, Deployment.[DepLocLong] as long,
+                      Deployment.[DepGroupId] as groupId, Deployment.[DepDateFrom] as dateFrom,
+                      Deployment.[DepDateTo] as dateTo, Deployment.[DepDescr] as description,
+                      Deployment.[DepId] as dep, Platform.[PlatformId] as platformId,
+                      Platform.[PlatformTypeId] as platform
+                      FROM Deployment INNER JOIN Platform ON Deployment.PlatformId=Platform.PlatformId ")
+    d = data.table(sqlQuery(sbdb, pos_query))
+    odbcCloseAll()
+
+    d = d[platform %in% c(1, 4, 8)] # remove non-standard deployments
+    d = d[!(groupId %in% c('LOWTEST', 'ESM2TEST'))] # remove test deployments
+    if(group){
+      d = d[,list(lat = median(lat), lon = median(long),
+                  dateTo = max(dateTo), dateFrom = min(dateFrom),
+                  platform = platform[1]), by = groupId] # group by deployment group
+    }else{
+      d = d[,list(lat = median(lat), lon = median(long),
+                  dateTo = max(dateTo), dateFrom = min(dateFrom),
+                  platform = platform[1]), by = dep] # group by deployment
+    }
+    d$active = "inactive"
+    d$active[d$dateTo > lubridate::now()] = "active"
+
+    d[platform == 1, platformName := 'SmartBuoy']
+    d[platform == 4, platformName := 'Lander']
+    d[platform == 8, platformName := 'Waverider']
+    return(d[,.(deployment = groupId, lat, lon, dateFrom, dateTo, platform = platformName, active)])
 }
 
