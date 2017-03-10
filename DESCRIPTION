@@ -1,19 +1,22 @@
 Package: cefasMOS
 Title: Provides tools for Cefas MOS activities
-Version: 0.2.5
-Date: 2016-10-07
+Version: 0.2.7
+Date: 2017-03-10
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
 Description: Provides tools for Cefas MOS activities
 Depends:
     R (>= 3.0.0),
     data.table (>= 1.9.5),
-    ggplot2,
-    reshape2,
-Imports:
+    ggplot2 (>= 2.0.0),
     lubridate,
+    sp,
+Imports:
     RColorBrewer,
     dygraphs,
     xts,
+    zoo,
+    htmltools,
+    htmlwidgets,
     stringr,
     svDialogs,
     RODBC,

@@ -116,7 +116,7 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
 #'
 #' @references GEBCO data from GEBCO 2014
-#' @references Coastlines from maps::worldHires CIA World Data Bank II (2003)
+#' @references Coastlines from rworldmap
 #'
 #' @return ggplot
 #' @import ggplot2 rworldmap
