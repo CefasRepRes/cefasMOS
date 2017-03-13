@@ -1,6 +1,6 @@
 Package: cefasMOS
 Title: Provides tools for Cefas MOS activities
-Version: 0.2.7
+Version: 0.2.8
 Date: 2017-03-10
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
 Description: Provides tools for Cefas MOS activities
