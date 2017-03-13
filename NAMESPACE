@@ -3,6 +3,7 @@
 export(PAR_from_Voltage)
 export(SAL_from_CT)
 export(bathymap)
+export(calc_bounding_box)
 export(convert_latlong)
 export(dTmatch)
 export(esm2.FLUORS_from_ADC)

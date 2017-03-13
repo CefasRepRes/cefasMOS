@@ -199,3 +199,25 @@ convert_latlong <- function(degrees, decimal_minutes, polarity = NA){
   decimal_degrees[grepl("[sSwW]", polarity)] = decimal_degrees[grep("[sSwW]", polarity)] * -1 # apply polarity
   return(decimal_degrees)
 }
+
+#' Calculate bounding box
+#'
+#' used WGS84 elipsoid to calculate northern, eastern, southern and western extent from a starting lat/lon.
+#'
+#' @param lat vector of lat
+#' @param lon vector of lon
+#' @param size distance in meters
+#'
+#' @return vector of limits (north, east, south, west)
+#' @export
+#'
+#' @examples
+#' calc_bounding_box(51, 1.2, 500) # 1x1km square
+calc_bounding_box <- function(lat, lon, size = 250){
+  north = geosphere::destPoint(c(lon, lat), 0, size)
+  east = geosphere::destPoint(c(lon, lat), 90, size)
+  south = geosphere::destPoint(c(lon, lat), 180, size)
+  west = geosphere::destPoint(c(lon, lat), 270, size)
+  box = c(north[2], east[1], south[2], west[1])
+  return(box)
+}
