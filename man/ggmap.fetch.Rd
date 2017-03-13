@@ -26,8 +26,5 @@ ggmap object
 \description{
 Creates a base map centred and scaled
 }
-\details{
-TODO
-}
 \keyword{map}
 

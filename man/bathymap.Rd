@@ -24,6 +24,6 @@ GEBCO Bathymetry base map
 \references{
 GEBCO data from GEBCO 2014
 
-Coastlines from maps::worldHires CIA World Data Bank II (2003)
+Coastlines from rworldmap
 }
 
