@@ -1,20 +1,26 @@
-#' Fetch nutrients data from LIMS (post 2013)
+#' Fetch nutrients data from LIMS
 #'
 #' @details parameter codes:
 #' Chlorophyll, TOXN, O2, SLD, SAL
 #'
-#' @param parameters
-#' @param cruise
+#' note "value" returned as character string to allow for <LOD values
+#'
+#' @param parameters character string of LIMS parameter names
+#' @param cruise optional character string of cruise name
+#' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
+#' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
+#' @param area optional vector consisting of 4 elements, max Latitude, max Longitude, min Latitude, min Longitude e.g. c(53, -2.5, 52, -4)
 #' @param db_name
 #' @return data frame (data.table) of extracted nutrients data
 #' @import RODBC data.table
 #' @export
-lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2'),
+lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'SIO4', 'NH4', 'PHAEOP', 'NO2', 'PO4', 'O2'),
                        cruise = NA,
                        after = NA, before = NA,
+                       area = NA,
                        db_name = 'lims'){
 
-        query = paste("SELECT [C_DATE_COLLECTED] as dateTime,",
+    query = paste("SELECT [C_DATE_COLLECTED] as dateTime,",
                   "[C_LATITUDE] as latitude,",
                   "[C_LONGITUDE] as longitude,",
                   "[C_CRUISE_CODE] as cruise,",
@@ -28,17 +34,27 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2')
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
     parameters_fetch = paste(parameters, collapse = "', '")
     query = paste0(query, " WHERE [NAME] IN ('", parameters_fetch, "')")
-    query = paste(query, "AND [SAMPLE STATUS] = 'A' AND [RESULT STATUS] = 'A'")
 
     if(!is.na(cruise[1])){
-        cruise = paste(cruise, collapse = "', '")
-        query = paste0(query, " AND [C_CRUISE_CODE] IN ('", cruise, "')")
+      cruise = paste(cruise, collapse = "', '")
+      query = paste0(query, " AND [C_CRUISE_CODE] IN ('", cruise, "')")
     }
     if(!is.na(before)){
-        query = paste0(query, " AND [C_DATE_COLLECTED] <= '", before, "'")
+      query = paste0(query, " AND [C_DATE_COLLECTED] <= '", before, "'")
     }
     if(!is.na(after)){
-        query = paste0(query, " AND [C_DATE_COLLECTED] >= '", after, "'")
+      query = paste0(query, " AND [C_DATE_COLLECTED] >= '", after, "'")
+    }
+
+    if(!is.na(area[1])){
+        # check if area contains 4 elements
+      if(length(area) != 4){
+        stop('area does not have 4 elements')
+      }else{
+        query = paste(query,
+        "AND CONVERT(float, (SELECT C_LATITUDE WHERE C_LATITUDE NOT LIKE '%[^0-9.-]%')) BETWEEN", area[3], "AND", area[1],
+        "AND CONVERT(float, (SELECT C_LONGITUDE WHERE C_LONGITUDE NOT LIKE '%[^0-9.-]%')) BETWEEN", area[4], "AND", area[2])
+      }
     }
 
     query = paste(query, 'ORDER BY dateTime')
@@ -49,11 +65,10 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2')
     odbcCloseAll()
     # check if valid data has been returned, if not quit
     if(! nrow(dat) > 1){
-        stop("no data returned")
+        warning("no data returned")
     }
-    dat[,longitude := as.numeric(as.character(longitude))] # lat and long are stored as varchar15
-    dat[,latitude := as.numeric(as.character(latitude))]
-    dat[,value := as.numeric(as.character(value))]
+    dat[,latitude := as.numeric(latitude)]
+    dat[,longitude := as.numeric(longitude)]
     return(dat)
 }
 

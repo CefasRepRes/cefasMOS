@@ -2,19 +2,33 @@
 % Please edit documentation in R/lims.R
 \name{lims.fetch}
 \alias{lims.fetch}
-\title{Fetch nutrients data from LIMS (post 2013)}
+\title{Fetch nutrients data from LIMS}
 \usage{
-lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SLD", "TOXN", "O2"),
-  cruise = NA, after = NA, before = NA, db_name = "lims")
+lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SLD", "TOXN", "SIO4", "NH4",
+  "PHAEOP", "NO2", "PO4", "O2"), cruise = NA, after = NA, before = NA,
+  area = NA, db_name = "lims")
+}
+\arguments{
+\item{parameters}{character string of LIMS parameter names}
+
+\item{cruise}{optional character string of cruise name}
+
+\item{after}{optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"}
+
+\item{before}{optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"}
+
+\item{area}{optional vector consisting of 4 elements, max Latitude, max Longitude, min Latitude, min Longitude e.g. c(53, -2.5, 52, -4)}
 }
 \value{
 data frame (data.table) of extracted nutrients data
 }
 \description{
-Fetch nutrients data from LIMS (post 2013)
+Fetch nutrients data from LIMS
 }
 \details{
 parameter codes:
 Chlorophyll, TOXN, O2, SLD, SAL
+
+note "value" returned as character string to allow for <LOD values
 }
 
