@@ -98,12 +98,12 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     sb = odbcConnect(db_name)
     dat = data.table(sqlQuery(sb, query))
     odbcCloseAll()
-    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
 
     # check if valid data has been returned, if not quit
     if(! nrow(dat) > 1){
         stop("no data returned")
     }
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
 
     if(night_flu_only & "FLUORS" %in% parameters){
       dat[, sunrise := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunrise]
