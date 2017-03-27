@@ -4,13 +4,15 @@
 \alias{bathymap}
 \title{GEBCO Bathymetry base map}
 \usage{
-bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), bathy_file = NA,
-  breaks = T)
+bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = T,
+  bathy_file = NA, breaks = T)
 }
 \arguments{
 \item{lat}{vector of latitude coordinates for calculating map extent}
 
 \item{lon}{as above for longitude}
+
+\item{margin}{if TRUE (default) will expand map to neatly fit all positions.}
 
 \item{bathy_file}{optional bathymetry raster file}
 

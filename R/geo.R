@@ -114,6 +114,7 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #'
 #' @param lat vector of latitude coordinates for calculating map extent
 #' @param lon as above for longitude
+#' @param margin if TRUE (default) will expand map to neatly fit all positions.
 #' @param bathy_file optional bathymetry raster file
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
 #'
@@ -124,7 +125,7 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @import ggplot2 rworldmap
 #' @export
 #'
-bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), bathy_file = NA, breaks = T){
+bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=T, bathy_file=NA, breaks=T){
     # should build bathymap which fits all data in
   if(is.na(bathy_file)){
     data("GBbathy2014")
@@ -136,11 +137,15 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), bathy_file = NA, 
     rtp = data.frame(raster::rasterToPoints(bathy))
     colnames(rtp) = c('lon', 'lat', 'depth')
   }
-  centre.lat = median(range(lat, na.rm=T))
-  centre.lon = median(range(lon, na.rm=T))
-  max.range = max(diff(range(lon, na.rm=T)), diff(range(lat, na.rm=T)))
-  xlim = c(centre.lon - (max.range / 2), centre.lon + (max.range / 2))
-  ylim = c(centre.lat - (max.range / 2), centre.lat+ (max.range / 2))
+  if(margin){
+    max.lat = abs(min(lat) - max(lat))
+    max.lon = abs(min(lon) - max(lon))
+    xlim = c(min(lon) - max.lon/4, max(lon) + max.lon/4)
+    ylim = c(min(lat) - max.lat/4, max(lat) + max.lat/4)
+  }else{
+    xlim = range(lon, na.rm=T)
+    ylim = range(lat, na.rm=T)
+  }
 
   GEBCOcolors5 = c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7")
   GEBCOcolors12 = c("#0F7CAB", "#1D8CB2", "#2C9CBA", "#3CABC1", "#4DB9C8", "#5FC6D0",
@@ -158,24 +163,23 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), bathy_file = NA, 
     bathy_scale = scale_fill_gradientn(name = "Depth (m)", colors=rev(GEBCOcolors12))
   }
 
-  # crop
-  bathy = bathy[lon %between% xlim & lat %between% ylim]
-
-  mapdata = data.table(ggplot2::fortify(rworldmap::getMap("high")))
-  # subset to just regions in xlim and ylim, see http://stackoverflow.com/a/16574176
-  mapdata = mapdata[mapdata[,.I[any(long %between% xlim) & any(lat %between% ylim)], by = list(group)]$V1]
+  # mapdata = data.table(ggplot2::fortify(rworldmap::getMap("high")))
+    # subset to just regions in xlim and ylim, see http://stackoverflow.com/a/16574176
+  # mapdata = mapdata[mapdata[,.I[any(long %between% xlim) & any(lat %between% ylim)], by = list(group)]$V1]
+  data("mapdata") # saved for speed
 
   # make geom
   bathy_raster = geom_raster(data=bathy, aes(lon, lat, fill=label))
   coast.poly = geom_polygon(data=mapdata, aes(x=long, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
   coast.outline = geom_path(data=mapdata, aes(x=long, y=lat, group=group), colour="#000000", lwd=0.2)
 
-  mp = ggplot() + bathy_raster + bathy_scale +
-      coast.poly + coast.outline +
-      labs(x = '', y = '') +
-      scale_x_continuous(expand=c(0, 0)) +
-      scale_y_continuous(expand=c(0, 0)) +
-      coord_quickmap(xlim, ylim)
+  mp = ggplot() +
+    bathy_raster + bathy_scale +
+    coast.poly + coast.outline +
+    labs(x = '', y = '') +
+    scale_x_continuous(expand=c(0, 0)) +
+    scale_y_continuous(expand=c(0, 0)) +
+    coord_quickmap(xlim, ylim)
 
   return(mp)
 }
