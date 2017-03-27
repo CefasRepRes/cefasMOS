@@ -76,42 +76,6 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'SIO4
     return(dat)
 }
 
-#' Fetch nutrients data from LIMS (pre 2013)
-#'
-#' @param parameters
-#' @param db_name
-#'
-#' @return data frame (data.table) of extracted nutrients data
-#' @import data.table RODBC
-#' @export
-lims.fetch.historic <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'O2'), db_name = 'lims'){
-
-        query = paste("SELECT [date_collected] as dateTime,",
-                  "[latitude], [longitude], [station],",
-                  "[ParamId] as par,",
-                  "[EnteredUnits] as unit,",
-                  "[EnteredValue] as value,",
-                  "[pressure] as depth",
-                  "FROM C_Historic_Nutrient_Samples")
-
-        # collapse down parameters vector and wrap with quotes to work with IN (xxx)
-    parameters_fetch = paste(parameters, collapse = "', '")
-    query = paste0(query, " WHERE [ParamId] IN ('", parameters_fetch, "')")
-
-    query = paste(query, 'AND [EnteredValue] IS NOT NULL')
-    query = paste(query, 'ORDER BY dateTime')
-    print(query)
-
-    lims = odbcConnect(db_name)
-    dat =  data.table(sqlQuery(lims, query))
-    odbcCloseAll()
-    # check if valid data has been returned, if not quit
-    if(! nrow(dat) > 1){
-        stop("no data returned")
-    }
-    return(dat)
-
-}
 
 #' Fetch list of cruises from LIMS
 #'
