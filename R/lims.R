@@ -25,15 +25,17 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'SIO4
                   "[C_LONGITUDE] as longitude,",
                   "[C_CRUISE_CODE] as cruise,",
                   "[C_STATION] as station,",
+                  "[TEXT_ID] as LSN,",
                   "[NAME] as variable,",
                   "[UNITS] as unit,",
                   "[ENTRY] as value,",
                   "[C_SAMPLE_DEPTH] as depth",
                   "FROM C_NUTRIENTS_SAMPLES")
 
+
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
     parameters_fetch = paste(parameters, collapse = "', '")
-    query = paste0(query, " WHERE [NAME] IN ('", parameters_fetch, "')")
+    query = paste0(query, " WHERE [RESULT STATUS] = 'A' AND [NAME] IN ('", parameters_fetch, "')")
 
     if(!is.na(cruise[1])){
       cruise = paste(cruise, collapse = "', '")
@@ -67,8 +69,10 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'SIO4
     if(! nrow(dat) > 1){
         warning("no data returned")
     }
-    dat[,latitude := as.numeric(latitude)]
-    dat[,longitude := as.numeric(longitude)]
+    dat[, latitude := as.character(latitude)]
+    dat[, longitude := as.character(longitude)]
+    dat[, value := as.character(value)]
+    dat[, cruise := as.character(cruise)]
     return(dat)
 }
 
