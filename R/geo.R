@@ -110,6 +110,8 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 
 #' GEBCO Bathymetry base map
 #'
+#' Simple basemap for using GEBCO data, if you want something more technical try marmap.
+#'
 #' @param lat vector of latitude coordinates for calculating map extent
 #' @param lon as above for longitude
 #' @param bathy_file optional bathymetry raster file
@@ -122,7 +124,7 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @import ggplot2 rworldmap
 #' @export
 #'
-bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
+bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), bathy_file = NA, breaks = T){
     # should build bathymap which fits all data in
   if(is.na(bathy_file)){
     data("GBbathy2014")
@@ -140,16 +142,20 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
   xlim = c(centre.lon - (max.range / 2), centre.lon + (max.range / 2))
   ylim = c(centre.lat - (max.range / 2), centre.lat+ (max.range / 2))
 
+  GEBCOcolors5 = c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7")
+  GEBCOcolors12 = c("#0F7CAB", "#1D8CB2", "#2C9CBA", "#3CABC1", "#4DB9C8", "#5FC6D0",
+                    "#72D3D8", "#86DFDF", "#9BE6E3", "#B1EDE8", "#C8F5EF", "#E1FCF7")
+
   # classify
   if(breaks == T){
     bathy$label = raster::cut(bathy$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf),
-                      labels = rev(c('<25','25-50','50-100','100-200','>200')))
+                      labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
     colorNum = length(unique(bathy$label))
-    bathy_scale = scale_fill_manual(values = rev( RColorBrewer::brewer.pal(colorNum, "Blues")), name='Depth')
+    bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth')
   }else{
     bathy$label = bathy$depth*-1
     bathy$label[bathy$label < 0] = 0
-    bathy_scale = scale_fill_gradient(name = "Depth", high = "#132B43", low = "#56B1F7")
+    bathy_scale = scale_fill_gradientn(name = "Depth (m)", colors=rev(GEBCOcolors12))
   }
 
   # crop
@@ -166,17 +172,12 @@ bathymap <- function(lat, lon, bathy_file = NA, breaks = T){
 
   mp = ggplot() + bathy_raster + bathy_scale +
       coast.poly + coast.outline +
-      coord_quickmap(xlim, ylim) +
-      # cowplot::theme_cowplot() +
       labs(x = '', y = '') +
       scale_x_continuous(expand=c(0, 0)) +
-      scale_y_continuous(expand=c(0, 0))
+      scale_y_continuous(expand=c(0, 0)) +
+      coord_quickmap(xlim, ylim)
 
   return(mp)
-  # mp + geom_point(data=x, aes(lon, lat), color = "red") +
-  #   ggrepel::geom_label_repel(data=x, aes(lon, lat, label=deployment),size=1) +
-  #   theme(legend.position="none")
-  # ggsave("sb_mp.pdf", height=297, units="mm", dpi=400)
 }
 
 #' Convert degrees + decimal minutes to decimal degrees

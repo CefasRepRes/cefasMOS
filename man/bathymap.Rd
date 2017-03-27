@@ -4,7 +4,8 @@
 \alias{bathymap}
 \title{GEBCO Bathymetry base map}
 \usage{
-bathymap(lat, lon, bathy_file = NA, breaks = T)
+bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), bathy_file = NA,
+  breaks = T)
 }
 \arguments{
 \item{lat}{vector of latitude coordinates for calculating map extent}
@@ -19,7 +20,7 @@ bathymap(lat, lon, bathy_file = NA, breaks = T)
 ggplot
 }
 \description{
-GEBCO Bathymetry base map
+Simple basemap for using GEBCO data, if you want something more technical try marmap.
 }
 \references{
 GEBCO data from GEBCO 2014
