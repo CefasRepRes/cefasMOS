@@ -4,7 +4,7 @@
 \alias{bathymap}
 \title{GEBCO Bathymetry base map}
 \usage{
-bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = T,
+bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = 8,
   bathy_file = NA, breaks = T)
 }
 \arguments{
@@ -12,7 +12,7 @@ bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = T,
 
 \item{lon}{as above for longitude}
 
-\item{margin}{if TRUE (default) will expand map to neatly fit all positions.}
+\item{margin}{integer (default = 8) indicating fraction of range to use for a margin.}
 
 \item{bathy_file}{optional bathymetry raster file}
 
