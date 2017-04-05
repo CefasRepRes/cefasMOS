@@ -343,25 +343,19 @@ read.BODC_ctd_ascii <- function(file, stripAgg = T){
 #' @param filename single xlsx filename
 #'
 #' @return long format data.table
-#' @import openxlsx data.table stringr
+#' @import openxlsx data.table
 #' @export
-read.nutrients_xlsx <- function(filename){
-  print(paste("reading", filename))
-  cruiseId = filename
-  r = openxlsx::read.xlsx(filename, sheet="Samples", detectDates=F, startRow=2, colNames=F)
-  header = data.table(r[1:3,])
-  dat = data.table(r[4:nrow(r),])
-  header = header[, lapply(.SD, function(x) {paste(na.omit(x), collapse=" ")})]
-  colnames(dat) = unlist(header)
-  dat = melt.data.table(dat, id.vars=1:8)
-  colnames(dat) = c("stn", "depth", "LSN", "date", "time", "lat",
-                    "lon", "comment", "id", "value")
-  dat[, depth := as.numeric(depth)]
-  dat$dateTime = as.numeric(dat$date) + as.numeric(dat$time)
-  dat[, lat := as.numeric(lat)]
-  dat[, lon := as.numeric(lon)]
-  dat[, value := as.numeric(value)]
-  dat[, dateTime := openxlsx::convertToDateTime(dat$dateTime)]
-  dat = dat[!is.na(value),.(dateTime, cruise=cruiseId, stn, depth, LSN, lat, lon, comment, id, value)]
+read.nutrients <- function(filename){
+  r = openxlsx::read.xlsx(filename, sheet="Samples", detectDates=F)
+  r_header = data.table(r[1,])
+  r = data.table(r[-1,])
+  r = r[,lapply(.SD, as.numeric), by=list(Survey, Site, comment, Gear)]
+  r[, Date := openxlsx::convertToDateTime(r$Date)]
+  dat = melt(r, id.var=c("LSN", "Survey", "Site", "Station", "depth",
+                         "lat", "lon", "CR", "comment", "Gear", "replicate", "Date"))
+  units = melt(r_header, id.var=c("LSN", "Survey", "Site", "Station", "depth",
+                                  "lat", "lon", "CR", "comment", "Gear", "replicate", "Date"))
+  dat = merge(dat, units[,.(variable, unit = value)], by="variable")
+  dat = dat[!is.na(value)]
   return(dat)
 }
