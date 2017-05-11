@@ -14,7 +14,7 @@
 #' @return data frame (data.table) of extracted nutrients data
 #' @import RODBC data.table
 #' @export
-lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SLD', 'TOXN', 'SIO4', 'NH4', 'PHAEOP', 'NO2', 'PO4', 'O2'),
+lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4', 'NH4', 'PHAEOP', 'NO2', 'PO4', 'DO2'),
                        cruise = NA,
                        after = NA, before = NA,
                        area = NA,
