@@ -148,7 +148,7 @@ ferrybox.position <- function(cruiseID = NA,
                               after = NA, before = NA,
                               db_name = 'ferrybox'){
         query = paste(
-            "SELECT CruiseId, DataHeaderTime as dateTime,",
+            "SELECT CruiseId, (CAST(DataHeaderTime AS NVARCHAR)) as dateTime,",
             "Latitude as latitude, Longitude as longitude,",
             "Course, Heading, Speed",
             "FROM [Ferrybox].[dbo].[DataHeader]",
@@ -175,7 +175,7 @@ ferrybox.position <- function(cruiseID = NA,
     sb = odbcConnect(db_name)
     dat = sqlQuery(sb, query)
     odbcCloseAll()
-    dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
+    dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
     return(data.table(dat))
 }
 
