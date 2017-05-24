@@ -231,29 +231,30 @@ ydaytime <- function(x, from = "year"){
 }
 
 
-#' Fast fuzzy dateTime matcher
-#' j
-#' @details finded closest timestamp in `reference`.
+#' Fast fuzzy matcher
 #'
-#' @param dat data.table of variables you want to look up, must contain a POSIXct "dateTime" column
-#' @param reference  data.table of variable you want to search against, must contain a POSIXct "dateTime" column
-#' @param varname  column name in `reference` you want to add to `dat`
-#' @param max_dT integer value in seconds for maximum permissible gap between lookup value
+#' @details finded closest index in `reference`.
 #'
-#' @return dat data.table with added variable column and dateTimes from `reference`
+#' Matches values from a reference data.table to another. Typically used for fuzzy dateTime matching.
+#' note, make sure the index column is the same data type in both dat and reference. e.g. as.numeric
+#'
+#' @param dat data.table of variables you want to look up, typically contain a POSIXct "dateTime" index column.
+#' @param reference  data.table of variable you want to search against, must contain the same named index column.
+#' @param index  column name in `reference` you want to match against (typically "dateTime")
+#' @param threshold integer value for maximum permissible gap between lookup value, unit = seconds for "dateTime".
+#'
+#' @return data.table with added variable column and index from `reference`
 #' @import data.table
 #' @export
 #'
-dTmatch <- function(dat, reference, varname, max_dT = Inf){
-
-  setkey(reference, dateTime)
-  i = reference[dat, varname, by = dateTime, roll = "nearest", with = F]
-  d = reference[dat, "dateTime", by = dateTime, roll = "nearest", with = F]
-
-  # update `data` by reference
-  dat[, varname := i, with = F]
-  dat[, "dT" := d]
-  return(copy(dat[ abs(as.numeric(dateTime) - as.numeric(dT)) < max_dT ]))
+#' dat = data.table(i = c(4.3, 5.9, 1.2), datval = runif(3)+10, datstuff="test")
+#' reference = data.table(i = as.numeric(1:10), refjunk = "junk", refval = runif(10))
+#'
+fuzzymatch <- function(dat, reference, index="dateTime", threshold = Inf){
+  reference[, (paste0("ref_", index)) := get(index)] # add duplicate reference column
+  out = reference[dat, roll="nearest", on=index] # match nearest
+  out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold] # exclude values outside threshold
+  return(copy(out))
 }
 
 update_telid <- function(){
