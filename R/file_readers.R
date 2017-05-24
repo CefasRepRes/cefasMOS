@@ -183,13 +183,13 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       d[, dateTime := as.POSIXct(d$"DateTime~~", format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
       d = d[,-c("DateTime~~"), with = F]
       d = suppressWarnings(
-        melt.data.table(d, id.vars = grep("Course|Long|Lat|Logitude|Satellite|Speed|Heading|dateTime", colnames(d)))
+        melt.data.table(d, id.vars = grep("Course|Long|Lat|Satellite|Speed|Heading|dateTime", colnames(d)))
       )
       d[, c("variable", "unit", "telid", "serial", "stat") := tstrsplit(variable, "~~")]
       colnames(d) = gsub("~~[[:alnum:]]*", "", colnames(d))
       d = na.omit(d)
       if(anyDuplicated(d) > 0){ warning(paste("duplicates found and removed", f)) }
-      d = dcast.data.table(unique(d), ... ~ stat, value.var = "value")
+      d = dcast.data.table(unique(d), ... ~ stat, value.var = "value", fun.aggregate=median)
       d[, Quality := as.character(Quality)]
       d[, Cruise := cruise]
       d[, SIC := SIC]
