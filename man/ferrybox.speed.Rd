@@ -11,6 +11,8 @@ ferrybox.speed(dateTime, lat, lon, threshold = 65)
 
 \item{lat}{in decimal degrees}
 
+\item{lon}{in decimal degrees}
+
 \item{threshold}{maximum time interval between gps points (seconds)}
 }
 \value{

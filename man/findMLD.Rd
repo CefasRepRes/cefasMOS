@@ -7,6 +7,12 @@
 findMLD(depth, density, threshold = 0.125, surface = T)
 }
 \arguments{
+\item{depth}{numeric vector of depth}
+
+\item{density}{vector of density}
+
+\item{threshold}{numeric density threshold, default is 0.125}
+
 \item{surface}{default is true, set to false for bottom mixed layer threshold (base of gradient)}
 }
 \value{

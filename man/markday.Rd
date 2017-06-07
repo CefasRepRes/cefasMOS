@@ -7,12 +7,16 @@
 markday(dateTime, lat, lon)
 }
 \arguments{
-\item{lon}{}
+\item{dateTime}{POSIXct datetime}
+
+\item{lat}{latitude in decimal degrees}
+
+\item{lon}{longitude in decimal degrees}
 }
 \value{
 vector of "day" or "night" character values
 }
 \description{
-Calculate day or night
+Calculates if a given datetime is during day or night based on sun angle.
 }
 

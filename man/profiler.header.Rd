@@ -7,7 +7,9 @@
 profiler.header(yr = "ALL", db_name = "smartbuoydblive")
 }
 \arguments{
-\item{db_name}{}
+\item{yr}{integer year defaults to "ALL"}
+
+\item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }
 \value{
 data.frame of headers

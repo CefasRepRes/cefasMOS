@@ -10,7 +10,7 @@
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param area optional vector consisting of 4 elements, max Latitude, max Longitude, min Latitude, min Longitude e.g. c(53, -2.5, 52, -4)
-#' @param db_name
+#' @param db_name character string matching ODBC data source name, defaults to 'lims'
 #' @return data frame (data.table) of extracted nutrients data
 #' @import RODBC data.table
 #' @export
@@ -26,6 +26,8 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4
                   "[C_CRUISE_CODE] as cruise,",
                   "[C_STATION] as station,",
                   "[TEXT_ID] as LSN,",
+                  "[C_GEAR_CODE] as gear,",
+                  "[C_COMMENT] as comment,",
                   "[NAME] as variable,",
                   "[UNITS] as unit,",
                   "[ENTRY] as value,",
@@ -79,8 +81,8 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4
 
 #' Fetch list of cruises from LIMS
 #'
-#' @param yr
-#' @param db_name
+#' @param yr integer specifing a year to limit the search, default is 'ALL'
+#' @param db_name character string matching ODBC data source name, defaults to 'lims'
 #'
 #' @return vector of cruise ids
 #' @import RODBC

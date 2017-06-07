@@ -1,9 +1,9 @@
 #' Round dateTime to x minutes
 #'
-#' @param x
-#' @param minutes
+#' @param x vector of POSIXct datetimes
+#' @param minutes integer minutes to round to, default is 30
 #'
-#' @return
+#' @return vector of rounded POSIXct
 #' @export
 round_minute <- function(x, minutes = 30){
   rt = minutes * 60
@@ -102,11 +102,11 @@ esm2.FLUORS_from_ADC<- function(x, factor = 1.22, offset = 0.001){
 #'  fitted with Cefas inline low-light amplifier.
 #'  Refer to calibration documents for factor and offset.
 #'
-#' @param x
-#' @param factor
-#' @param offset
+#' @param x vector of output voltage (LICOR)
+#' @param factor licor factor in volts
+#' @param offset licor offset in volts
 #'
-#' @return
+#' @return numeric PAR in uE m-2 s-1
 #' @export
 PAR_from_Voltage <- function(x, factor, offset){
     return(factor * exp(offset * x))
@@ -166,9 +166,9 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #'
 #' @description  simple threshold technique, mld where p +/- 0.125 of surface p
 #' @details returns max depth if threshold not met
-#' @param depth
-#' @param density
-#' @param threshold
+#' @param depth numeric vector of depth
+#' @param density vector of density
+#' @param threshold numeric density threshold, default is 0.125
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #'
 #' @return mld
@@ -242,14 +242,15 @@ ydaytime <- function(x, from = "year"){
 #' @param reference  data.table of variable you want to search against, must contain the same named index column.
 #' @param index  column name in `reference` you want to match against (typically "dateTime")
 #' @param threshold integer value for maximum permissible gap between lookup value, unit = seconds for "dateTime".
-#'
 #' @return data.table with added variable column and index from `reference`
 #' @import data.table
+#'
+#' @examples
+#'dat = data.table(i = c(4.3, 5.9, 1.2), datval = runif(3)+10, datstuff="test")
+#'reference = data.table(i = as.numeric(1:10), refjunk = "junk", refval = runif(10))
+#'fuzzymatch(dat, reference, index="i")
+#'
 #' @export
-#'
-#' dat = data.table(i = c(4.3, 5.9, 1.2), datval = runif(3)+10, datstuff="test")
-#' reference = data.table(i = as.numeric(1:10), refjunk = "junk", refval = runif(10))
-#'
 fuzzymatch <- function(dat, reference, index="dateTime", threshold = Inf){
   reference[, (paste0("ref_", index)) := get(index)] # add duplicate reference column
   out = reference[dat, roll="nearest", on=index] # match nearest
@@ -353,9 +354,11 @@ ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = 
 
 #' Calculate day or night
 #'
-#' @param dateTime
-#' @param lat
-#' @param lon
+#' Calculates if a given datetime is during day or night based on sun angle.
+#'
+#' @param dateTime POSIXct datetime
+#' @param lat latitude in decimal degrees
+#' @param lon longitude in decimal degrees
 #'
 #' @return vector of "day" or "night" character values
 #' @export

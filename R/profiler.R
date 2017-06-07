@@ -152,8 +152,8 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 
 #' ESM2 profiler header queryer
 #'
-#' @param yr
-#' @param db_name
+#' @param yr integer year defaults to "ALL"
+#' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #'
 #' @return data.frame of headers
 #' @import data.table RODBC
@@ -298,8 +298,8 @@ profiler.match_ferrybox <- function(cruiseID = NA,
 #' Estimate Kd from profile
 #'
 #' @description Estimates Kd PAR from downwelling PAR and depth using log par method.
-#' @param depth
-#' @param par
+#' @param depth vector of depth values
+#' @param par vector of par values
 #'
 #' @return kd (m-1)
 #' @export
@@ -311,8 +311,8 @@ profiler.kd <- function(depth, par){
 
 #' Estimate optical depths from PAR profile
 #'
-#' @param depth
-#' @param par
+#' @param depth vector of depth values
+#' @param par vector of par values
 #'
 #' @return vector of optical depth zone for each depth
 #' @export
@@ -330,8 +330,8 @@ profiler.odz <- function(depth, par){
 
 #' estimate euphotic depth from PAR profile
 #'
-#' @param depth
-#' @param par
+#' @param depth vector of depth values
+#' @param par vector of par values
 #' @param surf_par if not supplied attempts to find PAR at 0m depth
 #'
 #' @return euphotic depth (m)

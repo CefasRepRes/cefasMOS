@@ -7,7 +7,12 @@
 round_minute(x, minutes = 30)
 }
 \arguments{
-\item{minutes}{}
+\item{x}{vector of POSIXct datetimes}
+
+\item{minutes}{integer minutes to round to, default is 30}
+}
+\value{
+vector of rounded POSIXct
 }
 \description{
 Round dateTime to x minutes

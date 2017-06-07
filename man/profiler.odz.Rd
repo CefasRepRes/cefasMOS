@@ -7,7 +7,9 @@
 profiler.odz(depth, par)
 }
 \arguments{
-\item{par}{}
+\item{depth}{vector of depth values}
+
+\item{par}{vector of par values}
 }
 \value{
 vector of optical depth zone for each depth

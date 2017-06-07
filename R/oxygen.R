@@ -95,7 +95,7 @@ rinko_temp <- function(V, tC = list(A = -5.326887e+00, B = +1.663288e+01, C = -2
 #' @param G alpha calibration coef
 #' @param H beta calibration coef
 #'
-#' @return
+#' @return vector of RINKO oxygen in mmol m-3
 #' @export
 rinko_o2 <- function(V, t, S, oC = list(A = -4.234162e+01,
                                      B = +1.276475e+02,

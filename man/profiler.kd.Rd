@@ -7,7 +7,9 @@
 profiler.kd(depth, par)
 }
 \arguments{
-\item{par}{}
+\item{depth}{vector of depth values}
+
+\item{par}{vector of par values}
 }
 \value{
 kd (m-1)

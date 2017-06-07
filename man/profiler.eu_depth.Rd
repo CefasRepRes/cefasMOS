@@ -7,6 +7,10 @@
 profiler.eu_depth(depth, par, surf_par = NA)
 }
 \arguments{
+\item{depth}{vector of depth values}
+
+\item{par}{vector of par values}
+
 \item{surf_par}{if not supplied attempts to find PAR at 0m depth}
 }
 \value{

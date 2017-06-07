@@ -4,8 +4,8 @@
 \alias{lims.fetch}
 \title{Fetch nutrients data from LIMS}
 \usage{
-lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SLD", "TOXN", "SIO4", "NH4",
-  "PHAEOP", "NO2", "PO4", "O2"), cruise = NA, after = NA, before = NA,
+lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SPM", "TOXN", "SIO4", "NH4",
+  "PHAEOP", "NO2", "PO4", "DO2"), cruise = NA, after = NA, before = NA,
   area = NA, db_name = "lims")
 }
 \arguments{
@@ -18,6 +18,8 @@ lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SLD", "TOXN", "SIO4", "NH4",
 \item{before}{optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"}
 
 \item{area}{optional vector consisting of 4 elements, max Latitude, max Longitude, min Latitude, min Longitude e.g. c(53, -2.5, 52, -4)}
+
+\item{db_name}{character string matching ODBC data source name, defaults to 'lims'}
 }
 \value{
 data frame (data.table) of extracted nutrients data

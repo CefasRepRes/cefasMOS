@@ -218,7 +218,7 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
 #'
 #' @param dateTime in POSIXct
 #' @param lat in decimal degrees
-#' @param lon
+#' @param lon in decimal degrees
 #' @param threshold maximum time interval between gps points (seconds)
 #'
 #' @return vector of speeds
@@ -241,7 +241,7 @@ ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
 #'
 #' @param dateTime in POSIXct
 #' @param lat in decimal degrees
-#' @param lon
+#' @param lon in decimal degrees
 #' @param threshold maximum time interval between gps points (seconds)
 #'
 #' @return vector of courses

@@ -252,7 +252,7 @@ read.SmartBuoyLiveAquireExport <- function(file = svDialogs::dlgOpen(title = 'Op
 #' read analog live aquire data
 #'
 #' @param x one or more files captured from liveaquire
-#' @param channels_table
+#' @param channels_table data.frame containing channel calibrations
 #' @return processed data table
 #' @import data.table
 #' @export
@@ -294,8 +294,8 @@ read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 
 #'
 #' Reads ascii CTD files from BODC, attempts to extract metadata
 #'
-#' @param file
-#' @param stripAgg
+#' @param file string indicating BODC file location
+#' @param stripAgg if True (default) aggregation is used
 #'
 #' @return data.frame (data.table)
 #' @export

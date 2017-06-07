@@ -1,7 +1,7 @@
 Package: cefasMOS
 Title: Provides tools for Cefas MOS activities
 Version: 0.2.10
-Date: 2017-05-11
+Date: 2017-06-07
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
 Description: Provides tools for Cefas MOS activities
 Depends:
@@ -26,6 +26,15 @@ Imports:
     ggmap,
     knitr,
     rmarkdown,
+    ncdf4,
+    openxlsx,
+    rworldmap,
+    geosphere,
+    insol,
+    pbapply,
+    shiny,
+    viridis,
+    oce,
 Suggests:
 License: GPL-2
 RoxygenNote: 5.0.1

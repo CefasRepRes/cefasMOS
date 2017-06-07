@@ -181,8 +181,8 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, bathy_f
 
 #' Convert degrees + decimal minutes to decimal degrees
 #'
-#' @param degrees if negative will convert
-#' @param decimal_minutes
+#' @param degrees numeric vector of whole degrees, if negative will convert to W or S.
+#' @param decimal_minutes numeric vector of decimal minutes
 #' @param polarity optional "E, W, N, S"
 #'
 #' @return decimal degrees

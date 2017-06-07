@@ -8,7 +8,9 @@ x = lapply(list.files(folder, full.names = T, pattern = "*.lst"), read.BODC_ctd_
 d = rbindlist(x, fill = T)
 }
 \arguments{
-\item{stripAgg}{}
+\item{file}{string indicating BODC file location}
+
+\item{stripAgg}{if True (default) aggregation is used}
 }
 \value{
 data.frame (data.table)

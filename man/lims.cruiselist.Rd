@@ -7,7 +7,9 @@
 lims.cruiselist(yr = "ALL", db_name = "lims")
 }
 \arguments{
-\item{db_name}{}
+\item{yr}{integer specifing a year to limit the search, default is 'ALL'}
+
+\item{db_name}{character string matching ODBC data source name, defaults to 'lims'}
 }
 \value{
 vector of cruise ids

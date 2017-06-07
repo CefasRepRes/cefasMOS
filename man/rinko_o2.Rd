@@ -20,6 +20,9 @@ rinko_o2(V, t, S, oC = list(A = -42.34162, B = +127.6475, C = -0.3677435, D =
 
 \item{H}{beta calibration coef}
 }
+\value{
+vector of RINKO oxygen in mmol m-3
+}
 \description{
 Calculate RINKO oxygen from voltage
 }

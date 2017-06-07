@@ -7,7 +7,14 @@
 PAR_from_Voltage(x, factor, offset)
 }
 \arguments{
-\item{offset}{}
+\item{x}{vector of output voltage (LICOR)}
+
+\item{factor}{licor factor in volts}
+
+\item{offset}{licor offset in volts}
+}
+\value{
+numeric PAR in uE m-2 s-1
 }
 \description{
 Calculates PAR from Licor Li-198 sensors

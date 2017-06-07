@@ -7,7 +7,9 @@
 convert_latlong(degrees, decimal_minutes, polarity = NA)
 }
 \arguments{
-\item{degrees}{if negative will convert}
+\item{degrees}{numeric vector of whole degrees, if negative will convert to W or S.}
+
+\item{decimal_minutes}{numeric vector of decimal minutes}
 
 \item{polarity}{optional "E, W, N, S"}
 }
