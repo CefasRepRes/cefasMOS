@@ -23,10 +23,10 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4
     query = paste("SELECT [C_DATE_COLLECTED] as dateTime,",
                   "[C_LATITUDE] as latitude,",
                   "[C_LONGITUDE] as longitude,",
-                  "[C_CRUISE_CODE] as cruise,",
+                  "[C_SURVEY] as survey,",
                   "[C_STATION] as station,",
                   "[TEXT_ID] as LSN,",
-                  "[C_GEAR_CODE] as gear,",
+                  "[C_SAMPLING_GEAR] as gear,",
                   "[C_COMMENT] as comment,",
                   "[NAME] as variable,",
                   "[UNITS] as unit,",
@@ -88,7 +88,7 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4
 #' @import RODBC
 #' @export
 lims.cruiselist <- function(yr = 'ALL', db_name = 'lims'){
-    query = "SELECT DISTINCT [C_CRUISE_CODE] FROM C_NUTRIENTS_SAMPLES"
+    query = "SELECT DISTINCT [C_SURVEY] FROM C_NUTRIENTS_SAMPLES"
     if(yr != 'ALL'){
         query = paste(query, ' WHERE YEAR([C_DATE_COLLECTED]) = ', yr, sep = '')
     }
