@@ -216,6 +216,8 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
 
 #' calculate speed from GPS
 #'
+#' Make sure your data.frame or table is ordered by dateTime.
+#'
 #' @param dateTime in POSIXct
 #' @param lat in decimal degrees
 #' @param lon in decimal degrees
@@ -226,6 +228,9 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
 #'
 ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
   dat = data.table(dateTime, lat, lon)
+  if(dat != dat[order(dateTime)]){
+    stop("ERROR - data.table is not ordered")
+  }
   dat[, diff := c(NA, diff(as.numeric(dateTime)))]
   dat[, lats := data.table::shift(dat$lat, type = "lag")]
   dat[, lons := data.table::shift(dat$lon, type = "lag")]
@@ -249,6 +254,9 @@ ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
 #'
 ferrybox.course <- function(dateTime, lat, lon, threshold = 65){
   dat = data.table(dateTime, lat, lon)
+  if(dat != dat[order(dateTime)]){
+    stop("ERROR - data.table is not ordered")
+  }
   dat[, diff := c(NA, diff(as.numeric(dateTime)))] #ensure we're talking about seconds
   dat[, lats := data.table::shift(dat$lat, type = "lag")]
   dat[, lons := data.table::shift(dat$lon, type = "lag")]
