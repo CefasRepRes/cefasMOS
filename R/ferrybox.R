@@ -228,7 +228,7 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
 #'
 ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
   dat = data.table(dateTime, lat, lon)
-  if(dat != dat[order(dateTime)]){
+  if(!all.equal(dat, dat[order(dateTime)])){
     stop("ERROR - data.table is not ordered")
   }
   dat[, diff := c(NA, diff(as.numeric(dateTime)))]
@@ -254,7 +254,7 @@ ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
 #'
 ferrybox.course <- function(dateTime, lat, lon, threshold = 65){
   dat = data.table(dateTime, lat, lon)
-  if(dat != dat[order(dateTime)]){
+  if(!all.equal(dat, dat[order(dateTime)])){
     stop("ERROR - data.table is not ordered")
   }
   dat[, diff := c(NA, diff(as.numeric(dateTime)))] #ensure we're talking about seconds
