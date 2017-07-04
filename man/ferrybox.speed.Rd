@@ -19,6 +19,6 @@ ferrybox.speed(dateTime, lat, lon, threshold = 65)
 vector of speeds
 }
 \description{
-calculate speed from GPS
+Make sure your data.frame or table is ordered by dateTime.
 }
 

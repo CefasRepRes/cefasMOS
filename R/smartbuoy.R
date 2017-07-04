@@ -366,3 +366,21 @@ smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
     return(d[,.(deployment = groupId, lat, lon, dateFrom, dateTo, platform = platformName, active)])
 }
 
+#' SmartBuoy parameter codes
+#'
+#' Fetches parameter codes from SmartBuoy database
+#'
+#' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
+#' @return data.table of parcodes
+#' @keywords SmartBuoy
+#' @import data.table RODBC
+#' @export
+smartbuoy.parcodes <- function(db_name = 'smartbuoydblive'){
+  sbdb = odbcConnect(db_name)
+  pos_query = paste("SELECT
+                    [ParCode], [ParDescr] as description, [DefaultUnit]
+                    FROM Parameter ORDER BY [ParCode]")
+  d = data.table(sqlQuery(sbdb, pos_query))
+  odbcCloseAll()
+  return(d)
+}
