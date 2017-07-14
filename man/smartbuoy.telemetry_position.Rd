@@ -4,10 +4,11 @@
 \alias{smartbuoy.telemetry_position}
 \title{Query smartbuoy deployment position from telemetry messages}
 \usage{
-smartbuoy.telemetry_position(deployment, db_name = "smartbuoydblive")
+smartbuoy.telemetry_position(deployment = NA, deployment_group = NA,
+  db_name = "smartbuoydblive")
 }
 \arguments{
-\item{deployment}{}
+\item{deployment_group}{}
 }
 \value{
 data.table of lat-long from telemetry messages

@@ -289,11 +289,13 @@ smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
 #' Query smartbuoy deployment position from telemetry messages
 #'
 #' @param deployment
+#' @param deployment_group
 #'
 #' @return data.table of lat-long from telemetry messages
 #' @export
 #'
-smartbuoy.telemetry_position <- function(deployment, db_name = "smartbuoydblive"){
+smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
+                                         db_name = "smartbuoydblive"){
   query= paste0("
   SELECT DeploymentInstrument.DepId as deployment
   ,[DepGroupId] as deployment_group
@@ -307,13 +309,19 @@ smartbuoy.telemetry_position <- function(deployment, db_name = "smartbuoydblive"
   INNER JOIN Deployment ON
   DeploymentInstrument.DepId = Deployment.DepId
   WHERE
-  SequenceNumber > 60")
-  deployment = paste(deployment, collapse = "', '")
-  query = paste0(query, " AND Deployment.DepId IN ('", deployment, "')")
+  SequenceNumber > 1")
+  if(!is.na(deployment[1])){
+      deployment = paste(deployment, collapse = "', '")
+      query = paste0(query, " AND [DepId] IN ('", deployment, "')")
+  }
+  if(!is.na(deployment_group[1])){
+      deployment_group = paste(deployment_group, collapse = "', '")
+      query = paste0(query, " AND [DepGroupId] IN ('", deployment_group, "')")
+  }
   sb = odbcConnect(db_name)
   dat = data.table(sqlQuery(sb, query, as.is = T))
   odbcCloseAll()
-  dep_check = deployment %in% dat$deployment
+  dep_check = deployment %in% dat$deployment | deployment_group %in% dat$deployment_group
   dat[, lat := as.numeric(lat)]
   dat[, lon := as.numeric(lon)]
   if(FALSE %in% dep_check){ # not working correctly
