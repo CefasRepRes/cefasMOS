@@ -2,7 +2,6 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import matplotlib.pyplot as plt
 import Tkinter as Tk
-# import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import datetime
 import os
@@ -47,8 +46,6 @@ ax.set_ylabel("FTU")
 line1 = ax.plot(xaxis, yaxis, '-')  # add line
 values = [0]
 
-# ts = pd.Series()
-
 
 def random_gen():
     global values, tickrate, fo
@@ -88,7 +85,7 @@ def pod_reader():
     else:
         status = 999
         print("%s  %s  %s\r" % (len(values),
-                               now.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                                now.strftime("%Y-%m-%d %H:%M:%S.%f"),
                                 "bad reading"))
     if status == 0:
         gain = ad_response[1]
@@ -96,15 +93,14 @@ def pod_reader():
         volts = round(int(adc_value)/819, 3)  # accurate to 0.001v
         value = volts * obs_gain[gain]
         print("%s  %s  %s\r" % (len(values),
-                               now.strftime("%Y-%m-%d %H:%M:%S.%f"),
-                               value))
+                                now.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                                value))
         values.append(value)
         with open(filename,"ab") as fo:
             fo.write("%s,%s,%s\r\n" % (len(values),
                                        now.strftime("%Y-%m-%d %H:%M:%S.%f"),
                                        value))
     root.after(tickrate, pod_reader)
-
 
 
 def _quit():
@@ -120,7 +116,10 @@ canvas.get_tk_widget().pack(side=Tk.TOP, fill=Tk.BOTH, expand=1)
 toolbar = NavigationToolbar2TkAgg(canvas, root)
 toolbar.update()
 
-wScale = Tk.Scale(root, label="View Width", from_=10, to=10*60*60, length=300, orient=Tk.HORIZONTAL)
+wScale = Tk.Scale(root,
+                  label="View Width",
+                  from_=10, to=10*60*60,
+                  length=300, orient=Tk.HORIZONTAL)
 wScale.pack()
 
 filename = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S") + "_podlogger.txt"
