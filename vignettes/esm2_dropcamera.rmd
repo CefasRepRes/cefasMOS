@@ -1,0 +1,74 @@
+---
+title: "ESM2 Drop Camera Processing Example"
+author: "Tom Hull"
+date: "26 June 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+require(cefasMOS)
+```
+
+# extract data from database
+
+- Make sure the ESM2 headers have been updated with at least the cruise ID.
+
+```{r extract}
+  # check cruise ID's
+profiler.cruiselist(yr=2017)
+d = profiler.fetch(profiler="PR006", cruiseID="CEND_06x_17",
+                   min_QA_reached=F, RQ0=F,
+                   parameters=c("PRSADC", "O2CONC", "SAL", "TEMP", "FTU", "FLUORS"))
+
+  # rename optode temperature if fitted
+d[grepl("oxygen", sensor) & par == "TEMP", par := "O2TEMP"]
+  # rename 2nd FTU if fitted
+d[grepl("Cabled sensor", sensor) & par == "FTU", par := "FTU2"]
+
+```
+
+# isolate and combine dips
+
+```{r combine_dips}
+  # reshape
+x = dcast.data.table(d, startTime + offset + dateTime + cruise ~ par,
+                     fun.aggregate=mean, na.rm=T)[order(startTime, offset)]
+
+dips = unique(d$startTime)
+
+  # assign dip numbers
+x = merge(x, data.frame(startTime=dips, dip=1:length(dips)), by="startTime")
+
+  # go through each dip in turn, split and combine
+ggplot(x[dip %in% 7:9]) +
+  geom_line(aes(offset, PRSADC)) +
+  facet_wrap("dip")
+  
+  # assign QA flags
+x[dip == 1, dip := NA] # not a dip
+x[dip == 6, dip := 5] # part of previous dip
+x[dip == 7, dip := 8] # part of previous dip
+
+  # here we are splitting a dip into two,
+  #use a high dip number so you don't overwrite a real dip
+x[dip == 3 & offset > 550, dip := dip + 100]
+
+
+```
+# Calculate depth
+
+```{r calc_depth}
+
+  # calculate cumulative window pressure standard deviation
+require(TTR) # timeseries functions
+x[, cum_sd := TTR::runSD(PRSADC, n=10, cumulative=T), by=dip]
+x[cum_sd < 0.02 & PRSADC < 11, AIRPRS := PRSADC, by=dip]
+
+x[, PRS := mean(AIRPRS, na.rm=T), by=dip]
+x[, DEPTH := oce::swDepth(PRSADC, 52)]
+
+```
+
+# apply calibrations
+
+# package
