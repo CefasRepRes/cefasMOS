@@ -28,7 +28,8 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            privateData = FALSE,
                            db_name = 'smartbuoydblive'){
         # boilerplate query start
-    query = paste("SELECT (CAST([Start Time] AS NVARCHAR)) as startTime,",
+    query = paste("SELECT [Start Time] as startTime,",
+              "[Seconds Since 01-Jan-2000] as dateTime,",
               "[Start Time Offset (secs)] as offset,",
               "[Site] as site,",
               "[Depth] as depth,",
@@ -103,7 +104,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 
     print(query)
     sb = odbcConnect(db_name)
-    dat = data.table(sqlQuery(sb, query))
+    dat = data.table(sqlQuery(sb, query, stringsAsFactors=F))
     odbcCloseAll()
     # check if valid data has been returned, if not quit
     if(nrow(dat) > 1){
@@ -112,9 +113,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         stop("no data returned")
     }
 
-    dat$startTime = as.POSIXct(dat$startTime, format="%b %d %Y %I:%M%p", tz="UTC")
-    dat$dateTime = dat$startTime + dat$offset
-    # dat[,max_depth := max(depth), by = list(startTime, profiler)]
+    dat[, dateTime := as.POSIXct(dateTime, origin="2000-01-01")]
 
         # if only CT temp wanted remove non ct data
     if(ct_temp_only == TRUE){
