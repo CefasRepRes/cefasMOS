@@ -242,6 +242,7 @@ ydaytime <- function(x, from = "year"){
 #' @param reference  data.table of variable you want to search against, must contain the same named index column.
 #' @param index  column name in `reference` you want to match against (typically "dateTime")
 #' @param threshold integer value for maximum permissible gap between lookup value, unit = seconds for "dateTime".
+#' @param return if false (default) values with no match, or outside threshold are dropped
 #' @return data.table with added variable column and index from `reference`
 #' @import data.table
 #'
@@ -251,10 +252,14 @@ ydaytime <- function(x, from = "year"){
 #'fuzzymatch(dat, reference, index="i")
 #'
 #' @export
-fuzzymatch <- function(dat, reference, index="dateTime", threshold = Inf){
+fuzzymatch <- function(dat, reference, index="dateTime", threshold = Inf, return = F){
   reference[, (paste0("ref_", index)) := get(index)] # add duplicate reference column
   out = reference[dat, roll="nearest", on=index] # match nearest
-  out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold] # exclude values outside threshold
+  if(return){
+    out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold, within_threshold := T]
+  }else{
+    out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold] # exclude values outside threshold
+  }
   return(copy(out))
 }
 
