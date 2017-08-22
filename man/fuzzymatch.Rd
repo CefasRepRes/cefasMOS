@@ -4,7 +4,8 @@
 \alias{fuzzymatch}
 \title{Fast fuzzy matcher}
 \usage{
-fuzzymatch(dat, reference, index = "dateTime", threshold = Inf)
+fuzzymatch(dat, reference, index = "dateTime", threshold = Inf,
+  return = F)
 }
 \arguments{
 \item{dat}{data.table of variables you want to look up, typically contain a POSIXct "dateTime" index column.}
@@ -14,6 +15,8 @@ fuzzymatch(dat, reference, index = "dateTime", threshold = Inf)
 \item{index}{column name in `reference` you want to match against (typically "dateTime")}
 
 \item{threshold}{integer value for maximum permissible gap between lookup value, unit = seconds for "dateTime".}
+
+\item{return}{if false (default) values with no match, or outside threshold are dropped}
 }
 \value{
 data.table with added variable column and index from `reference`
