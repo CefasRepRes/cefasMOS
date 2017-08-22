@@ -158,7 +158,7 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @import data.table RODBC
 #' @export
 profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
-    query = paste("SELECT [CruiseId], [InstId], [Latitude], [Longitude], [StartDate] FROM",
+    query = paste("SELECT [CtdHeaderId], [CruiseId], [InstId], [Latitude], [Longitude], [StartDate] as startTime FROM",
                   "[SmartBuoy].[dbo].[CtdHeader]",
                   "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
                   "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
