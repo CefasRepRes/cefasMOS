@@ -312,12 +312,13 @@ smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
   SequenceNumber > 1")
   if(!is.na(deployment[1])){
       deployment = paste(deployment, collapse = "', '")
-      query = paste0(query, " AND [DepId] IN ('", deployment, "')")
+      query = paste0(query, " AND DeploymentInstrument.[DepId] IN ('", deployment, "')")
   }
   if(!is.na(deployment_group[1])){
       deployment_group = paste(deployment_group, collapse = "', '")
       query = paste0(query, " AND [DepGroupId] IN ('", deployment_group, "')")
   }
+  query = paste0(query, " ORDER BY [TelTime]")
   sb = odbcConnect(db_name)
   dat = data.table(sqlQuery(sb, query, as.is = T))
   odbcCloseAll()
