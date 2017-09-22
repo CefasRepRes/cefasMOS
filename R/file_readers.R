@@ -167,7 +167,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       ln = readLines(f)
       if(print_file){print(f)}
       dateLine = grep("Date[ /\t]Time", ln, perl = T)
-      d = read.table(f, sep = "\t", header = F, skip = dateLine + 1, fill = F)
+      d = read.table(f, sep = "\t", header = F, skip = dateLine + 1, fill = T)
       cruise = strsplit(ln[2], "\t")[[1]][2]
       SIC = strsplit(ln[3], "\t")[[1]][2]
       comment = strsplit(ln[6], "\t")[[1]][2]
