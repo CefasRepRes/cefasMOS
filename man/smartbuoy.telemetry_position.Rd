@@ -8,7 +8,9 @@ smartbuoy.telemetry_position(deployment = NA, deployment_group = NA,
   db_name = "smartbuoydblive")
 }
 \arguments{
-\item{deployment_group}{}
+\item{deployment}{provide if you want a specific buoy deployment e.g. "DOWSING/040"}
+
+\item{deployment_group}{provide if you want everything for a site e.g. "WESTGAB2"}
 }
 \value{
 data.table of lat-long from telemetry messages

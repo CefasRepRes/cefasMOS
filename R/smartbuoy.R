@@ -288,8 +288,8 @@ smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
 
 #' Query smartbuoy deployment position from telemetry messages
 #'
-#' @param deployment
-#' @param deployment_group
+#' @param deployment provide if you want a specific buoy deployment e.g. "DOWSING/040"
+#' @param deployment_group provide if you want everything for a site e.g. "WESTGAB2"
 #'
 #' @return data.table of lat-long from telemetry messages
 #' @export
