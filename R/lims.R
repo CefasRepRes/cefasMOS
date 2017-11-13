@@ -10,6 +10,7 @@
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param area optional vector consisting of 4 elements, max Latitude, max Longitude, min Latitude, min Longitude e.g. c(53, -2.5, 52, -4)
+#' @param convert convert fields to numeric? default = True
 #' @param db_name character string matching ODBC data source name, defaults to 'lims'
 #' @return data frame (data.table) of extracted nutrients data
 #' @import RODBC data.table
@@ -17,6 +18,7 @@
 lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4', 'NH4', 'PHAEOP', 'NO2', 'PO4', 'DO2'),
                        cruise = NA,
                        after = NA, before = NA,
+                       convert = T,
                        area = NA,
                        db_name = 'lims'){
 
@@ -65,16 +67,19 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4
     print(query)
 
     lims = odbcConnect(db_name)
-    dat =  data.table(sqlQuery(lims, query))
+    dat =  data.table(sqlQuery(lims, query, as.is=T))
     odbcCloseAll()
     # check if valid data has been returned, if not quit
     if(! nrow(dat) > 1){
         warning("no data returned")
     }
-    dat[, latitude := as.character(latitude)]
-    dat[, longitude := as.character(longitude)]
-    dat[, value := as.character(value)]
-    dat[, cruise := as.character(cruise)]
+    if(convert == TRUE){
+      dat[, dateTime := as.POSIXct(dateTime, format="%Y-%m-%d %H:%M:%S", tz="UTC")]
+      dat[, latitude := as.numeric(latitude)]
+      dat[, longitude := as.numeric(longitude)]
+      dat[, value := as.numeric(value)]
+      dat[, depth := as.numeric(value)]
+    }
     return(dat)
 }
 

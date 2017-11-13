@@ -6,7 +6,7 @@
 \usage{
 lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SPM", "TOXN", "SIO4", "NH4",
   "PHAEOP", "NO2", "PO4", "DO2"), cruise = NA, after = NA, before = NA,
-  area = NA, db_name = "lims")
+  convert = T, area = NA, db_name = "lims")
 }
 \arguments{
 \item{parameters}{character string of LIMS parameter names}
@@ -16,6 +16,8 @@ lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SPM", "TOXN", "SIO4", "NH4",
 \item{after}{optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"}
 
 \item{before}{optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"}
+
+\item{convert}{convert fields to numeric? default = True}
 
 \item{area}{optional vector consisting of 4 elements, max Latitude, max Longitude, min Latitude, min Longitude e.g. c(53, -2.5, 52, -4)}
 
