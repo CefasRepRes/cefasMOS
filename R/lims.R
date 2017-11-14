@@ -78,7 +78,7 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4
       dat[, latitude := as.numeric(latitude)]
       dat[, longitude := as.numeric(longitude)]
       dat[, value := as.numeric(value)]
-      dat[, depth := as.numeric(value)]
+      dat[, depth := as.numeric(depth)]
     }
     return(dat)
 }
