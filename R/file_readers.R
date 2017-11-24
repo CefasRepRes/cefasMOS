@@ -197,17 +197,6 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       return(data.frame(d))
     }
   }
-  rbind.named.fill <- function(x) {
-    nam <- sapply(x, names)
-    unam <- unique(unlist(nam))
-    len <- sapply(x, length)
-    out <- vector("list", length(len))
-    for (i in seq_along(len)) {
-      out[[i]] <- unname(x[[i]])[match(unam, nam[[i]])]
-    }
-    setNames(as.data.frame(do.call(rbind, out), stringsAsFactors=FALSE), unam)
-  }
-
   if(print_file){
     recursive = T
     dat = lapply(list.files(folder, recursive = recursive), read_10min, print_file = T)
