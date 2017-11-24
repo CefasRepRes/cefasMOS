@@ -160,7 +160,8 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, bathy_f
 
   # mapdata = data.table(ggplot2::fortify(rworldmap::getMap("high")))
     # subset to just regions in xlim and ylim, see http://stackoverflow.com/a/16574176
-  # mapdata = mapdata[mapdata[,.I[any(long %between% xlim) & any(lat %between% ylim)], by = list(group)]$V1]
+  # mapdata = mapdata[mapdata[,.I[any(long %between% c(-50, 25)) & any(lat %between% c(45, 70))], by = list(group)]$V1]
+  # devtools::use_data(mapdata, overwrite=T)
   data("mapdata") # saved for speed
 
   # make geom
