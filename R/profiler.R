@@ -38,12 +38,14 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
               "[Result Value] as value,",
               "[Latitude] as latitude, [Longitude] as longitude,",
               "[Sensor Description] as sensor,",
+              "[SerialNumber] as serial,",
               "[Parameter code] as par,",
               "[Station] as station,",
               "[Cruise Id] as cruise,",
               "[Logger Id] as profiler,",
               "[Notes] as notes",
               "FROM v_CtdProfile_DataComplete",
+              "INNER JOIN Sensor ON v_CtdProfile_DataComplete.[Sensor Id] = Sensor.SensorId",
               "WHERE [Parameter code] IN")
 
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
@@ -71,14 +73,12 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
       if(!length(area) == 4){
         stop('area does not have 4 elements')
       }else{
-        # TODO between code
         query = paste0(query,
                        " AND [Latitude] >= ", area[1],
                        " AND [Latitude] <= ", area[3],
                        " AND [Longitude] >= ", area[2],
-                       " AND [Longitude] <= ", area[4]
-                       )
-      }
+                       " AND [Longitude] <= ", area[4])
+        }
     }
 
       # if before or after is suppled build filter into query
@@ -95,12 +95,11 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
     }
 
     if(min_QA_reached == TRUE){
-        # TODO min QA level reached
         query = paste(query, "AND [QA Status] >= [QA Status Min Publish Level]")
     }
 
     # finally
-    query = paste0(query, ' ORDER BY startTime')
+    query = paste(query, 'ORDER BY startTime')
 
     print(query)
     sb = odbcConnect(db_name)
