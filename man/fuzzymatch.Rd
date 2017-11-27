@@ -36,4 +36,3 @@ reference = data.table(i = as.numeric(1:10), refjunk = "junk", refval = runif(10
 fuzzymatch(dat, reference, index="i")
 
 }
-

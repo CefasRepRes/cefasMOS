@@ -24,13 +24,18 @@ profiler.binning(x, bin_height = 1, method = round, use_cast = "UP",
 character vector of Cruise Id's
 }
 \description{
-Binns profiler data into depth bins
+Bins profiler data into depth bins
 }
 \details{
-TODO, default boxcar
+This function uses the standard "boxcar" approch to binning CTD profiles.
+profiles can be split to use the average value at each depth from both up and down casts (the "ALL" option),
+or the binning can be restricted to just the down or up casts. DOWN is usually best when the profiler has been deployed correctly,
+UP is useful for comparison to niskin bottle firings.
+Note that startTime and endTime corrispond to the time at the start or end of the cast.
+e.g. if you select UP ast the use_cast option startTime will be the time at the start of the UP cast.
+The UP cast is identified as being the time after the deepest part of the profile.
 }
 \keyword{ctd}
 \keyword{esm2}
 \keyword{profiler}
 \keyword{query}
-

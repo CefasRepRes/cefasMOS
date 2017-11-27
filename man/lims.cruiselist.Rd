@@ -17,4 +17,3 @@ vector of cruise ids
 \description{
 Fetch list of cruises from LIMS
 }
-

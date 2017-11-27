@@ -15,4 +15,3 @@ data.table containing all netcdf variables in long format
 \description{
 Read and convert ECMWF netcdf to data.table
 }
-

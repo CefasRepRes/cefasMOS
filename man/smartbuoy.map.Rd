@@ -35,4 +35,3 @@ Creates a map of MOS deployment sites
 1 for SmartBuoy, 4 = Lander, 8 = Waverider
 }
 \keyword{SmartBuoy}
-

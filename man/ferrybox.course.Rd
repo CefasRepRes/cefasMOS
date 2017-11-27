@@ -21,4 +21,3 @@ vector of courses
 \description{
 Calculate course from GPS
 }
-

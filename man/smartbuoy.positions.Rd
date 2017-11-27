@@ -18,4 +18,3 @@ data.table of positions
 Fetches median positions of deployments
 }
 \keyword{SmartBuoy}
-

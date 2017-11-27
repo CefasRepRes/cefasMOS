@@ -17,4 +17,3 @@ vector of optical depth zone for each depth
 \description{
 Estimate optical depths from PAR profile
 }
-

@@ -25,4 +25,3 @@ Ferrybox quality codes:
 sometimes \0 characters appear in data, to sanitise run sed from a bash terminal
 }
 \keyword{ferrybox}
-

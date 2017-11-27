@@ -22,4 +22,3 @@ data.table containing query results
 \description{
 Tool for fetching serial numbers and calibration dates for SmartBuoy sensor
 }
-

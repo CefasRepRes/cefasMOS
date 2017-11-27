@@ -21,4 +21,3 @@ vector of speeds
 \description{
 Make sure your data.frame or table is ordered by dateTime.
 }
-

@@ -19,4 +19,3 @@ decimal degrees
 \description{
 Convert degrees + decimal minutes to decimal degrees
 }
-

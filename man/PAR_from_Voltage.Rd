@@ -21,4 +21,3 @@ Calculates PAR from Licor Li-198 sensors
  fitted with Cefas inline low-light amplifier.
  Refer to calibration documents for factor and offset.
 }
-

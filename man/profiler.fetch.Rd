@@ -41,9 +41,9 @@ Fetches CTD data from ESM2 profiler records
 \details{
 This function querys the Smartbuoy database and returns ESM2 profiler data matching the provided critiera.
 the v_CtdProfile_AllData table is used, as such private data will not be available to this function.
+Note that startTime is the time at which the instrument started logging.
 }
 \keyword{ctd}
 \keyword{esm2}
 \keyword{profiler}
 \keyword{query}
-

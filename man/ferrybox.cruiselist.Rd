@@ -23,4 +23,3 @@ profiler data is available. The v_CtdProfile_AllData table is used, as such priv
 }
 \keyword{ferrybox}
 \keyword{query}
-

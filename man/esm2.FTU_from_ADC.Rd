@@ -23,4 +23,3 @@ Calculates FTU value from ESM2 raw hex ADC counts
 This function querys the Smartbuoy database and returns
 }
 \keyword{esm2}
-

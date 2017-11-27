@@ -26,4 +26,3 @@ ggplot
 \description{
 Plots a biwavelet wt object with sensible defaults
 }
-

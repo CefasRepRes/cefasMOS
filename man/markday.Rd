@@ -19,4 +19,3 @@ vector of "day" or "night" character values
 \description{
 Calculates if a given datetime is during day or night based on sun angle.
 }
-

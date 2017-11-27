@@ -17,4 +17,3 @@ vector of rate of change in unit/second
 \description{
 Calculates rate of change given datetime and value
 }
-

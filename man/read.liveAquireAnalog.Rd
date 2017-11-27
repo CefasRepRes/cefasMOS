@@ -19,4 +19,3 @@ processed data table
 \description{
 read analog live aquire data
 }
-

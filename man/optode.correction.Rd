@@ -26,4 +26,3 @@ Optode salinity and pressure compensation
 \examples{
 optode.correction(300, 7.701, 34.176, 1000)
 }
-

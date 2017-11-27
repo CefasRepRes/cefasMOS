@@ -18,4 +18,3 @@ data.table of lat-long from telemetry messages
 \description{
 Query smartbuoy deployment position from telemetry messages
 }
-

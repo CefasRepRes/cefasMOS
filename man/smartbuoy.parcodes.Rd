@@ -16,4 +16,3 @@ data.table of parcodes
 Fetches parameter codes from SmartBuoy database
 }
 \keyword{SmartBuoy}
-

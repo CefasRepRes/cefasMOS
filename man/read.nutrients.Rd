@@ -15,4 +15,3 @@ long format data.table
 \description{
 Tool to parse the "Samples" sheet from a modern nutrients lab spreadsheet (.xlsx only)
 }
-

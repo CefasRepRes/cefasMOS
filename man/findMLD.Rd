@@ -24,4 +24,3 @@ simple threshold technique, mld where p +/- 0.125 of surface p
 \details{
 returns max depth if threshold not met
 }
-

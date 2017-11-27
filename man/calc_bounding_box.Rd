@@ -22,4 +22,3 @@ used WGS84 elipsoid to calculate northern, eastern, southern and western extent 
 \examples{
 calc_bounding_box(51, 1.2, 500) # 1x1km square
 }
-

@@ -26,4 +26,3 @@ vector of RINKO oxygen in mmol m-3
 \description{
 Calculate RINKO oxygen from voltage
 }
-

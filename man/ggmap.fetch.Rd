@@ -27,4 +27,3 @@ ggmap object
 Creates a base map centred and scaled
 }
 \keyword{map}
-

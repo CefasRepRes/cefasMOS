@@ -30,4 +30,3 @@ Flags are:
 1024 = undefined
 2048 = value is simulated
 }
-

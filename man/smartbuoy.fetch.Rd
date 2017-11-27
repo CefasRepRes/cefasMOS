@@ -45,4 +45,3 @@ This function querys the Smartbuoy database and returns
 \keyword{esm2}
 \keyword{query}
 \keyword{smartbuoy}
-

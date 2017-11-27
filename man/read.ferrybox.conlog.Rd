@@ -21,4 +21,3 @@ requires intensive string operations on many rows and thus fairly slow
 }
 \keyword{conlog}
 \keyword{ferrybox}
-

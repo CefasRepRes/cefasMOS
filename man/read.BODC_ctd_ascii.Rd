@@ -18,4 +18,3 @@ data.frame (data.table)
 \description{
 Reads ascii CTD files from BODC, attempts to extract metadata
 }
-

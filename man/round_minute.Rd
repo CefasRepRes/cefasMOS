@@ -17,4 +17,3 @@ vector of rounded POSIXct
 \description{
 Round dateTime to x minutes
 }
-

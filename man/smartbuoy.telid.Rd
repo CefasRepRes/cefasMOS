@@ -15,4 +15,3 @@ a vector of matching sensor parameter names
 \description{
 Telemetry id lookup function
 }
-

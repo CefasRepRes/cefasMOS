@@ -19,4 +19,3 @@ euphotic depth (m)
 \description{
 estimate euphotic depth from PAR profile
 }
-

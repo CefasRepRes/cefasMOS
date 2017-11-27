@@ -22,4 +22,3 @@ converts POSIXct to decimal day of year with decimal time.
 The first day of the year is treated as zero, i.e. midday on Jan 1st will return 0.5.
 This differs from the value provided by the `yday` lubridate  function
 }
-

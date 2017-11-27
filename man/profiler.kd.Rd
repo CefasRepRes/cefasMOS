@@ -17,4 +17,3 @@ kd (m-1)
 \description{
 Estimates Kd PAR from downwelling PAR and depth using log par method.
 }
-

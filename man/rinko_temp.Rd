@@ -18,4 +18,3 @@ vector of temperatures
 \description{
 Calculate RINKO temperature from voltage
 }
-
