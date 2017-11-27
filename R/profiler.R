@@ -225,7 +225,7 @@ profiler.binning <- function(x, bin_height= 1,
     }
 
     dat = dat[, list(bin_mean = mean(value, na.rm = T), count = length(value), bin_sd = sd(value, na.rm = T)),
-        by = list(startTime, endTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par)]
+        by = list(startTime, endTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par, serial)]
 
     if(return_bin != 'all'){
         dat = dat[depth_bin == return_bin,]
