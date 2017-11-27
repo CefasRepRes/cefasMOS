@@ -4,6 +4,7 @@
 #'
 #' @details This function querys the Smartbuoy database and returns ESM2 profiler data matching the provided critiera.
 #' the v_CtdProfile_AllData table is used, as such private data will not be available to this function.
+#' Note that startTime is the time at which the instrument started logging.
 #' @param cruiseID optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.
 #' @param profiler optional profiler name string, e.g. "PR009", if provided only data from this profiler will be returned.
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
@@ -173,9 +174,15 @@ profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 
 #' ESM2 profiler depth binning
 #'
-#' Binns profiler data into depth bins
+#' Bins profiler data into depth bins
 #'
-#' @details TODO, default boxcar
+#' @details This function uses the standard "boxcar" approch to binning CTD profiles.
+#' profiles can be split to use the average value at each depth from both up and down casts (the "ALL" option),
+#' or the binning can be restricted to just the down or up casts. DOWN is usually best when the profiler has been deployed correctly,
+#' UP is useful for comparison to niskin bottle firings.
+#' Note that startTime and endTime corrispond to the time at the start or end of the cast.
+#' e.g. if you select UP ast the use_cast option startTime will be the time at the start of the UP cast.
+#' The UP cast is identified as being the time after the deepest part of the profile.
 #' @param x data.frame matching output from fetch.profiler
 #' @param bin_height numeric vector determining depth binning interval, default is 0.5
 #' @param method function for binning, default is round, ceiling and floor also work
@@ -206,7 +213,8 @@ profiler.binning <- function(x, bin_height= 1,
         dat = dat[offset <= max_depth_offset, !"max_depth_offset", with = F] # select all but max_depth_time
     }
     dat = dat[, depth_bin := method(depth / bin_height) * bin_height]
-    dat[,endTime := startTime + max(offset), by = startTime]
+    dat[, endTime := startTime + max(offset), by = startTime]
+    dat[, startTime := startTime + min(offset), by = startTime]
 
     if(O2_trim & "O2CONC" %in% dat$par){
       print("Trimming oxygen")
@@ -215,7 +223,6 @@ profiler.binning <- function(x, bin_height= 1,
       dat[par == "O2CONC",bin_start := min(offset, na.rm = T), by = list(par, startTime, depth_bin)]
       dat = dat[bin_start != offset]
     }
-      print(nrow(dat))
 
     dat = dat[, list(bin_mean = mean(value, na.rm = T), count = length(value), bin_sd = sd(value, na.rm = T)),
         by = list(startTime, endTime, latitude, longitude, cruise, station, site, profiler, depth_bin, par)]
