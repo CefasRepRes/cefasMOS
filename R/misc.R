@@ -377,3 +377,42 @@ markday <- function(dateTime, lat, lon){
   output[(dateTime < sunrise | dateTime > sunset)] = "night"
   return(output)
 }
+
+#' uniform random numbers from percentage
+#'
+#' This is a wrapper for runif that calculates the upper and lower bounds based on a percentage of a given mean
+#'
+#' @param n number of observations
+#' @param mean mean of observations
+#' @param percent percentage of mean
+#'
+#' @return numeric vector of random deviates
+#' @export
+#'
+#' @examples
+#' rpercentunif(10, 50, 10)
+rpercentunif = function(n, mean, percent){
+  lower = mean - ((mean/100) * percent)
+  upper = mean + ((mean/100) * percent)
+  return(runif(n, lower, upper))
+}
+
+
+#' quantile uniform random numbers from percentage
+#'
+#' This is a wrapper for qunif that calculates the upper and lower bounds based on a percentage of a given mean
+#'
+#' @param p a vector of probabilies
+#' @param mean mean of observations
+#' @param percent percentage of mean
+#'
+#' @return numeric vector of random deviates
+#' @export
+#'
+#' @examples
+#' rpercentunif(10, 50, 10)
+qpercentunif = function(p, mean, percent){
+  lower = mean - ((mean/100) * percent)
+  upper = mean + ((mean/100) * percent)
+  return(qunif(p, lower, upper))
+}
