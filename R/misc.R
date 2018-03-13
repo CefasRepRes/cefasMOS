@@ -434,12 +434,16 @@ qpercentunif = function(p, mean, percent){
 #' wash_times = as.POSIXct("2017-01-01 11:05:00")
 #' fb[, flag := lagged_flag(dateTime, wash_times, 600)] # flag for 10 minutes after wash
 lagged_flag <- function(dateTime, init, lag = 300){
-  init = data.table("start" = init)
+  init = data.table("start" = unique(init))
   init[, end := init + lag]
   init[, flag := T]
-  dateTime = data.table("dateTime" = x$dateTime, "dt2" = x$dateTime)
+  dateTime = data.table("dateTime" = dateTime, "dt2" = dateTime)
   setkey(dateTime, dateTime, dt2) # set keys for foverlaps
   setkey(init, start, end)
-  flag = foverlaps(dateTime, init, type="within")$flag
-  return(flag)
+  # flag = foverlaps(dateTime, init, type="within")$flag
+  flag = foverlaps(dateTime, init, type="within", mult="first")
+  if(!all(dateTime$dateTime == flag$dateTime)){
+    stop("")
+  }
+  return(flag$flag)
 }
