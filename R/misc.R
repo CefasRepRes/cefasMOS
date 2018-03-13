@@ -416,3 +416,27 @@ qpercentunif = function(p, mean, percent){
   upper = mean + ((mean/100) * percent)
   return(qunif(p, lower, upper))
 }
+
+#' lagged flag
+#'
+#' function designed to flag data based on specified start times
+#' This is mostly used for flagging data for x minutes after an event
+#'
+#' @param dateTime a vector of times which are to be flagged, this does not need to be POSIXct
+#' @param lag integer period to add to times, should be in the same units i.e. seconds for POSIXct
+#' @import data.table
+#'
+#' @return logical vector of same length as dateTime, True denotes flagged
+#' @export
+#'
+#' @examples
+lagged_flag <- function(dateTime, init, lag = 300){
+  init = data.table("start" = init)
+  init[, end := init + lag]
+  init[, flag := T]
+  dateTime = data.table("dateTime" = x$dateTime, "dt2" = x$dateTime)
+  setkey(dateTime, dateTime, dt2) # set keys for foverlaps
+  setkey(init, start, end)
+  flag = foverlaps(dateTime, init, type="within")$flag
+  return(flag)
+}
