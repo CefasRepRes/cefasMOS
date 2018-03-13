@@ -434,7 +434,7 @@ qpercentunif = function(p, mean, percent){
 #' wash_times = as.POSIXct("2017-01-01 11:05:00")
 #' fb[, flag := lagged_flag(dateTime, wash_times, 600)] # flag for 10 minutes after wash
 lagged_flag <- function(dateTime, init, lag = 300){
-  init = data.table("start" = init)
+  init = data.table("start" = unique(init))
   init[, end := init + lag]
   init[, flag := T]
   dateTime = data.table("dateTime" = dateTime, "dt2" = dateTime)
