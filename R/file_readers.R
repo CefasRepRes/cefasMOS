@@ -205,7 +205,7 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
     dat = pbapply::pblapply(list.files(folder, recursive = recursive), read_10min)
     dat = rbindlist(dat, fill = T)
   }
-  return(dat)
+  return(dat[order(dateTime)])
 }
 
 #' SmartBuoy live aquire export reader
