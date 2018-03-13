@@ -437,9 +437,13 @@ lagged_flag <- function(dateTime, init, lag = 300){
   init = data.table("start" = init)
   init[, end := init + lag]
   init[, flag := T]
-  dateTime = data.table("dateTime" = x$dateTime, "dt2" = x$dateTime)
+  dateTime = data.table("dateTime" = dateTime, "dt2" = dateTime)
   setkey(dateTime, dateTime, dt2) # set keys for foverlaps
   setkey(init, start, end)
-  flag = foverlaps(dateTime, init, type="within")$flag
-  return(flag)
+  # flag = foverlaps(dateTime, init, type="within")$flag
+  flag = foverlaps(dateTime, init, type="within", mult="first")
+  if(!all(dateTime$dateTime == flag$dateTime)){
+    stop("")
+  }
+  return(flag$flag)
 }
