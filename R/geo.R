@@ -110,12 +110,11 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 
 #' GEBCO Bathymetry base map
 #'
-#' Simple basemap for using GEBCO data, if you want something more technical try marmap.
+#' Simple basemap using GEBCO data, if you want something more technical try marmap.
 #'
 #' @param lat vector of latitude coordinates for calculating map extent
 #' @param lon as above for longitude
 #' @param margin integer (default = 8) indicating fraction of range to use for a margin.
-#' @param bathy_file optional bathymetry raster file
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
 #'
 #' @references GEBCO data from GEBCO 2014
@@ -125,22 +124,26 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @import ggplot2 rworldmap
 #' @export
 #'
-bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, bathy_file=NA, breaks=T){
+bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=T){
     # should build bathymap which fits all data in
-  if(is.na(bathy_file)){
+  if(!exists("GBbathy2014")){
     data("GBbathy2014")
-    bathy = GBbathy2014
-  }else{
-    # make bathy
-    bathy = raster::raster(bathy_file)
-    bathy = raster::crop(bathy, raster::extent(c(xlim, ylim)))
-    rtp = data.frame(raster::rasterToPoints(bathy))
-    colnames(rtp) = c('lon', 'lat', 'depth')
-  }
+    print("loaded GEBCO2014")
+    }
+    # make new bathy?
+    # GBbathy2014 = raster::raster(bathy_file)
+    # GBbathy2014 = raster::crop(GBbathy2014, raster::extent(c(xlim, ylim)))
+    # rtp = data.frame(raster::rasterToPoints(GBbathy2014))
+    # colnames(rtp) = c('lon', 'lat', 'depth')
+    # GBbathy2014$label = raster::cut(GBbathy2014$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf), labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
+    # devtools::use_data(GBbathy2014, overwrite=T)
+
   max.lat = abs(min(lat) - max(lat))
   max.lon = abs(min(lon) - max(lon))
   xlim = c(min(lon) - max.lon / margin, max(lon) + max.lon / margin)
   ylim = c(min(lat) - max.lat / margin, max(lat) + max.lat / margin)
+
+  bathy = GBbathy2014[lon %between% xlim & lat %between% ylim]
 
   GEBCOcolors5 = c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7")
   GEBCOcolors12 = c("#0F7CAB", "#1D8CB2", "#2C9CBA", "#3CABC1", "#4DB9C8", "#5FC6D0",
@@ -148,8 +151,6 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, bathy_f
 
   # classify
   if(breaks == T){
-    bathy$label = raster::cut(bathy$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf),
-                      labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
     colorNum = length(unique(bathy$label))
     bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth')
   }else{

@@ -5,7 +5,7 @@
 \title{GEBCO Bathymetry base map}
 \usage{
 bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = 8,
-  bathy_file = NA, breaks = T)
+  breaks = T)
 }
 \arguments{
 \item{lat}{vector of latitude coordinates for calculating map extent}
@@ -14,15 +14,13 @@ bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = 8,
 
 \item{margin}{integer (default = 8) indicating fraction of range to use for a margin.}
 
-\item{bathy_file}{optional bathymetry raster file}
-
 \item{breaks}{if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins}
 }
 \value{
 ggplot
 }
 \description{
-Simple basemap for using GEBCO data, if you want something more technical try marmap.
+Simple basemap using GEBCO data, if you want something more technical try marmap.
 }
 \references{
 GEBCO data from GEBCO 2014
