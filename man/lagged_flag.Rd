@@ -18,3 +18,8 @@ logical vector of same length as dateTime, True denotes flagged
 function designed to flag data based on specified start times
 This is mostly used for flagging data for x minutes after an event
 }
+\examples{
+
+wash_times = as.POSIXct("2017-01-01 11:05:00")
+fb[, flag := lagged_flag(dateTime, wash_times, 600)] # flag for 10 minutes after wash
+}
