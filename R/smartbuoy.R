@@ -66,8 +66,12 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                   "[Result - Count] as n,",
                   "[Sensor Descr] as sensor,",
                   "[Sensor Serial Number] as sensor_serial,",
-                  "[Parameter Code] as par",
-                  "FROM AdHocRetrieval_BurstMeanResults")
+                  "[Parameter Code] as par,",
+                  "SensorParameter.[ParUnit] as unit",
+                  "FROM AdHocRetrieval_BurstMeanResults",
+                  "INNER JOIN SensorParameter ON",
+                  "AdHocRetrieval_BurstMeanResults.[Sensor Id] = SensorParameter.SensorId AND",
+                  "AdHocRetrieval_BurstMeanResults.[Parameter Code] = SensorParameter.ParCode")
     }
 
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
