@@ -138,7 +138,7 @@ read.ULP000 <- function(file){
     rate = as.numeric(sen[3])
     d = sen[7:length(sen)]
     index = seq(0,(length(d)*rate)-rate,rate)
-    dat = rbind(dat, data.frame(index = index, value = d, channel))
+    dat = rbind(dat, data.table(index = index, value = d, channel, stringsAsFactors=F))
   }
   dat[, burst := id[6]]
   dat[, time := startTime + (index/10)]
