@@ -223,3 +223,41 @@ calc_bounding_box <- function(lat, lon, size = 250){
   box = c(north[2], east[1], south[2], west[1])
   return(box)
 }
+
+#' Spatial-temporal matching
+#'
+#' builds distance matrix between all points in two data.tables using WGS84 elipsoid,
+#' this matrix is then reduced to those within a specified distance threshold.
+#' These spacial matched points are then matched against time within a time threshold
+#'
+#' @param x data.table with lat, lon and dateTime columns
+#' @param y data.table with lat, lon and dateTime columns
+#' @param distance_threshold distance in meters to match within
+#' @param time_threshold time in seconds to match within
+#' @param merge bool
+#' @import geosphere
+#'
+#' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
+#' @export
+match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 3600, merge=T){
+  if(!is.data.table(x) | !is.data.table(y)){stop("x and y must be data.tables")}
+  if(!all(c("lat", "lon", "dateTime") %in% names(x)))stop("lat, lon and dateTime columns must be present in x")
+  if(!all(c("lat", "lon", "dateTime") %in% names(y)))stop("lat, lon and dateTime columns must be present in y")
+  dm = geosphere::distm(x[,.(lon, lat)], y[,.(lon, lat)])
+  ind = data.table(which(dm < distance_threshold, arr.ind=T))
+  ind[, rtime := x$dateTime[row]]
+  ind[, ctime := y$dateTime[col]]
+  ind = ind[abs(rtime - ctime) < 5]
+  x = copy(x[ind$row])
+  y = copy(y[ind$col])
+  if(merge){
+    setnames(y, c("dateTime", "lat", "lon"), c("dateTime_y", "lat_y", "lon_y"))
+    out = cbind(x, y)
+    out[, dist := geosphere::distGeo(cbind(lon, lat), cbind(lon_y, lat_y))]
+    out[, t_dist := as.numeric(dateTime) - as.numeric(dateTime_y)]
+    out
+  }
+  else{
+    list("x" = x, "y" = y)
+  }
+}
