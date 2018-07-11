@@ -4,12 +4,14 @@
 \alias{oxygen.sat}
 \title{Equilibrium Oxygen saturation concentration}
 \usage{
-oxygen.sat(temp, salinity)
+oxygen.sat(temp, salinity, unit = "molm")
 }
 \arguments{
 \item{temp}{numeric vector of water temperature in degrees Celsius}
 
 \item{salinity}{numeric vector of salinity (PSU)}
+
+\item{unit}{"molm" for mmol m-3 (default), "mgl" for mg l-1 or "molkg" for umol kg-1.}
 }
 \value{
 vector of saturation concentration in mmol m-3
@@ -18,7 +20,10 @@ vector of saturation concentration in mmol m-3
 Calculates oxygen saturation concentration in equilibrium with the atmosphere
 as per Garcia & Gordon, 1992 (Benson & Kraus data)
 }
+\details{
+conversions via SCOR WG 142
+}
 \examples{
-Csat(10, 35)  # saturation concentration at 10 degrees and 35 salinity
+oxygen.sat(10, 35)  # saturation concentration at 10 degrees and 35 salinity
 }
 \keyword{oxygen}

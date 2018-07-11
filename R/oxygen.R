@@ -32,7 +32,6 @@ optode.fixer <- function(O2SAT, O2CONC, salinity = 0){
                     (C0*salinity^2))
 
     O2CONC = ((Cstar * 44.614 * O2SAT) / 100) * 0.0319988 # mg/l
-    # O2CONC = (O2CONC/31.9988) * 1000 # mg/l to mmol m-3
 
     return(O2CONC)
 }
@@ -66,8 +65,6 @@ optode.correction <- function(O2, t, S, depth = 0, optode_salinity = 0){
   O2c = O2 * exp(S * (B0 + B1 * Ts + B2 * Ts^2 + B3 * Ts^3) + C0 * S^2) /
       exp(optode_salinity* (B0 + B1 * Ts + B2 * Ts^2 + B3 * Ts^3) + C0^2 * optode_salinity^2) *
       (1 + (pCoef * abs(depth)) / 1000)
-  # sal_factor = exp((S - optode_salinity_setting) * (B0 + B1*Ts + B2*Ts^2 + B3*Ts^3) + C0 * (S^2 - optode_salinity_setting^2))
-  # prs_factor = (((abs(depth))/1000)*pCoef) + 1
   return(O2c)
 }
 
@@ -147,41 +144,6 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01,
   return(DO)
 }
 
-#' Equilibrium Oxygen saturation concentration
-#'
-#' Calculates oxygen saturation concentration in equilibrium with the atmosphere
-#' as per Garcia & Gordon, 1992 (Benson & Kraus data)
-#' @param temp numeric vector of water temperature in degrees Celsius
-#' @param salinity numeric vector of salinity (PSU)
-#' @return vector of saturation concentration in mmol m-3
-#' @keywords oxygen
-#' @examples
-#' Csat(10, 35)  # saturation concentration at 10 degrees and 35 salinity
-#' @export
-oxygen.sat <- function(temp, salinity){
-  # Coefficents
-  A0 = 2.00907
-  A1 = 3.22014
-  A2 = 4.05010
-  A3 = 4.94457
-  A4 = -0.256847
-  A5 = 3.88767
-  B0 = -0.00624523
-  B1 = -0.00737614
-  B2 = -0.0103410
-  B3 = -0.00817083
-  C0 = -4.88682E-07
-
-  Ts = log((298.15-temp)/(273.15+temp))
-
-  O2.sat = A0+(A1*Ts)+(A2*Ts^2)+
-    (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
-    salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
-    (C0*salinity^2)
-
-  return((exp(O2.sat))* 44.6608)     # output in uMol/L
-}
-
 #' convert oxygen partial pressure to molar oxygen concentration
 #' according to recommendations by SCOR WG 142 "Quality Control Procedures
 #' for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
@@ -195,10 +157,6 @@ oxygen.sat <- function(temp, salinity){
 #' @return oxygen concentration in mmol m-3
 #' @export
 oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0){
-  #function O2conc=O2ptoO2c(pO2,T,S,P)
-  #
-  # 28.10.2015
-  # 19.04.2018, v1.1, fixed typo in B2 exponent
   xO2     = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
   pH2Osat = 1013.25*(exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+TEMP)/100)))-0.000544*SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   # pH2Osat = 6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP))) # mbar , Buck 1996 equation for over water , TEMP = air temp ?more accurate
@@ -209,6 +167,31 @@ oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0){
   R       = 8.314 # universal gas constant in J mol-1 K-1
 
   pO2/(xO2*(1013.25-pH2Osat))*(TCorr*Scorr)/exp(Vm*PRS/(R*(TEMP+273.15)))
+}
+
+#' convert molar oxygen concentration to oxygen partial pressure
+#' according to recommendations by SCOR WG 142 "Quality Control Procedures
+#' for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
+#' Henry Bittig
+#'
+#' @param O2 molar concentration of oxygen in mmol m-3
+#' @param TEMP temperature
+#' @param SAL salinity
+#' @param PRS hydrostatic pressure in dbar (default = 0)
+#'
+#' @return partial pressure of oxygen in mbar
+#' @export
+oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
+
+  xO2 = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
+  pH2Osat = 1013.25 * (exp(24.4543 -(67.4509 * (100 / (T + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
+  sca_T   = log((298.15 - TEMP)/(273.15 + TEMP)) # scaled temperature for use in TCorr and SCorr
+  TCorr   = 44.6596 * exp(2.00907 + 3.22014 * sca_T + 4.05010 * sca_T^2 + 4.94457 * sca_T^3 - 2.56847e-1 * sca_T^4 + 3.88767 * sca_T^5) # temperature correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit mL(STP) L-1; and conversion from mL(STP) L-1 to umol L-1
+  Scorr   = exp(SAL * (-6.24523e-3-7.37614e-3 * sca_T - 1.03410e-2 * sca_T^2-8.17083e-3*sca_T^3)-4.88682e-7*SAL^2) # salinity correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit ml(STP) L-1
+  Vm      = 0.317 # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
+  R       = 8.314 # universal gas constant in J mol-1 K-1
+
+  pO2 = O2*(xO2*(1013.25-pH2Osat))/(TCorr*Scorr)*exp(Vm*PRS/(R*(TEMP+273.15)))
 }
 
 #' Oxygen in-air concentration
@@ -253,4 +236,78 @@ oxygen.air_conc <- function(TEMP, SAL, AIRPRS, RH = NA, DTEMP = NA, return_conc=
   }else{
     return(pO2air)
   }
+}
+
+#' Equilibrium Oxygen saturation concentration
+#'
+#' Calculates oxygen saturation concentration in equilibrium with the atmosphere
+#' as per Garcia & Gordon, 1992 (Benson & Kraus data)
+#'
+#' conversions via SCOR WG 142
+#'
+#' @param temp numeric vector of water temperature in degrees Celsius
+#' @param salinity numeric vector of salinity (PSU)
+#' @param unit "molm" for mmol m-3 (default), "mgl" for mg l-1 or "molkg" for umol kg-1.
+#' @return vector of saturation concentration in mmol m-3
+#' @keywords oxygen
+#' @examples
+#' oxygen.sat(10, 35)  # saturation concentration at 10 degrees and 35 salinity
+#' @export
+oxygen.sat <- function(temp, salinity, unit = "molm"){
+
+  if(unit == "molkg"){
+    # umol kg coefficents
+    A0 = 5.80871;
+    A1 = 3.20291;
+    A2 = 4.17887;
+    A3 = 5.10006;
+    A4 = -9.86643-2;
+    A5 = 3.80369;
+    B0 = -7.01577e-3;
+    B1 = -7.70028e-3;
+    B2 = -1.13864e-2;
+    B3 = -9.51519e-3;
+    C0 = -2.75915e-7;
+  }else{
+    # cm3 dm-3 coefficents (ml/l)
+    A0 = 2.00907
+    A1 = 3.22014
+    A2 = 4.05010
+    A3 = 4.94457
+    A4 = -0.256847
+    A5 = 3.88767
+    B0 = -0.00624523
+    B1 = -0.00737614
+    B2 = -0.0103410
+    B3 = -0.00817083
+    C0 = -4.88682E-07
+  }
+    Ts = log((298.15-temp)/(273.15+temp))
+
+    O2.sat = A0+(A1*Ts)+(A2*Ts^2)+
+    (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
+    salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
+    (C0*salinity^2)
+
+    # molar volume of O2 of 22,39 1.6 cm3 mol-1
+
+    if(unit == "molm"){
+      return(exp(O2.sat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
+    }
+    if(unit == "mll"){
+      return(exp(O2.sat)) # no conversion
+    }
+    if(unit == "mgl"){
+      return(exp(O2.sat) / 0.699745)     # convert ml/l to mg/l
+    }
+    if(unit == "molkg"){
+      return(exp(O2.sat)) # no conversion
+    }
+
+    # 1 μmol O2 = .022391 ml at sea surface pressure
+    # 1 mg/l = 22.391 ml/31.998 = 0.699745 ml/l
+
+    else{
+      stop("unit not recognised")
+    }
 }
