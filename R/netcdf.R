@@ -14,7 +14,7 @@ read.ecmwf <- function(file){
   lat = nc$dim$latitude$vals
   dateTime = nc$dim$time$vals # hours since 1900-01-01
   dateTime = as.POSIXct(dateTime*60*60, origin = "1900-01-01", tz = "UTC")
-  met = data.frame()
+  met = list()
   for(var in vars){
     print(paste("extracting", var))
     dat = ncvar_get(nc, var)
@@ -24,9 +24,10 @@ read.ecmwf <- function(file){
     dat[, longitude := lon[longitude]]
     dat[, latitude := lat[latitude]]
     dat[, time := dateTime[time]]
-    met = rbind(met, dat)
+    met[[var]] = dat
   }
-  nc_close(file)
+  nc_close(nc)
+  met = rbindlist(met)
   met = dcast.data.table(met, time + longitude + latitude ~ variable)
   if("u10" %in% vars & "v10" %in% vars){
     print("calculating wsp and dir")
