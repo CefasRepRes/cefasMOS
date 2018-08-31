@@ -74,10 +74,10 @@ esm2.FTU_from_ADC<- function(x, factor = 1.22, offset = 0.001){
 #' @param x vector of ESM2 hex ADC counts, each count should be 6 characters i.e. "1a13D2"
 #' @param factor channel calibration factor, specific to logger, default is 1.22
 #' @param offset channel calibration offset, default is 0.001
-#' @return vector of calibrated FTU values
+#' @return vector of calibrated FLUORS values
 #' @keywords esm2
 #' @export
-esm2.FLUORS_from_ADC<- function(x, factor = 1.22, offset = 0.001){
+esm2.FLUORS_from_ADC <- function(x, factor = 1.22, offset = 0.001){
     which_range <- function(range){
         switch(range,
                "0" = 30,
@@ -94,6 +94,24 @@ esm2.FLUORS_from_ADC<- function(x, factor = 1.22, offset = 0.001){
         return(dec.c * range) # apply gain factor
     }
     return(sapply(x, subfunc))
+}
+
+#' volts from ADC
+#'
+#' Calculates raw voltage value from ESM2 hex ADC counts
+#'
+#' @details This function querys the Smartbuoy database and returns
+#' @param x vector of ESM2 hex ADC counts, each count should be 6 characters i.e. "1a13D2"
+#' @param factor channel calibration factor, specific to logger, default is 1.22
+#' @param offset channel calibration offset, default is 0.001
+#' @return vector of channel corrected voltage values
+#' @keywords esm2
+#' @export
+esm2.volts_from_ADC <- function(x, factor = 1.22, offset = 0.001){
+  dec = as.numeric(paste0("0x", substr(x, 4, 6)))
+  dec.mv = dec / 1000 # convert to mV
+  dec.c = (dec.mv * factor) - (offset / 1000)  # apply channel calibrations
+  return(dec.c)
 }
 
 #' Calculate Cefas LiCor PAR from voltage

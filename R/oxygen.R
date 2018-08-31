@@ -68,6 +68,84 @@ optode.correction <- function(O2, t, S, depth = 0, optode_salinity = 0){
   return(O2c)
 }
 
+#' Analog optode temperature
+#'
+#' Calculates temperature from optode analog channel
+#'
+#' @param v volts
+#' @param TempLimit0 optode TempLimit lower parameter (usually -5)
+#' @param TempLimit1 optode TempLimit upper parameter (usually 35)
+#'
+#' @return vector of temperature (C)
+#' @export
+optode.analogtemp <- function(v, TempLimit0=-5, TempLimit1=35){
+  TempLimit0 + (v / 5) * TempLimit1
+}
+
+#' Analog optode calphase
+#'
+#' Calculates Calphase from optode analog channel
+#'
+#' @param v volts
+#' @param TempLimit0 optode PhaseLimit lower parameter (usually 10)
+#' @param TempLimit1 optode PhaseLimit upper parameter (usually 70)
+#'
+#' @return vector of temperature (C)
+#' @export
+optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
+  PhaseLimit0 + (v / 5) * PhaseLimit1
+}
+
+#' Optode phase
+#'
+#' Uses suppled optode calibration coeffients to calculate oxygen concentration from Dphase/Calphase and temperature.
+#'
+#' @param DPhase vector of phase values
+#' @param Temp vector of temperature (C)
+#' @param coefs list (or data.frame) consisting of C0..C6 coefs, see examples
+#'
+#' @return oxygen concentration in mmol m-3
+#' @export
+#'
+#' @examples
+#'
+#' # for SVU multipoint calibrated optodes:
+#' SVU_coef = list(batch="1517M", coef="SVU", C0=0.002757413, C1=0.000115132, C2=2.34E-06, C3=234.4436, C4=-0.3752192, C5=-45.60156, C6=4.630104)
+#' optode.phaseCalc(45, 10, coefs=SVU_coef)
+#'
+#' # For standard optodes:
+#' coefs = data.frame(
+#'   batch = 1707,
+#'   coef = 0:3,
+#'   C0 = c(5326.5, -192.117, 4.14357, -0.0378695),
+#'   C1 = c(-292.068, 9.71993, -0.214295, 0.00200778),
+#'   C2 = c(6.47595, -0.19808, 0.0044994, -0.0000431),
+#'   C3 = c(-0.0669288, 0.00188066, -0.0000442, 0.000000428),
+#'   C4 = c(0.000265042, -0.00000683, 0.000000167, -1.62E-09))
+#' optode.phaseCalc(30, 10, coefs=coefs)
+
+optode.phaseCalc <- function(DPhase, Temp, coefs){
+  with(coefs, {
+    if(coef[1] == "SVU"){
+      # For 4831 multipoint calibrated optodes
+      print(paste("using SVU foil batch coefs", batch))
+      Ksv = C0 + C1*Temp + C2*Temp^2
+      P0 = C3 + C4*Temp
+      Pc = C5 + C6*DPhase # actually calphase
+      ((P0/Pc)-1) / Ksv
+    } else{
+      # for mkl optodes 3830 & 3835
+      print(paste("using foil batch coefs", batch[1]))
+      (C0[1]+C0[2]*Temp+C0[3]*Temp^2+C0[4]*Temp^3) +
+        (C1[1]+C1[2]*Temp+C1[3]*Temp^2+C1[4]*Temp^3) *
+        DPhase+(C2[1]+C2[2]*Temp+C2[3]*Temp^2+C2[4]*Temp^3) *
+        DPhase^2+(C3[1]+C3[2]*Temp+C3[3]*Temp^2+C3[4]*Temp^3) *
+        DPhase^3+(C4[1]+C4[2]*Temp+C4[3]*Temp^2+C4[4]*Temp^3) *
+        DPhase^4
+    }
+  })
+}
+
 #' Calculate RINKO temperature from voltage
 #'
 #' @param V measured RINKO output in volts
@@ -94,13 +172,7 @@ rinko.temp <- function(V, tC = list(A = -5.326887e+00, B = +1.663288e+01, C = -2
 #'
 #' @return vector of RINKO oxygen in mmol m-3
 #' @export
-rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01,
-                                     B = +1.276475e+02,
-                                     C = -3.677435e-01,
-                                     D = +1.137000e-02,
-                                     E = +4.600000e-03,
-                                     F = +7.570000e-05),
-                     p = 10.1325, G = 0, H = 1){
+rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 10.1325, G = 0, H = 1){
 
   # V = output voltage
   # t = tempeture from rinko_temp
@@ -117,7 +189,7 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01,
   DO = G + H * P
     # pressure correction
   d = p * 0.01 # convert from decibar to MPa
-  DO = DO * (1 + oC$E * d) # DO = %
+  DO = DO * (1 + oC$E * d) # DO = oxygen saturation %, corrected for pressure
 
   # from garcia and gordon
     A0 = 2.00856
