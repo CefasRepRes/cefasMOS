@@ -7,6 +7,7 @@
 #' @export
 read.ecmwf <- function(file){
   nc = nc_open(file)
+  print(nc)
   dims = names(nc$dim)
   vars = names(nc$var)
   lon = nc$dim$longitude$vals
@@ -24,7 +25,8 @@ read.ecmwf <- function(file){
     dat[, latitude := lat[latitude]]
     dat[, time := dateTime[time]]
     met = rbind(met, dat)
-    }
+  }
+  nc_close(file)
   met = dcast.data.table(met, time + longitude + latitude ~ variable)
   if("u10" %in% vars & "v10" %in% vars){
     print("calculating wsp and dir")
