@@ -1,11 +1,12 @@
 #' Read and convert ECMWF netcdf to data.table
 #'
-#' @param file
+#' @param file name of ECMWF netcdf file
+#' @param convert_units if True convert to more typical units (i.e. Celcius / mbar), default is False.
 #'
-#' @return data.table containing all netcdf variables in long format
+#' @return data.table containing all netcdf variables in wide format
 #' @import ncdf4 data.table
 #' @export
-read.ecmwf <- function(file){
+read.ecmwf <- function(file, convert_units = F){
   nc = nc_open(file)
   print(nc)
   dims = names(nc$dim)
@@ -18,8 +19,19 @@ read.ecmwf <- function(file){
   for(var in vars){
     print(paste("extracting", var))
     dat = ncvar_get(nc, var)
+    unit = ncatt_get(nc, var, "units")
     dat = data.table(melt(dat))
     colnames(dat) = c(names(nc$dim), "value")
+    if(unit$hasatt == T & convert_units == T){
+      if(unit$value == "K"){
+        print("converting Kelvin to Celcius")
+        dat[, value := value - 273.15]
+      }
+      if(unit$value == "Pa"){
+        print("converting Pa to hPa/mbar")
+        dat[, value := value * 0.01]
+      }
+    }
     dat$variable = var
     dat[, longitude := lon[longitude]]
     dat[, latitude := lat[latitude]]
@@ -30,7 +42,7 @@ read.ecmwf <- function(file){
   met = rbindlist(met)
   met = dcast.data.table(met, time + longitude + latitude ~ variable)
   if("u10" %in% vars & "v10" %in% vars){
-    print("calculating wsp and dir")
+    print("calculating wsp and dir (m s-1 & degrees)")
     met[, wsp := sqrt(u10^2 + v10^2)] # wind speed
     met[, dir := atan2(u10, v10)] # calculate direction
     met[, dir := dir * (360/(2*pi))] # convert to 180 degrees

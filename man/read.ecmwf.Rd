@@ -4,13 +4,15 @@
 \alias{read.ecmwf}
 \title{Read and convert ECMWF netcdf to data.table}
 \usage{
-read.ecmwf(file)
+read.ecmwf(file, convert_units = F)
 }
 \arguments{
-\item{file}{}
+\item{file}{name of ECMWF netcdf file}
+
+\item{convert_units}{if True convert to more typical units (i.e. Celcius / mbar), default is False.}
 }
 \value{
-data.table containing all netcdf variables in long format
+data.table containing all netcdf variables in wide format
 }
 \description{
 Read and convert ECMWF netcdf to data.table
