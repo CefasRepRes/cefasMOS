@@ -79,7 +79,7 @@ optode.correction <- function(O2, t, S, depth = 0, optode_salinity = 0){
 #' @return vector of temperature (C)
 #' @export
 optode.analogtemp <- function(v, TempLimit0=-5, TempLimit1=35){
-  TempLimit0 + (v / 5) * TempLimit1
+  TempLimit0 + (v / 5) * diff(c(TempLimit0, TempLimit1))
 }
 
 #' Analog optode calphase
@@ -93,7 +93,7 @@ optode.analogtemp <- function(v, TempLimit0=-5, TempLimit1=35){
 #' @return vector of temperature (C)
 #' @export
 optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
-  PhaseLimit0 + (v / 5) * PhaseLimit1
+  PhaseLimit0 + (v / 5) * diff(c(PhaseLimit0, PhaseLimit1))
 }
 
 #' Optode phase
