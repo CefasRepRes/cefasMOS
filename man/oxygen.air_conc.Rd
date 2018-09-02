@@ -25,6 +25,8 @@ oxygen concentration in mmol m-3
 \description{
 Calculates in-air concentration of oxygen, given temperature, pressure and relative humidity.
 If only given dewpoint will use Sargent (1980) approximation to derive relative humidity
+}
+\details{
 Bittig2018
 }
 \keyword{oxygen}

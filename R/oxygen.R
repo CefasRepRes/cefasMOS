@@ -270,6 +270,7 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 #'
 #' Calculates in-air concentration of oxygen, given temperature, pressure and relative humidity.
 #' If only given dewpoint will use Sargent (1980) approximation to derive relative humidity
+#'
 #' Bittig2018
 #'
 #' @param TEMP air temperature in Celsius
@@ -285,14 +286,9 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 oxygen.air_conc <- function(TEMP, SAL, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){
   if(any(is.na(RH)) & any(is.na(DTEMP))){stop("tool requires relative humidity or dew temp")}
   if(any(is.na(RH)) & !any(is.na(DTEMP))){
-    # sargent1980
-    K0 = 17.9
-    K1 = 0.18 # for RH > 65%
-    RH = (-TEMP + K0 + DTEMP) / K1
-    if(any(RH < 65)){warning("Sargent1980 only valid for RH > 65%")}
+    RH = RH_from_dewtemp(TEMP, DTEMP)
   }
-  # pVap = 6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP))) # mbar , Buck 1996 equation , TEMP = air temp ?more accurate
-  pVap = (exp(24.4543 - 67.4509 * (100/(273.15 + TEMP)) - 4.8489 * log((273.15 + TEMP)/100) - 0.000544 * SAL)) # weiss1970 [Atm]
+  pVap = saturation_vapour_pressure(TEMP)
   xO2     = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
   pO2air = xO2 * (AIRPRS - (pVap * (RH / 100))) # partial pressure of oxygen in air
 

@@ -465,3 +465,59 @@ lagged_flag <- function(dateTime, init, lag = 300){
   }
   return(flag$flag)
 }
+
+#' Calculate relative humidity from air temperature and dewpoint
+#'
+#' @param t2m air temperature
+#' @param d2m dew point temperature
+#' @unit "K" or "C" (default)
+#'
+#' @return
+#' @export
+#'
+RH_from_dewtemp <- function(t2m, d2m, unit="C"){
+  RH = 100 * (saturation_vapour_pressure(d2m) / saturation_vapour_pressure(t2m))
+  return(RH)
+}
+
+#' Calculate water vapour saturation pressure
+#'
+#' @param TEMP
+#' @param unit "C" default or "K"
+#' @param method options are "Wagner", "Buck" and "Weiss"
+#'
+#' @return
+#' @export
+#'
+saturation_vapour_pressure <- function(TEMP, unit="C", method="Wagner"){
+  if(unit == "C"){
+    KTEMP = TEMP + 273.15
+  }else{
+    KTEMP = TEMP
+    TEMP = KTEMP - 273.15
+  }
+  if(method == "Wagner"){
+    # IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance for General and Scientific Use ",
+    # Journal of Physical and Chemical Reference Data, June 2002 ,Volume 31, Issue 2, pp. 387535):
+    Tc = 647.096 # critical temperature [K]
+    Pc = 220640 # critical pressure [hPa]
+    C1 = -7.85951783
+    C2 = 1.84408259
+    C3 = -11.7866497
+    C4 = 22.6807411
+    C5 = -15.9618719
+    C6 = 1.80122502
+    v = 1 - (KTEMP / Tc)
+    Cx = (C1 * v + C2 * v^1.5 + C3 * v^3 + C4 * v^3.5 + C5 * v^4 + C6 * v^7.5)
+    return(exp((Tc / KTEMP) * Cx) * Pc) # hPa
+  }
+  if(method == "Buck"){
+    # Buck 1996 equation
+    return(6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP)))) # hPa/mbar
+  }
+  if(method == "Weiss")
+    # weiss1970 [mbar]
+    return(
+      (exp(24.4543 - 67.4509 * (100/(273.15 + TEMP)) - 4.8489 * log((273.15 + TEMP)/100) - 0.000544 * 0)) * 1013.25
+    )
+}
