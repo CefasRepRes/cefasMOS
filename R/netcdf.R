@@ -13,15 +13,24 @@ read.ecmwf <- function(file, convert_units = F){
   vars = names(nc$var)
   lon = nc$dim$longitude$vals
   lat = nc$dim$latitude$vals
+
+  time_origin = ncatt_get(nc, "time", "units")$value
+  if(grepl("hours", time_origin)){
+    time_scale = 60*60
+  }else{
+    time_scale = 1
+  }
+  time_origin = stringr::str_sub(time_origin, -19)
   dateTime = nc$dim$time$vals # hours since 1900-01-01
-  dateTime = as.POSIXct(dateTime*60*60, origin = "1900-01-01", tz = "UTC")
+  dateTime = as.POSIXct(dateTime * time_scale, origin = time_origin, tz = "UTC")
   met = list()
   for(var in vars){
     print(paste("extracting", var))
-    dat = ncvar_get(nc, var)
+    dat = ncvar_get(nc, var, collapse_degen=F)
     unit = ncatt_get(nc, var, "units")
     dat = data.table(melt(dat))
-    colnames(dat) = c(names(nc$dim), "value")
+    var_dim_index = nc$var[[var]]$dimids + 1 # get dim indexes
+    colnames(dat) = c(dims[var_dim_index], "value")
     if(unit$hasatt == T & convert_units == T){
       if(unit$value == "K"){
         print("converting Kelvin to Celcius")
@@ -48,5 +57,4 @@ read.ecmwf <- function(file, convert_units = F){
     met[, dir := dir * (360/(2*pi))] # convert to 180 degrees
     met[dir < 0, dir := dir + 360] # convert to 360 degrees
   }
-  return(met)
 }
