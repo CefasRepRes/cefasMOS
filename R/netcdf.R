@@ -20,7 +20,7 @@ read.ecmwf <- function(file, convert_units = F){
   }else{
     time_scale = 1
   }
-  time_origin = stringr::str_sub(time_origin, -19)
+  time_origin = stringr::str_extract(time_origin, "[0-9\\-]+ [0-9:]+")
   dateTime = nc$dim$time$vals # hours since 1900-01-01
   dateTime = as.POSIXct(dateTime * time_scale, origin = time_origin, tz = "UTC")
   met = list()
