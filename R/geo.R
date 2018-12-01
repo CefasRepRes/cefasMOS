@@ -192,8 +192,8 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=
 convert_latlong <- function(degrees, decimal_minutes, polarity = NA){
   degrees = as.numeric(degrees)
   decimal_minutes = as.numeric(decimal_minutes)
-  # if(is.na(degrees) | is.na(decimal_minutes)){return(NA)}
-  if((min(degrees, na.rm = T) < 0) & !is.na(polarity[1])){
+  if(any(is.na(degrees)) | any(is.na(decimal_minutes))){return(NA)}
+  if((min(degrees, na.rm = T) < 0) & !any(is.na(polarity))){
     stop("polarity supplied for negative decimal value")
   }
   decimal_minutes[degrees < 0 & !is.na(degrees)] = decimal_minutes[degrees < 0 & !is.na(degrees)] * -1

@@ -6,7 +6,7 @@ shinyUI(fluidPage(
 
   titlePanel("ESM2 Profiler QA3 Tool"),
   fluidRow(
-    column(2, numericInput('select_year', "Select Year", min = 2005, value = 2016)),
+    column(2, numericInput('select_year', "Select Year", min = 2005, value = year(now()))),
     column(4, selectInput('select_cruiseID', "Select Cruise ID", choices = "")),
     column(3, selectInput('select_profile', "Select Profile", choices = "")),
     column(3, selectInput('select_variable', "Select Variable", choices = ""))

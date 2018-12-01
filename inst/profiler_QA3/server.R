@@ -3,6 +3,7 @@ library(shiny)
 library(cefasMOS)
 library(rhandsontable)
 
+
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
@@ -17,7 +18,7 @@ shinyServer(function(input, output, session) {
   observeEvent(input$select_cruiseID, {
     if(input$select_cruiseID != ""){
       selected = prdata$cruiseList[name == input$select_cruiseID]
-      withProgress(message = 'Fetching data', value = 0, {
+      withProgress(message = 'Fetching data', value = 0.5, {
         dat = profiler.fetch(cruiseID = selected$CruiseId,
                              profiler = selected$InstId,
                              min_QA_reached = F, parameters = c("SAL", "O2CONC"))
