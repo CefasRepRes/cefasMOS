@@ -1,3 +1,15 @@
+#' print the variables in a netcdf (ncdump lite)
+#'
+#' @param ncfile
+#'
+#' @return variable names
+#' @export
+printvars <- function(ncfile){
+  nc = nc_open(ncfile)
+  print(names(nc$var))
+  nc_close(nc)
+}
+
 #' Read and convert ECMWF netcdf to data.table
 #'
 #' @param file name of ECMWF netcdf file

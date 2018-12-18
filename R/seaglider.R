@@ -1,0 +1,294 @@
+# functions for dealing with (UEA) seaglider data
+
+#' read seaglider logfiles, extracts GPS, altimetry, battery data, and targets
+#'
+#' @param glider_folder
+#'
+#' @return data.table containing processed logfiles
+#' @export
+read.seaglider_log <- function(glider_folder){
+  require(data.table)
+  file_list = list.files(glider_folder, full.names = T, pattern = "\\d+\\.log")
+  logs = list()
+  for(file in file_list){
+    print(file)
+    log = readLines(file)
+    dive = strsplit(log[grepl("dive:", log)], ": ")[[1]][2]
+    if(dive != "0" & !grepl("RECOV_CODE", log)){
+      # extract targets
+      target_line = grep("$TGT_NAME", log, fixed=T, value=F)
+      if(length(target_line) == 0){
+        target = NA
+      }else{
+        target = strsplit(log[target_line], ",")[[1]][2]
+      }
+      # extract pings
+      ping_line = grep("ALTIM_BOTTOM_PING,", log, fixed=T, value=F)
+      ping_depth = NA
+      alt = NA
+      if(length(ping_line) > 0){
+        ping_depth = strsplit(log[max(ping_line)], ",")[[1]][2]
+        alt = strsplit(log[max(ping_line)], ",")[[1]][3]
+      }
+      # extract gps
+      gps_line = grep("$GPS2,", log, fixed=T, value=F)
+      if(length(gps_line) == 0){
+        lat = NA
+        lon = NA
+      }
+      gps = strsplit(log[max(gps_line)], ",")[[1]]
+      # battery
+      batt24 = strsplit(grep("\\$24V_AH", log, value=T), ",")[[1]]
+      batt10 = strsplit(grep("\\$10V_AH", log, value=T), ",")[[1]]
+      batt24_V = as.numeric(batt24[2])
+      batt10_V = as.numeric(batt10[2])
+      if(batt24_V > 16) {
+          # 24v pack
+        batt24_AH = 100 * (1 - as.numeric(batt24[3]) / 145);
+        batt10_AH = 100 * (1 - as.numeric(batt10[3]) / 95);
+      }else{
+          # 15v pack
+        batt24_AH = 100 * (1 - as.numeric(batt24[3]) / 310);
+        batt10_AH = batt10[3];
+      }
+
+      dateTime = as.POSIXct(paste(gps[2], gps[3]), format="%d%m%y %H%M%S", tz="UTC")
+      lat = as.numeric(gps[4])
+      lat = sign(lat) * (as.integer(abs(lat)/100) + (abs(lat)%%100)/60)
+      lon = as.numeric(gps[5])
+      lon = sign(lon) * (as.integer(abs(lon)/100) + (abs(lon)%%100)/60)
+
+      logs[[file]] = data.frame("dive" = as.numeric(dive),
+                                "target" = target,
+                                "ping_depth" = as.numeric(ping_depth),
+                                "alt" = as.numeric(alt),
+                                dateTime, lat, lon, batt24_V, batt10_V, batt24_AH, batt10_AH,
+                                stringsAsFactors=F)
+      }
+    }
+  logs = rbindlist(logs)
+  logs[alt == 999, alt := NA]
+  logs[, h := ping_depth + alt]
+  return(logs)
+}
+
+read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
+  require(ncdf4)
+  require(data.table)
+  variables = c("dive", "time", "direction", "pressure", "lat", "lon", variables)
+  nc = nc_open(ncfile)
+  if(!grepl("UEA gt_sg_", ncatt_get(nc, varid=0, attname="About")$value)){
+    nc_close(nc)
+    stop("wrong netCDF file")
+  }
+  d = list()
+  for(var in variables){
+    print(paste("extracting", var))
+    x = ncvar_get(nc, var)
+    x = melt(x)
+    dims = sapply(nc$var[[var]]$dim, function(i){i$name})
+    colnames(x) = c(dims, "value")
+    x = as.data.table(x)
+    x[, variable := var]
+    d[[var]] = x
+  }
+  nc_close(nc)
+  d = rbindlist(d)
+  d = dcast.data.table(d, profile + depth ~ variable)
+  d[, time := as.POSIXct((time - 719529)*86400, origin = "1970-01-01", tz = "UTC")] # convert
+  return(d)
+}
+
+#' read UEA seaglider toolbox timeseries netcdf
+#'
+#' extracts data from UEA seaglider toolbox timeseries netcdf output
+#' always includes dive, direction, pressure, lat and lon
+#'
+#' @param ncfile UEA glider netcdf timeseries file
+#' @param variables varibles to extract as named in netcdf, e.g. c("salinity", "temp")
+#'
+#' @return data.table containing extracted fields
+#' @export
+read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
+  require(ncdf4)
+  require(data.table)
+  # ncfile = "SG510_Alter Eco May new edit_timeseries.nc"
+  variables = c("dive", "direction", "pressure", "lat", "lon", variables)
+  nc = nc_open(ncfile)
+  if(!grepl("UEA gt_sg_", ncatt_get(nc, varid=0, attname="About")$value) | nc$ndims != 1){
+    nc_close(nc)
+    stop("wrong netCDF file")
+  }
+  d = list()
+  time_val =  ncvar_get(nc, "time")
+  for(var in variables){
+    print(paste("extracting", var))
+    x = ncvar_get(nc, var)
+    x = melt(x)
+    dims = "time"
+    colnames(x) = c(dims, "value")
+    x = as.data.table(x)
+    x[, variable := var]
+    d[[var]] = x
+  }
+  nc_close(nc)
+  d = rbindlist(d)
+  d[, time := time_val[time]]
+  d[, time := as.POSIXct((time - 719529)*86400, origin = "1970-01-01", tz = "UTC")] # convert
+  d = dcast.data.table(d, time ~ variable)
+  return(d)
+}
+
+#' Read seaglider .eng files
+#'
+#' @param folder folder containing .eng
+#' @param files single files if not using folder
+#'
+#' @return data.table containing extracted fields
+#' @export
+read.seaglider_eng <- function(folder=NA, files=NA){
+  if(!is.na(files)){
+    file_list = files
+  }else{
+    file_list = list.files(folder, full.names = T, pattern = "*.eng")
+  }
+  d = list()
+  for(file in file_list){
+    # print(file)
+    data = fread(file, skip=8, header = F)
+    header = readLines(file, 8)
+    header = lapply(header, function(x){ gsub("\\%.+\\:\\ ", "", x, perl = T) })
+    header_columns = unlist(strsplit(header[[8]], ","))
+    colnames(data) = header_columns
+    data[, dive := as.numeric(header[[5]])]
+    data[, start := as.POSIXct(header[[7]], format="%m %d 1%y %H %M %S", tz="UTC")]
+    d[[file]] = data
+  }
+  d = rbindlist(d, fill=T)
+  return(d)
+}
+
+read.seaglider_basestation_binned_nc <- function(ncfile, variables = c("sigma_theta", "pressure", "salinity", "temperature")){
+  # for binned basestation NC
+    require(ncdf4)
+    nc = nc_open(ncfile)
+    my_vars = c("dive_number", "start_time", "start_latitude", "start_longitude",
+                "end_latitude", "end_longitude", variables)
+    d = list()
+    metadata = list()
+    for(var in my_vars){
+      print(paste("extracting", var))
+      x = ncvar_get(nc, var)
+      x = melt(x)
+      dims = sapply(nc$var[[var]]$dim, function(i){i$name})
+      colnames(x) = c(dims, "value")
+      x = as.data.table(x)
+      x[, variable := var]
+      if("depth" %in% colnames(x)){
+        d[[var]] = x
+      }else{
+        metadata[[var]] = x
+      }
+    }
+    nc_close(nc)
+    d = rbindlist(d)
+    d = dcast.data.table(d, profile + depth ~ variable)
+    metadata = rbindlist(metadata)
+    metadata = dcast.data.table(metadata, profile ~ variable)
+    d = merge(d, metadata, by="profile")
+    d[, dateTime := as.POSIXct(start_time, origin="1970-01-01")]
+    return(d)
+}
+
+read.seaglider_basestation_nc <- function(folder, variables = c("sigma_theta", "salinity", "temperature")){
+  variables = c("sigma_theta", "salinity", "temperature")
+  filelist = list.files(folder, pattern="p*.nc", full.names = T)
+  out = list()
+  for(f in filelist){
+    d = list()
+    print(f)
+    nc = nc_open(f)
+    time_var = ncvar_get(nc, "time")
+    time_var = as.POSIXct(time_var, origin="1970-01-01", tz="UTC")
+    lat_var = ncvar_get(nc, "latitude")
+    lon_var = ncvar_get(nc, "longitude")
+    prs_var = ncvar_get(nc, "pressure")
+    dive_number = ncatt_get(nc, 0, "dive_number")$value
+    for(var in variables){
+      # print(paste("extracting", var))
+      x = ncvar_get(nc, var)
+      x = melt(x)
+      colnames(x) = c("obs", "value")
+      x = as.data.table(x)
+      x[, c("time", "lat", "lon", "pressure") := list(time_var, lat_var, lon_var, prs_var)]
+      d[[var]] = x
+    }
+    nc_close(nc)
+    d = rbindlist(d, idcol = "var")
+    d[, dive := dive_number]
+    out[[f]] = d
+  }
+  out = rbindlist(out)
+  return(out)
+}
+
+#' Read BODC ego glider files (e.g. slocum)
+#'
+#' @param ncfile ego netcdf file
+#' @param vars character vector of variables to extract, e.g. c("DOXY", "PRES")
+#'
+#' @return data.table containing extracted fields
+#' @export
+read.ego <- function(ncfile, vars = c("DOXY", "PRES", "TEMP", "CNDC", "CHLA", "BBP700")){
+  require(ncdf4)
+  d = list()
+  metadata = list()
+  nc = nc_open(ncfile)
+  time_var = ncvar_get(nc, "TIME")
+  time_var = as.POSIXct(time_var, origin = "1970-01-01", tz="UTC")
+  lat = as.vector(ncvar_get(nc, "LATITUDE"))
+  lon = as.vector(ncvar_get(nc, "LONGITUDE"))
+  for(var in vars){
+    if(var %in% names(nc$var)){
+      print(paste("extracting", var))
+      x = ncvar_get(nc, var)
+      unit = ncatt_get(nc, var, "units")
+      x = melt(x)
+      dims = sapply(nc$var[[var]]$dim, function(i){i$name})
+      colnames(x) = c(dims, "value")
+      x = as.data.table(x)
+      if(unit$hasatt){
+        x[, unit := unit$value]
+      }
+      x[, c("lat", "lon") := list(lat, lon)]
+      d[[var]] = x
+    }
+  }
+  out = rbindlist(d, fill=T, idcol="var")
+  out[, dateTime := time_var[TIME]]
+  return(out)
+}
+
+read.seaglider_calib <- function(file){
+  cal = read.table(file, sep="=", comment.char="%")
+  cal$V2 = gsub(";", "", cal$V2)
+  nm = cal$V1
+  cal = cal$V2
+  names(cal) = nm
+  as.list(cal)
+}
+
+#' Calculate seaglider temperature
+#'
+#' @param tempFreq vector of seaglider SBE temperature frequency
+#' @param calib_file path to seaglider calibration.mat file
+#'
+#' @return vector of calibrated temperature
+#' @export
+seaglider.temp <- function(tempFreq, calib_file){
+  cal = read.seaglider_calib(calib_file)
+  tempPrelim = log(1000 / tempFreq)
+  tempPrelim = (1 / (as.numeric(cal$t_g) + tempPrelim * (as.numeric(cal$t_h) + tempPrelim * (as.numeric(cal$t_i) + tempPrelim * as.numeric(cal$t_j))))) - 273.15
+  return(tempPrelim)
+}
+
