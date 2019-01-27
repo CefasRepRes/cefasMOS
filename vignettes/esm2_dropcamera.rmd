@@ -2,7 +2,13 @@
 title: "ESM2 Drop Camera Processing Example"
 author: "Tom Hull"
 date: "26 June 2017"
-output: html_document
+output: 
+  pdf_document: 
+    highlight: espresso
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}

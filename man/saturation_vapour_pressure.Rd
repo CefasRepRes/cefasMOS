@@ -7,9 +7,14 @@
 saturation_vapour_pressure(TEMP, unit = "C", method = "Wagner")
 }
 \arguments{
+\item{TEMP}{vector of temperature}
+
 \item{unit}{"C" default or "K"}
 
 \item{method}{options are "Wagner", "Buck" and "Weiss"}
+}
+\value{
+saturation vapour pressure in hPa (mBar)
 }
 \description{
 Calculate water vapour saturation pressure

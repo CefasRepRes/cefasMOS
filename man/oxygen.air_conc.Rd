@@ -4,7 +4,8 @@
 \alias{oxygen.air_conc}
 \title{Oxygen in-air concentration}
 \usage{
-oxygen.air_conc(TEMP, SAL, AIRPRS, RH = NA, DTEMP = NA, return_conc = T)
+oxygen.air_conc(TEMP, SAL, AIRPRS, RH = NA, DTEMP = NA,
+  return_conc = T)
 }
 \arguments{
 \item{TEMP}{air temperature in Celsius}

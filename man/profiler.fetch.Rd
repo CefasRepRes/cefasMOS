@@ -4,10 +4,11 @@
 \alias{profiler.fetch}
 \title{ESM2 profiler data query tool}
 \usage{
-profiler.fetch(cruiseID = NA, profiler = NA, after = NA, before = NA,
-  area = NA, parameters = c("TEMP", "SAL", "FTU", "O2CONC", "PAR",
-  "FLUORS"), RQ0 = TRUE, ct_temp_only = TRUE, min_QA_reached = TRUE,
-  privateData = FALSE, db_name = "smartbuoydblive")
+profiler.fetch(cruiseID = NA, profiler = NA, after = NA,
+  before = NA, area = NA, parameters = c("TEMP", "SAL", "FTU",
+  "O2CONC", "PAR", "FLUORS"), RQ0 = TRUE, ct_temp_only = TRUE,
+  min_QA_reached = TRUE, privateData = FALSE,
+  db_name = "smartbuoydblive")
 }
 \arguments{
 \item{cruiseID}{optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.}

@@ -5,8 +5,8 @@
 \title{SmartBuoy data query tool}
 \usage{
 smartbuoy.fetch(deployment = NA, deployment_group = NA, after = NA,
-  before = NA, parameters = c("TEMP", "SAL", "FTU", "O2CONC", "FLUORS"),
-  min_QA_reached = TRUE, RQ0 = TRUE, ct_temp_only = TRUE,
+  before = NA, parameters = c("TEMP", "SAL", "FTU", "O2CONC",
+  "FLUORS"), min_QA_reached = TRUE, RQ0 = TRUE, ct_temp_only = TRUE,
   averaging_period = NA, night_flu_only = FALSE,
   db_name = "smartbuoydblive")
 }

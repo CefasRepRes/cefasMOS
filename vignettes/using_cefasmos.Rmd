@@ -1,7 +1,7 @@
 ---
 title: "Using the cefasMOS package"
 author: "Tom Hull"
-date: "`r Sys.Date()`"
+date: "26 June 2017"
 output: 
   pdf_document: 
     highlight: espresso

@@ -478,9 +478,9 @@ lagged_flag <- function(dateTime, init, lag = 300){
 #'
 #' @param t2m air temperature
 #' @param d2m dew point temperature
-#' @unit "K" or "C" (default)
+#' @param unit "K" or "C" (default)
 #'
-#' @return
+#' @return relative humidity (%)
 #' @export
 #'
 RH_from_dewtemp <- function(t2m, d2m, unit="C"){
@@ -490,11 +490,11 @@ RH_from_dewtemp <- function(t2m, d2m, unit="C"){
 
 #' Calculate water vapour saturation pressure
 #'
-#' @param TEMP
+#' @param TEMP vector of temperature
 #' @param unit "C" default or "K"
 #' @param method options are "Wagner", "Buck" and "Weiss"
 #'
-#' @return
+#' @return saturation vapour pressure in hPa (mBar)
 #' @export
 #'
 saturation_vapour_pressure <- function(TEMP, unit="C", method="Wagner"){
