@@ -64,9 +64,12 @@ read.seaglider_log <- function(glider_folder){
                                 "alt" = as.numeric(alt),
                                 dateTime, lat, lon, batt24_V, batt10_V, batt24_AH, batt10_AH,
                                 stringsAsFactors=F)
+      if(any(grepl("loiter", log))){
+        logs[[file]]$loiter = T
+      }
       }
     }
-  logs = rbindlist(logs)
+  logs = rbindlist(logs, fill = T)
   logs[alt == 999, alt := NA]
   logs[, h := ping_depth + alt]
   return(logs)

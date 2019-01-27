@@ -2,7 +2,7 @@
 % Please edit documentation in R/seaglider.R
 \name{read.seaglider_log}
 \alias{read.seaglider_log}
-\title{read seaglider logfiles, extracts GPD, altimetry, battery data, and targets}
+\title{read seaglider logfiles, extracts GPS, altimetry, battery data, and targets}
 \usage{
 read.seaglider_log(glider_folder)
 }
@@ -13,5 +13,5 @@ read.seaglider_log(glider_folder)
 data.table containing processed logfiles
 }
 \description{
-read seaglider logfiles, extracts GPD, altimetry, battery data, and targets
+read seaglider logfiles, extracts GPS, altimetry, battery data, and targets
 }
