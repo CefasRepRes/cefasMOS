@@ -34,8 +34,6 @@ rate_of_change <- function(dateTime, value){
   return(dV/dt)
 }
 
-
-
 #' ftu from ADC
 #'
 #' Calculates FTU value from ESM2 raw hex ADC counts
@@ -188,12 +186,12 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' @param density vector of density
 #' @param threshold numeric density threshold, default is 0.125
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
+#' @param band default is false, if true function returns paired vector of interval which meets threshold
 #'
 #' @return mld
 #' @import data.table
 #' @export
-findMLD <- function(depth, density, threshold = 0.125, surface = T){
-
+findMLD <- function(depth, density, threshold = 0.125, surface = T, band=F){
   depth = depth[order(depth)]
   density = density[order(depth)]
 
@@ -206,7 +204,12 @@ findMLD <- function(depth, density, threshold = 0.125, surface = T){
   if(surface == T){
     # done this way as some dips have min density !@ surface
     if(abs(top - bottom) > threshold){ # is there strat?
-      return(min(depth[abs(density - top) > threshold], na.rm = T))
+      if(band){
+        index = min(which(abs(density - top) > threshold))
+        return(list("upper" = depth[index-1], "lower" = depth[index]))
+      }else{
+        return(min(depth[abs(density - top) > threshold], na.rm = T))
+      }
     }else{
       return(max(depth, na.rm = T)) # fully mixed
     }
@@ -214,7 +217,12 @@ findMLD <- function(depth, density, threshold = 0.125, surface = T){
   if(surface == F){
     # done this way as some dips have min density !@ surface
     if(abs(top - bottom) > threshold){ # is there strat?
-      return(max(depth[abs(density - bottom) > threshold], na.rm = T))
+      if(band){
+        index = max(which(abs(density - bottom) > threshold))
+        return(list("upper" = depth[index], "lower" = depth[index+1]))
+      }else{
+        return(max(depth[abs(density - bottom) > threshold], na.rm = T))
+      }
     }else{
       return(max(depth, na.rm = T)) # fully mixed
     }

@@ -4,7 +4,7 @@
 \alias{findMLD}
 \title{Find mixed layer depth}
 \usage{
-findMLD(depth, density, threshold = 0.125, surface = T)
+findMLD(depth, density, threshold = 0.125, surface = T, band = F)
 }
 \arguments{
 \item{depth}{numeric vector of depth}
@@ -14,6 +14,8 @@ findMLD(depth, density, threshold = 0.125, surface = T)
 \item{threshold}{numeric density threshold, default is 0.125}
 
 \item{surface}{default is true, set to false for bottom mixed layer threshold (base of gradient)}
+
+\item{band}{default is false, if true function returns paired vector of interval which meets threshold}
 }
 \value{
 mld
