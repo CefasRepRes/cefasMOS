@@ -529,3 +529,32 @@ saturation_vapour_pressure <- function(TEMP, unit="C", method="Wagner"){
       (exp(24.4543 - 67.4509 * (100/(273.15 + TEMP)) - 4.8489 * log((273.15 + TEMP)/100) - 0.000544 * 0)) * 1013.25
     )
 }
+
+#' ggplot lm
+#'
+#' quickly plot a lm like everyone wants from excel
+#'
+#' @param fit a lm fit object
+#' @param option currently just "caption"
+#'
+#' @return ggplot2 dotplot with equation at top
+#' @export
+#'
+ggplot.lm <- function (fit, option="caption") {
+require(ggplot2)
+plt = ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
+  geom_point() +
+  stat_smooth(method = "lm", col = "red")
+
+plt + labs(caption = paste0(
+                           "y = ",
+                           signif(fit$coef[[1]], 4),
+                           " + ",
+                           signif(fit$coef[[2]]),
+                           "x",
+                           ", ",
+                           "Adj R2 = ",
+                           signif(summary(fit)$adj.r.squared, 5)
+                           )
+           )
+}
