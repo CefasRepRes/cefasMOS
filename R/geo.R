@@ -202,6 +202,23 @@ convert_latlong <- function(degrees, decimal_minutes, polarity = NA){
   return(decimal_degrees)
 }
 
+#' Convert decimal degrees  to degrees + decimal minutes
+#'
+#' @param degrees numeric vector of decimal degrees
+#' @param paste if True (default) return a pasted string, otherwise returns list of DD and MM
+#'
+#' @return decimal degrees
+#' @export
+convert_latlong_ddmmm <- function(degrees, paste=T){
+  dd = degrees %/% 1
+  mm = round((degrees %% 1) * 60, 3)
+  if(paste){
+    return(paste0(dd, "'", mm))
+  }else{
+    return(list(dd, mm))
+  }
+}
+
 #' Calculate bounding box
 #'
 #' used WGS84 elipsoid to calculate northern, eastern, southern and western extent from a starting lat/lon.
