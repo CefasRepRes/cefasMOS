@@ -153,12 +153,13 @@ read.ULP000 <- function(file){
 #' @details TODO
 #' @param folder folder containing 10min files
 #' @param recursive if true look in subfolders
-#' @param print_file if true filenames are printed as processed
+#' @param print_file if true filenames are printed as processed (faster without)
+#' @param debug if true enables careful parsing
 #' @return data.frame (data.table) of processed 10min files
 #' @import data.table
 #' @keywords ferrybox 10minfile
 #' @export
-read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
+read.ferrybox.10min <- function(folder, recursive = F, print_file = F, debug = F){
   # for(f in list.files(folder, recursive = T))
 
   read_10min <- function(f, print_file = F){
@@ -194,6 +195,9 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = T){
       d[, Cruise := cruise]
       d[, SIC := SIC]
       d[, Comment := comment]
+      if(debug){
+        d[, filename := f]
+      }
       return(data.frame(d))
     }
   }
