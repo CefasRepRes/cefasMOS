@@ -69,4 +69,5 @@ read.ecmwf <- function(file, convert_units = F){
     met[, dir := dir * (360/(2*pi))] # convert to 180 degrees
     met[dir < 0, dir := dir + 360] # convert to 360 degrees
   }
+  return(met)
 }
