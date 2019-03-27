@@ -255,7 +255,6 @@ calc_bounding_box <- function(lat, lon, size = 250){
 #' @import geosphere
 #'
 #' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
-#' @export
 match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 3600, merge=T){
   if(!is.data.table(x) | !is.data.table(y)){stop("x and y must be data.tables")}
   if(!all(c("lat", "lon", "dateTime") %in% names(x)))stop("lat, lon and dateTime columns must be present in x")
@@ -277,4 +276,55 @@ match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 36
   else{
     list("x" = x, "y" = y)
   }
+}
+
+#' Improved Spatial-temporal matching
+#'
+#' builds distance matrix between all points in two data.tables using WGS84 elipsoid,
+#' this matrix is then reduced to those within a specified distance threshold.
+#' These spacial matched points are then matched against time within a time threshold
+#'
+#' @param A data.table with lat, lon and dateTime columns
+#' @param Z data.table with lat, lon and dateTime columns
+#' @param dt distance in meters to match within
+#' @param tt time in seconds to match within
+#' @param merge bool
+#' @import geosphere scales data.table
+#'
+#' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
+#' @export
+fuzzy_spacetime <- function(A, Z, tt=3600, dt=5000){
+
+  A_name = deparse(substitute(A)) # get the names of the objects for labling later
+  Z_name = deparse(substitute(Z))
+  if(!is.data.table(A) | !is.data.table(Z)){stop("x and y must be data.tables")}
+  if(!all(c("lat", "lon", "dateTime") %in% names(A)))stop("lat, lon and dateTime columns must be present in A")
+  if(!all(c("lat", "lon", "dateTime") %in% names(Z)))stop("lat, lon and dateTime columns must be present in Z")
+
+  d_lon = distHaversine(c(mean(Z$lon), min(Z$lat)), c(mean(Z$lon), max(Z$lat))) / (max(Z$lat) - min(Z$lat)) # meters per degree at this lat
+  dt_deg = (dt / d_lon) * 1.1
+  # subset the two sets of data to make sure we only calculate what we need to
+  A = A[dateTime %between% c(min(Z$dateTime) - tt, max(Z$dateTime) + tt)]
+  if(nrow(A) == 0){stop("Time bounds of A are not within Z, no overlaps")}
+  A = A[lat %between% scales::expand_range(range(Z$lat), add=dt_deg) &
+          lon %between% scales::expand_range(range(Z$lon), add=dt_deg)] # need to use scales because lon can be neg
+  if(nrow(A) == 0){stop("Spatial bounds of A are not within Z, no overlaps")}
+  Z = Z[dateTime %between% c(min(A$dateTime) - tt, max(A$dateTime) + tt)]
+  if(nrow(Z) == 0){stop("Time bounds of Z are not within A, no overlaps")}
+  Z = Z[lat %between% scales::expand_range(range(A$lat), add=dt_deg) &
+          lon %between% scales::expand_range(range(A$lon), add=dt_deg)] # need to use scales because lon can be neg
+  if(nrow(Z) == 0){stop("Spatial bounds of Z are not within A, no overlaps")}
+
+  Dm = distm(Z[,.(lon, lat)], A[,.(lon, lat)]) # generate distance matrix
+  Dx = which(Dm < dt, arr.ind=T) # find the indexes in the matrix where close enough
+  Dx = data.table(cbind(Dx, id = 1:nrow(Dx), dist = Dm[Dx])) # convert to DT and add actual distance
+  Zx = Z[Dx$row] # select those in Z which are close enough, replicate if needed
+  colnames(Zx) = paste0(colnames(Zx),"_", Z_name) # rename columns to avoid duplicates
+  Ax = A[Dx$col] # select those in Az which are close enough, replicate if needed
+  colnames(Ax) = paste0(colnames(Ax),"_", A_name) # rename columns to avoid duplicates
+  M = cbind(Zx, Ax) # stick them together
+  M[, dist := Dx$dist] # add the distance
+  M[, dtime := as.numeric(get(paste0("dateTime_", A_name))) - as.numeric(get(paste0("dateTime_", Z_name)))] # calculate distance in time
+  M = M[abs(dtime) < tt] # subset those too far away in time.
+  return(M)
 }
