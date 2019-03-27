@@ -2,27 +2,29 @@
 % Please edit documentation in R/oxygen.R
 \name{oxygen.conc_to_pp}
 \alias{oxygen.conc_to_pp}
-\title{convert molar oxygen concentration to oxygen partial pressure
+\title{convert (salinity uncorrected) molar oxygen concentration to oxygen partial pressure
 according to recommendations by SCOR WG 142 "Quality Control Procedures
 for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
 Henry Bittig}
 \usage{
-oxygen.conc_to_pp(O2, TEMP, SAL = 0, PRS = 0)
+oxygen.conc_to_pp(O2, TEMP, SAL = 0, PRS = 0, APRS = 1013.25)
 }
 \arguments{
 \item{O2}{molar concentration of oxygen in mmol m-3}
 
 \item{TEMP}{temperature}
 
-\item{SAL}{salinity}
+\item{SAL}{salinity (if correction has been applied, default = 0)}
 
 \item{PRS}{hydrostatic pressure in dbar (default = 0)}
+
+\item{APRS}{air pressure in mbar (default = 1013.25)}
 }
 \value{
 partial pressure of oxygen in mbar
 }
 \description{
-convert molar oxygen concentration to oxygen partial pressure
+convert (salinity uncorrected) molar oxygen concentration to oxygen partial pressure
 according to recommendations by SCOR WG 142 "Quality Control Procedures
 for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
 Henry Bittig

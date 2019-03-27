@@ -7,7 +7,7 @@ according to recommendations by SCOR WG 142 "Quality Control Procedures
 for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
 Henry Bittig}
 \usage{
-oxygen.pp_to_conc(pO2, TEMP, SAL = 0, PRS = 0)
+oxygen.pp_to_conc(pO2, TEMP, SAL = 0, PRS = 0, APRS = 1013.25)
 }
 \arguments{
 \item{pO2}{partial pressure of oxygen in mbar}
@@ -17,6 +17,8 @@ oxygen.pp_to_conc(pO2, TEMP, SAL = 0, PRS = 0)
 \item{SAL}{salinity}
 
 \item{PRS}{hydrostatic pressure in dbar (default = 0)}
+
+\item{APRS}{air pressure in mbar (default = 1013.25)}
 }
 \value{
 oxygen concentration in mmol m-3

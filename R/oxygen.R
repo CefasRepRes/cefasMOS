@@ -216,6 +216,30 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
   return(DO)
 }
 
+#' Calculate RINKO saturation from voltage
+#'
+#' @param V output oxygen voltage
+#' @param t temperature from rinko_temp
+#' @param oC list of named calibration coefs A-F, defaults to #0263 ARO-CAV
+#' @param p in-situ pressure in dBar, default to atmospheric (10.1325)
+#' @param G alpha calibration coef
+#' @param H beta calibration coef
+#'
+#' @return vector of RINKO oxygen in % saturation
+#' @export
+rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 10.1325, G = 0, H = 1){
+  # G & H = RINKO calibration coefs (alpha and beta)
+  P1 = oC$A / (1 + oC$D * (t - 25) + oC$F * (t - 25)^2)
+  P2 = oC$B / (V * (1 + oC$D * (t - 25) + oC$F * (t - 25)^2) + oC$C)
+  P = P1 + P2
+
+  DO = G + H * P
+  # pressure correction
+  d = p * 0.01 # convert from decibar to MPa
+  DO = DO * (1 + oC$E * d) # pressure corrected DO in %
+  return(P)
+}
+
 #' convert oxygen partial pressure to molar oxygen concentration
 #' according to recommendations by SCOR WG 142 "Quality Control Procedures
 #' for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
@@ -225,12 +249,13 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
 #' @param TEMP temperature
 #' @param SAL salinity
 #' @param PRS hydrostatic pressure in dbar (default = 0)
+#' @param APRS air pressure in mbar (default = 1013.25)
 #'
 #' @return oxygen concentration in mmol m-3
 #' @export
-oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0){
+oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0, APRS = 1013.25){
   xO2     = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
-  pH2Osat = 1013.25*(exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+TEMP)/100)))-0.000544*SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
+  pH2Osat = APRS*(exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+TEMP)/100)))-0.000544*SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   # pH2Osat = 6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP))) # mbar , Buck 1996 equation for over water , TEMP = air temp ?more accurate
   sca_T   = log((298.15-TEMP)/(273.15+TEMP)) # scaled temperature for use in TCorr and SCorr
   TCorr   = 44.6596*exp(2.00907+3.22014*sca_T+4.05010*sca_T^2+4.94457*sca_T^3-2.56847e-1*sca_T^4+3.88767*sca_T^5) # temperature correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit mL(STP) L-1; and conversion from mL(STP) L-1 to umol L-1
@@ -241,22 +266,23 @@ oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0){
   pO2/(xO2*(1013.25-pH2Osat))*(TCorr*Scorr)/exp(Vm*PRS/(R*(TEMP+273.15)))
 }
 
-#' convert molar oxygen concentration to oxygen partial pressure
+#' convert (salinity uncorrected) molar oxygen concentration to oxygen partial pressure
 #' according to recommendations by SCOR WG 142 "Quality Control Procedures
 #' for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
 #' Henry Bittig
 #'
 #' @param O2 molar concentration of oxygen in mmol m-3
 #' @param TEMP temperature
-#' @param SAL salinity
+#' @param SAL salinity (if correction has been applied, default = 0)
 #' @param PRS hydrostatic pressure in dbar (default = 0)
+#' @param APRS air pressure in mbar (default = 1013.25)
 #'
 #' @return partial pressure of oxygen in mbar
 #' @export
-oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
+oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0, APRS=1013.25){
 
   xO2 = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
-  pH2Osat = 1013.25 * (exp(24.4543 -(67.4509 * (100 / (T + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
+  pH2Osat = APRS * (exp(24.4543 -(67.4509 * (100 / (T + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   sca_T   = log((298.15 - TEMP)/(273.15 + TEMP)) # scaled temperature for use in TCorr and SCorr
   TCorr   = 44.6596 * exp(2.00907 + 3.22014 * sca_T + 4.05010 * sca_T^2 + 4.94457 * sca_T^3 - 2.56847e-1 * sca_T^4 + 3.88767 * sca_T^5) # temperature correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit mL(STP) L-1; and conversion from mL(STP) L-1 to umol L-1
   Scorr   = exp(SAL * (-6.24523e-3-7.37614e-3 * sca_T - 1.03410e-2 * sca_T^2-8.17083e-3*sca_T^3)-4.88682e-7*SAL^2) # salinity correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit ml(STP) L-1
@@ -274,7 +300,6 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 #' Bittig2018
 #'
 #' @param TEMP air temperature in Celsius
-#' @param SAL salinity
 #' @param AIRPRS air pressure in mbar/hPa
 #' @param RH relative humidity in \%
 #' @param DTEMP dewpoint temperature in Celsius
@@ -283,12 +308,12 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 #'
 #' @return oxygen concentration in mmol m-3
 #' @export
-oxygen.air_conc <- function(TEMP, SAL, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){
+oxygen.air_conc <- function(TEMP, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){
   if(any(is.na(RH)) & any(is.na(DTEMP))){stop("tool requires relative humidity or dew temp")}
   if(any(is.na(RH)) & !any(is.na(DTEMP))){
     RH = RH_from_dewtemp(TEMP, DTEMP)
   }
-  pVap = saturation_vapour_pressure(TEMP)
+  pVap = saturation_vapour_pressure(TEMP) # should be mbar
   xO2     = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
   pO2air = xO2 * (AIRPRS - (pVap * (RH / 100))) # partial pressure of oxygen in air
 
