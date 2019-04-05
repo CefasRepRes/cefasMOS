@@ -43,7 +43,7 @@ lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4
 
     if(!is.na(cruise[1])){
       cruise = paste(cruise, collapse = "', '")
-      query = paste0(query, " AND [C_CRUISE_CODE] IN ('", cruise, "')")
+      query = paste0(query, " AND [C_SURVEY] IN ('", cruise, "')")
     }
     if(!is.na(before)){
       query = paste0(query, " AND [C_DATE_COLLECTED] <= '", before, "'")
