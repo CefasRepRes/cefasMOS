@@ -9,6 +9,7 @@
 read.seaglider_log <- function(glider_folder){
   require(data.table)
   file_list = list.files(glider_folder, full.names = T, pattern = "\\d+\\.log")
+  if(length(file_list) < 1){stop("No log files found")}
   logs = list()
   for(file in file_list){
     print(file)
@@ -40,8 +41,8 @@ read.seaglider_log <- function(glider_folder){
       # battery
       batt24 = strsplit(grep("\\$24V_AH", log, value=T), ",")[[1]]
       batt10 = strsplit(grep("\\$10V_AH", log, value=T), ",")[[1]]
-      batt24_V = as.numeric(batt24[2])
       batt10_V = as.numeric(batt10[2])
+      batt24_V = as.numeric(batt24[2])
       if(batt24_V > 16) {
           # 24v pack
         batt24_AH = 100 * (1 - as.numeric(batt24[3]) / 145);
@@ -154,17 +155,19 @@ read.seaglider_eng <- function(folder=NA, files=NA){
     file_list = files
   }else{
     file_list = list.files(folder, full.names = T, pattern = "*.eng")
+    if(length(file_list) < 1){stop("no .eng files found")}
   }
   d = list()
   for(file in file_list){
-    # print(file)
-    data = fread(file, skip=8, header = F)
-    header = readLines(file, 8)
+    lns = readLines(file)
+    data_start = grep("%data", lns)
+    data = fread(file, skip=data_start, header = F)
+    header = readLines(file, data_start)
     header = lapply(header, function(x){ gsub("\\%.+\\:\\ ", "", x, perl = T) })
-    header_columns = unlist(strsplit(header[[8]], ","))
+    header_columns = unlist(strsplit(header[[data_start-1]], ","))
     colnames(data) = header_columns
-    data[, dive := as.numeric(header[[5]])]
-    data[, start := as.POSIXct(header[[7]], format="%m %d 1%y %H %M %S", tz="UTC")]
+    data[, dive := as.numeric(header[[grep("%dive", lns)]])]
+    data[, start := as.POSIXct(header[[grep("%start", lns)]], format="%m %d 1%y %H %M %S", tz="UTC")]
     d[[file]] = data
   }
   d = rbindlist(d, fill=T)
