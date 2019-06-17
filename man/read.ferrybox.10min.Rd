@@ -4,14 +4,16 @@
 \alias{read.ferrybox.10min}
 \title{Ferrybox 10min file data reader}
 \usage{
-read.ferrybox.10min(folder, recursive = F, print_file = T)
+read.ferrybox.10min(folder, recursive = F, print_file = F, debug = F)
 }
 \arguments{
 \item{folder}{folder containing 10min files}
 
 \item{recursive}{if true look in subfolders}
 
-\item{print_file}{if true filenames are printed as processed}
+\item{print_file}{if true filenames are printed as processed (faster without)}
+
+\item{debug}{if true enables careful parsing}
 }
 \value{
 data.frame (data.table) of processed 10min files
