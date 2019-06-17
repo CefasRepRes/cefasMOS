@@ -20,10 +20,10 @@ bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = 8,
 ggplot
 }
 \description{
-Simple basemap using GEBCO data, if you want something more technical try marmap.
+Basemap using GEBCO data, if you want something more technical try the marmap package.
 }
 \references{
-GEBCO data from GEBCO 2014
+GEBCO data from GEBCO 2019
 
 Coastlines from rworldmap
 }

@@ -110,31 +110,26 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 
 #' GEBCO Bathymetry base map
 #'
-#' Simple basemap using GEBCO data, if you want something more technical try marmap.
+#' Basemap using GEBCO data, if you want something more technical try the marmap package.
 #'
 #' @param lat vector of latitude coordinates for calculating map extent
 #' @param lon as above for longitude
 #' @param margin integer (default = 8) indicating fraction of range to use for a margin.
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
 #'
-#' @references GEBCO data from GEBCO 2014
+#' @references GEBCO data from GEBCO 2019
 #' @references Coastlines from rworldmap
 #'
 #' @return ggplot
-#' @import ggplot2 rworldmap
+#' @import ggplot2 rworldmap cmocean
 #' @export
 #'
 bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=T){
     # should build bathymap which fits all data in
-  if(!exists("GBbathy2014")){
-    data("GBbathy2014")
-    print("loaded GEBCO2014")
+  if(!exists("gebco_nwes")){
+    data("gebco_nwes")
+    print("loaded GEBCO2019")
     }
-    # make new bathy?
-    # GBbathy2014 = raster::raster(bathy_file)
-    # GBbathy2014 = raster::crop(GBbathy2014, raster::extent(c(xlim, ylim)))
-    # rtp = data.frame(raster::rasterToPoints(GBbathy2014))
-    # colnames(rtp) = c('lon', 'lat', 'depth')
     # GBbathy2014$label = raster::cut(GBbathy2014$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf), labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
     # devtools::use_data(GBbathy2014, overwrite=T)
 
@@ -143,20 +138,17 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=
   xlim = c(min(lon) - max.lon / margin, max(lon) + max.lon / margin)
   ylim = c(min(lat) - max.lat / margin, max(lat) + max.lat / margin)
 
-  bathy = GBbathy2014[lon %between% xlim & lat %between% ylim]
+  bathy = gebco_nwes[lon %between% xlim & lat %between% ylim]
 
-  GEBCOcolors5 = c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7")
-  GEBCOcolors12 = c("#0F7CAB", "#1D8CB2", "#2C9CBA", "#3CABC1", "#4DB9C8", "#5FC6D0",
-                    "#72D3D8", "#86DFDF", "#9BE6E3", "#B1EDE8", "#C8F5EF", "#E1FCF7")
+  GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
 
   # classify
   if(breaks == T){
-    colorNum = length(unique(bathy$label))
-    bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth')
+    bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth [m]')
+    bathy_raster = geom_raster(aes(lon, lat, fill=label))
   }else{
-    bathy$label = bathy$depth*-1
-    bathy$label[bathy$label < 0] = 0
-    bathy_scale = scale_fill_gradientn(name = "Depth (m)", colors=rev(GEBCOcolors12))
+    bathy_scale = scale_fill_gradientn(name = "Depth [m]", colors=cmocean("deep")(256))
+    bathy_raster = geom_raster(aes(lon, lat, fill=depth))
   }
 
   # mapdata = data.table(ggplot2::fortify(rworldmap::getMap("high")))
@@ -166,18 +158,18 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=
   data("mapdata") # saved for speed
 
   # make geom
-  bathy_raster = geom_raster(data=bathy, aes(lon, lat, fill=label))
   coast.poly = geom_polygon(data=mapdata, aes(x=long, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
   coast.outline = geom_path(data=mapdata, aes(x=long, y=lat, group=group), colour="#000000", lwd=0.2)
 
-  mp = ggplot() +
+  mp = ggplot(bathy) +
     bathy_raster + bathy_scale +
     coast.poly + coast.outline +
-    labs(x = '', y = '') +
+    labs(x = NULL, y = NULL) +
     scale_x_continuous(expand=c(0, 0)) +
     scale_y_continuous(expand=c(0, 0)) +
     coord_quickmap(xlim, ylim)
 
+  # mp +  geom_contour(aes(lon, lat, z=depth), binwidth=20, color="black")
   return(mp)
 }
 
@@ -327,4 +319,23 @@ fuzzy_spacetime <- function(A, Z, tt=3600, dt=5000){
   M[, dtime := as.numeric(get(paste0("dateTime_", A_name))) - as.numeric(get(paste0("dateTime_", Z_name)))] # calculate distance in time
   M = M[abs(dtime) < tt] # subset those too far away in time.
   return(M)
+}
+
+geom_text_contour <- function (mapping = NULL, data = NULL, stat = "text_contour",
+                               position = "identity", ..., min.size = 5, skip = 0, rotate = TRUE,
+                               parse = FALSE, nudge_x = 0, nudge_y = 0, stroke = 0, stroke.color = "white",
+                               check_overlap = FALSE, na.rm = FALSE, show.legend = NA, inherit.aes = TRUE)
+{
+  if (!missing(nudge_x) || !missing(nudge_y)) {
+    if (!missing(position)) {
+      stop("Specify either `position` or `nudge_x`/`nudge_y`",
+           call. = FALSE)
+    }
+    position <- position_nudge(nudge_x, nudge_y)
+  }
+  layer(data = data, mapping = mapping, stat = stat, geom = GeomTextContour,
+        position = position, show.legend = show.legend, inherit.aes = inherit.aes,
+        params = list(skip = skip, min.size = min.size, rotate = rotate,
+                      parse = parse, check_overlap = check_overlap, stroke = stroke,
+                      stroke.color = stroke.color, na.rm = na.rm, ...))
 }
