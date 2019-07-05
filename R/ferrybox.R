@@ -213,6 +213,34 @@ ferrybox.errorcode <- function(x, collapse_vector = T){
   return(out)
 }
 
+#' Ferrybox error codes 2
+#'
+#' checks if a particular error code is present
+#'
+#' Flags are:
+#' 0 = no flag, good data
+#' 1 = Bad or missing data (general flag)
+#' 2 = flow rate too high
+#' 4 = flow rate too low
+#' 8 = timeout
+#' 16 = standby, fb loop not running
+#' 32 = wrong channel
+#' 64 = value during cleaning
+#' 128 = value during standby
+#' 256 = value during empty
+#' 512 = value during general error
+#' 1024 = undefined
+#' 2048 = value is simulated
+#' @param x error code
+#' @param code code to check for
+#'
+#' @return true or false if code is present in x
+#' @export
+ferrybox.haserror <- function(x, code){
+  bincode = log2(code)+1
+  return(sapply(x, function(z) intToBits(z)[bincode] == T))
+}
+
 
 #' calculate speed from GPS
 #'
