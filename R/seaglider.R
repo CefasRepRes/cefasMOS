@@ -12,10 +12,11 @@ read.seaglider_log <- function(glider_folder){
   if(length(file_list) < 1){stop("No log files found")}
   logs = list()
   for(file in file_list){
+    # file = "AE2_sg620/p6200001.log"
     print(file)
     log = readLines(file)
     dive = strsplit(log[grepl("dive:", log)], ": ")[[1]][2]
-    if(dive != "0" & !grepl("RECOV_CODE", log)){
+    if(dive != "0" & !any(grepl("RECOV_CODE", log))){
       # extract targets
       target_line = grep("$TGT_NAME", log, fixed=T, value=F)
       if(length(target_line) == 0){
@@ -33,11 +34,31 @@ read.seaglider_log <- function(glider_folder){
       }
       # extract gps
       gps_line = grep("$GPS2,", log, fixed=T, value=F)
-      if(length(gps_line) == 0){
-        lat = NA
-        lon = NA
-      }
+      if(length(gps_line) == 0){ lat = NA;  lon = NA }
       gps = strsplit(log[max(gps_line)], ",")[[1]]
+      gelement = length(gps)
+      HDOP = NA
+      magvar = NA
+      hozerror = NA
+      if(gelement == 13){
+        # better gps
+        # GPS1, date, time, lat, lon, timetofix, HDOP, totaltofix, magvar, driftspd, driftdir, numsat, hozerror
+        HDOP = as.numeric(gps[7])
+        magvar = as.numeric(gps[9])
+        hozerror = as.numeric(gps[13])
+      }
+      if(gelement == 9){
+        # old gps
+        # $gps1, date, time, lat, long, timetofix, HDOP, totaltime, magvar
+        HDOP = as.numeric(gps[7])
+        magvar = as.numeric(gps[9])
+      }
+
+      # end of dive position
+      end_gps_line = max(grep("$GPS,", log, fixed=T, value=F))
+      if(length(end_gps_line) == 0){ e_lat = NA;  e_lon = NA }
+      end_gps = strsplit(log[max(end_gps_line)], ",")[[1]]
+
       # battery
       batt24 = strsplit(grep("\\$24V_AH", log, value=T), ",")[[1]]
       batt10 = strsplit(grep("\\$10V_AH", log, value=T), ",")[[1]]
@@ -59,11 +80,18 @@ read.seaglider_log <- function(glider_folder){
       lon = as.numeric(gps[5])
       lon = sign(lon) * (as.integer(abs(lon)/100) + (abs(lon)%%100)/60)
 
+      dateTime_end = as.POSIXct(paste(end_gps[2], end_gps[3]), format="%d%m%y %H%M%S", tz="UTC")
+      lat_end = as.numeric(end_gps[4])
+      lat_end = sign(lat_end) * (as.integer(abs(lat_end)/100) + (abs(lat_end)%%100)/60)
+      lon_end = as.numeric(end_gps[5])
+      lon_end = sign(lon_end) * (as.integer(abs(lon_end)/100) + (abs(lon_end)%%100)/60)
+
       logs[[file]] = data.frame("dive" = as.numeric(dive),
                                 "target" = target,
                                 "ping_depth" = as.numeric(ping_depth),
                                 "alt" = as.numeric(alt),
-                                dateTime, lat, lon, batt24_V, batt10_V, batt24_AH, batt10_AH,
+                                HDOP, magvar, hozerror,
+                                dateTime, lat, lon, lat_end, lon_end, dateTime_end, batt24_V, batt10_V, batt24_AH, batt10_AH,
                                 stringsAsFactors=F)
       if(any(grepl("loiter", log))){
         logs[[file]]$loiter = T
