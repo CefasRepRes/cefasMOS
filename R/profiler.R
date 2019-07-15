@@ -3,8 +3,8 @@
 #' Fetches CTD data from ESM2 profiler records
 #'
 #' @details This function querys the Smartbuoy database and returns ESM2 profiler data matching the provided critiera.
-#' the v_CtdProfile_AllData table is used, as such private data will not be available to this function.
 #' Note that startTime is the time at which the instrument started logging.
+#' remember to do `options(digits.secs=3)` if you want to display POSIXct miliseconds.
 #' @param cruiseID optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.
 #' @param profiler optional profiler name string, e.g. "PR009", if provided only data from this profiler will be returned.
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
@@ -14,7 +14,8 @@
 #' @param RQ0 boolean, if True only data where result quality = 0 is returned, i.e. good data. default is True
 #' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param min_QA_reached boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.
-#' @param privateData boolean, if True will return private data
+#' @param privateData boolean, if True will return non-public data (e.g. commerical contracts), default is False.
+#' @param debug boolean, if True will return raw query output
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords profiler ctd esm2 query
@@ -27,27 +28,39 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            RQ0 = TRUE, ct_temp_only = TRUE,
                            min_QA_reached = TRUE,
                            privateData = FALSE,
+                           debug = FALSE,
                            db_name = 'smartbuoydblive'){
         # boilerplate query start
-    query = paste("SELECT [Start Time] as startTime,",
-              "[Seconds Since 01-Jan-2000] as dateTime,",
-              "[Start Time Offset (secs)] as offset,",
-              "[Site] as site,",
-              "[Depth] as depth,",
-              "[QA Status] as QA_level,",
-              "[Result Quality] as QA_flag,",
-              "[Result Value] as value,",
-              "[Latitude] as latitude, [Longitude] as longitude,",
-              "[Sensor Description] as sensor,",
-              "[SerialNumber] as serial,",
-              "[Parameter code] as par,",
-              "[Station] as station,",
-              "[Cruise Id] as cruise,",
-              "[Logger Id] as profiler,",
-              "[Notes] as notes",
-              "FROM v_CtdProfile_DataComplete",
-              "INNER JOIN Sensor ON v_CtdProfile_DataComplete.[Sensor Id] = Sensor.SensorId",
-              "WHERE [Parameter code] IN")
+    query = {paste(
+      "SELECT",
+      "StartDate AS startTime,",
+      "StartTimeOffset AS offset,",
+      "0 AS dateTime,",
+      "Latitude AS latitude,",
+      "Longitude AS longitude,",
+      "Site AS site,",
+      "Station AS station,",
+      "CruiseId AS cruise,",
+      "Notes AS notes,",
+      "InAir_Pressure,",
+      "InAir_PAR,",
+      "CtdData.ParCode AS par,",
+      "Depth AS depth,",
+      "QaStatus AS QA_level,",
+      "ResultQuality AS QA_flag,",
+      "SensorDescr AS sensor,",
+      "sensor.SerialNumber AS serial,",
+      "CtdConfig.InstId as profiler,",
+      "ResultValue AS value,",
+      "ParUnit AS unit",
+      "FROM [SmartBuoy].[dbo].[CtdHeader]",
+      "INNER JOIN CtdConfig ON CtdHeader.CtdConfigId = CtdConfig.CtdConfigId",
+      "INNER JOIN CtdData ON CtdHeader.CtdHeaderId = CtdData.CtdHeaderId",
+      "INNER JOIN Sensor ON CtdData.SensorId = Sensor.SensorId",
+      "INNER JOIN Instrument ON CtdConfig.InstId = Instrument.InstId",
+      "INNER JOIN SensorParameter ON Sensor.SensorId = SensorParameter.SensorId",
+      "WHERE CtdData.ParCode IN"
+    )}
 
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
     parameters = paste(parameters, collapse = "', '")
@@ -56,16 +69,16 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         # if cruise id is suppled build filter into query
     if(!is.na(cruiseID[1])){
         cruiseID = paste(cruiseID, collapse = "', '")
-        query = paste0(query, "AND [Cruise Id] IN ('", cruiseID,"')")
+        query = paste0(query, "AND CruiseId IN ('", cruiseID,"')")
     }
         #
     if(privateData == FALSE){
-        query = paste0(query, " AND [Is Private Data] = 0")
+        query = paste0(query, " AND IsPrivate = 0")
     }
         # if profiler id is suppled build filter into query
     if(!is.na(profiler[1])){
         profiler = paste(profiler, collapse = "', '")
-        query = paste0(query, " AND [Logger Id] IN ('", profiler,"')")
+        query = paste0(query, " AND InstId IN ('", profiler,"')")
     }
       # if area is suppled build filter into query
       # area = c(minLat, minLon, maxLat, maxLon)
@@ -84,19 +97,19 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 
       # if before or after is suppled build filter into query
     if(!is.na(before)){
-        query = paste0(query, " AND [Date/Time] <= '", before, "'")
+        query = paste0(query, " AND StartDate <= '", before, "'")
     }
     if(!is.na(after)){
-        query = paste0(query, " AND [Date/Time] >= '", after, "'")
+        query = paste0(query, " AND StartDate >= '", after, "'")
     }
 
       # if only RQ0 data is required build filter into query
     if(RQ0 == TRUE){
-      query = paste(query, "AND [Result Quality] = 0 ")
+      query = paste(query, "AND ResultQuality = 0 ")
     }
 
     if(min_QA_reached == TRUE){
-        query = paste(query, "AND [QA Status] >= [QA Status Min Publish Level]")
+        query = paste(query, "AND QaStatus >= QaStatusMinPublishLevel")
     }
 
     # finally
@@ -104,6 +117,11 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 
     print(query)
     sb = odbcConnect(db_name)
+    if(debug){
+      out = sqlQuery(sb, query, stringsAsFactors=F)
+      odbcCloseAll()
+      return(out) # return output data
+    }
     dat = data.table(sqlQuery(sb, query, stringsAsFactors=F))
     odbcCloseAll()
     # check if valid data has been returned, if not quit
@@ -113,7 +131,8 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         stop("no data returned")
     }
 
-    dat[, dateTime := as.POSIXct(dateTime, origin="2000-01-01")]
+    dat[, dateTime := as.POSIXct(dateTime, origin="1970-01-01", tz="UTC")]
+    dat[, dateTime := startTime + offset]
 
         # if only CT temp wanted remove non ct data
     if(ct_temp_only == TRUE){

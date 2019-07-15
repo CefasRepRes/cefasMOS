@@ -7,7 +7,7 @@
 profiler.fetch(cruiseID = NA, profiler = NA, after = NA,
   before = NA, area = NA, parameters = c("TEMP", "SAL", "FTU",
   "O2CONC", "PAR", "FLUORS"), RQ0 = TRUE, ct_temp_only = TRUE,
-  min_QA_reached = TRUE, privateData = FALSE,
+  min_QA_reached = TRUE, privateData = FALSE, debug = FALSE,
   db_name = "smartbuoydblive")
 }
 \arguments{
@@ -29,7 +29,9 @@ profiler.fetch(cruiseID = NA, profiler = NA, after = NA,
 
 \item{min_QA_reached}{boolean, if True only data which has passed required QA level is returned, always used with QA0 = True.}
 
-\item{privateData}{boolean, if True will return private data}
+\item{privateData}{boolean, if True will return non-public data (e.g. commerical contracts), default is False.}
+
+\item{debug}{boolean, if True will return raw query output}
 
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }
