@@ -127,8 +127,12 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #'
 bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=T, highres=F){
     # should build bathymap which fits all data in
-    # GBbathy2014$label = raster::cut(GBbathy2014$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf), labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
-    # devtools::use_data(GBbathy2014, overwrite=T)
+    # gebco_2014$label = raster::cut(GBbathy2014$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf), labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
+    # gebco_2014[, lat := round(lat, digits=6)]
+    # gebco_2014[, lon := round(lon, digits=6)]
+    # gebco_2014[, depth := depth * -1]
+    # ggplot(gebco_2014) + geom_raster(aes(lon, lat, fill=depth)) + scale_fill_gradientn(name = "Depth [m]", colors=cmocean("deep")(256))
+    # usethis::use_data(gebco_2019, overwrite=T)
 
   max.lat = abs(min(lat) - max(lat))
   max.lon = abs(min(lon) - max(lon))
@@ -136,11 +140,11 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=
   ylim = c(min(lat) - max.lat / margin, max(lat) + max.lat / margin)
 
   if(highres){
-    if(!exists("gebco_nwes")){data("gebco_nwes");print("loaded GEBCO2019")}
-    bathy = gebco_nwes[lon %between% xlim & lat %between% ylim]
+    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019")}
+    bathy = gebco_2019[lon %between% xlim & lat %between% ylim]
   }else{
-    if(!exists("GBbathy2014")){data("GBbathy2014");print("loaded GEBCO2014")}
-    bathy = GBbathy2014[lon %between% xlim & lat %between% ylim]
+    if(!exists("GBbathy2014")){data("gebco_2014");print("loaded GEBCO 2014")}
+    bathy = gebco_2014[lon %between% xlim & lat %between% ylim]
   }
 
   GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
