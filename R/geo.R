@@ -110,10 +110,11 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 
 #' GEBCO Bathymetry base map
 #'
-#' Basemap using GEBCO data, if you want something more technical try the marmap package.
+#' Basemap using GEBCO 2019 data, if you want something more technical try the marmap package.
 #'
 #' @param lat vector of latitude coordinates for calculating map extent
 #' @param lon as above for longitude
+#' @param highres default = False, if true fetch the full half degree GEBCO 2019 data
 #' @param margin integer (default = 8) indicating fraction of range to use for a margin.
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
 #'
@@ -124,12 +125,8 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @import ggplot2 rworldmap cmocean
 #' @export
 #'
-bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=T){
+bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=T, highres=F){
     # should build bathymap which fits all data in
-  if(!exists("gebco_nwes")){
-    data("gebco_nwes")
-    print("loaded GEBCO2019")
-    }
     # GBbathy2014$label = raster::cut(GBbathy2014$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf), labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
     # devtools::use_data(GBbathy2014, overwrite=T)
 
@@ -138,7 +135,13 @@ bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=
   xlim = c(min(lon) - max.lon / margin, max(lon) + max.lon / margin)
   ylim = c(min(lat) - max.lat / margin, max(lat) + max.lat / margin)
 
-  bathy = gebco_nwes[lon %between% xlim & lat %between% ylim]
+  if(highres){
+    if(!exists("gebco_nwes")){data("gebco_nwes");print("loaded GEBCO2019")}
+    bathy = gebco_nwes[lon %between% xlim & lat %between% ylim]
+  }else{
+    if(!exists("GBbathy2014")){data("GBbathy2014");print("loaded GEBCO2014")}
+    bathy = GBbathy2014[lon %between% xlim & lat %between% ylim]
+  }
 
   GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
 
