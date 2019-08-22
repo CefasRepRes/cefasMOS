@@ -2,20 +2,25 @@
 
 #' read seaglider logfiles, extracts GPS, altimetry, battery data, and targets
 #'
+#' dateTime is from GPS time
+#'
 #' @param glider_folder
+#' @param echo if true print name of log file
 #'
 #' @return data.table containing processed logfiles
 #' @export
-read.seaglider_log <- function(glider_folder){
+read.seaglider_log <- function(glider_folder, echo=F){
   require(data.table)
   file_list = list.files(glider_folder, full.names = T, pattern = "\\d+\\.log")
   if(length(file_list) < 1){stop("No log files found")}
   logs = list()
   for(file in file_list){
     # file = "AE2_sg620/p6200001.log"
-    print(file)
+    if(echo){ print(file) }
     log = readLines(file)
     dive = strsplit(log[grepl("dive:", log)], ": ")[[1]][2]
+    log_time = strsplit(log[grepl("start:", log)], ": ")[[1]][2]
+    log_time = as.POSIXct(log_time, format="%m %d 1%y %H %M %S", tz="UTC")
     if(dive != "0" & !any(grepl("RECOV_CODE", log))){
       # extract targets
       target_line = grep("$TGT_NAME", log, fixed=T, value=F)
@@ -40,10 +45,12 @@ read.seaglider_log <- function(glider_folder){
       HDOP = NA
       magvar = NA
       hozerror = NA
+      timetofix = NA
       if(gelement == 13){
         # better gps
         # GPS1, date, time, lat, lon, timetofix, HDOP, totaltofix, magvar, driftspd, driftdir, numsat, hozerror
         HDOP = as.numeric(gps[7])
+        timetofix = as.numeric(gps[6])
         magvar = as.numeric(gps[9])
         hozerror = as.numeric(gps[13])
       }
@@ -51,6 +58,7 @@ read.seaglider_log <- function(glider_folder){
         # old gps
         # $gps1, date, time, lat, long, timetofix, HDOP, totaltime, magvar
         HDOP = as.numeric(gps[7])
+        timetofix = as.numeric(gps[6])
         magvar = as.numeric(gps[9])
       }
 
@@ -90,7 +98,8 @@ read.seaglider_log <- function(glider_folder){
                                 "target" = target,
                                 "ping_depth" = as.numeric(ping_depth),
                                 "alt" = as.numeric(alt),
-                                HDOP, magvar, hozerror,
+                                HDOP, magvar, hozerror, timetofix,
+                                log_time,
                                 dateTime, lat, lon, lat_end, lon_end, dateTime_end, batt24_V, batt10_V, batt24_AH, batt10_AH,
                                 stringsAsFactors=F)
       if(any(grepl("loiter", log))){
