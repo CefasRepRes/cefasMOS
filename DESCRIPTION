@@ -1,7 +1,7 @@
 Package: cefasMOS
 Title: Provides tools for Cefas MOS activities
-Version: 0.3.2
-Date: 2019-06-17
+Version: 0.3.3
+Date: 2019-08-26
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
 Description: Provides tools for Cefas MOS activities
 Depends:
@@ -34,6 +34,7 @@ Imports:
     pbapply,
     shiny,
     viridis,
+    cmocean,
     oce,
 Suggests:
 License: GPL-2

@@ -110,10 +110,10 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 
 #' GEBCO Bathymetry base map
 #'
-#' Basemap using GEBCO 2019 data, if you want something more technical try the marmap package.
+#' Basemap using GEBCO 2019 data, if you want something more technical, perhaps try the marmap package.
 #'
-#' @param lat vector of latitude coordinates for calculating map extent
-#' @param lon as above for longitude
+#' @param lon vector of longitude coordinates for calculating map extent
+#' @param lat as above for latitude
 #' @param highres default = False, if true fetch the full half degree GEBCO 2019 data
 #' @param margin integer (default = 8) indicating fraction of range to use for a margin.
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
@@ -125,26 +125,18 @@ ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F,
 #' @import ggplot2 rworldmap cmocean
 #' @export
 #'
-bathymap <- function(lat = c(47, 60), lon = c(-14.996, 8.004), margin=8, breaks=T, highres=F){
-    # should build bathymap which fits all data in
-    # gebco_2014$label = raster::cut(GBbathy2014$depth, breaks = c(Inf, -25, -50, -100, -200, -Inf), labels = rev(c('< 25','25-50','50-100','100-200','> 200')))
-    # gebco_2014[, lat := round(lat, digits=6)]
-    # gebco_2014[, lon := round(lon, digits=6)]
-    # gebco_2014[, depth := depth * -1]
-    # ggplot(gebco_2014) + geom_raster(aes(lon, lat, fill=depth)) + scale_fill_gradientn(name = "Depth [m]", colors=cmocean("deep")(256))
-    # usethis::use_data(gebco_2019, overwrite=T)
-
+bathymap <- function(lon = c(-14.996, 8.004), lat = c(47, 60), margin=8, breaks=T, highres=F){
   max.lat = abs(min(lat) - max(lat))
   max.lon = abs(min(lon) - max(lon))
   xlim = c(min(lon) - max.lon / margin, max(lon) + max.lon / margin)
   ylim = c(min(lat) - max.lat / margin, max(lat) + max.lat / margin)
 
   if(highres){
-    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019")}
+    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 15 arc second grid")}
     bathy = gebco_2019[lon %between% xlim & lat %between% ylim]
   }else{
-    if(!exists("GBbathy2014")){data("gebco_2014");print("loaded GEBCO 2014")}
-    bathy = gebco_2014[lon %between% xlim & lat %between% ylim]
+    if(!exists("gebco_2019_low")){data("gebco_2019_low");print("loaded GEBCO 2019, 0.05 degree grid")}
+    bathy = gebco_2019_low[lon %between% xlim & lat %between% ylim]
   }
 
   GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
