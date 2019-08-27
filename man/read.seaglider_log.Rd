@@ -4,14 +4,14 @@
 \alias{read.seaglider_log}
 \title{read seaglider logfiles, extracts GPS, altimetry, battery data, and targets}
 \usage{
-read.seaglider_log(glider_folder)
+read.seaglider_log(glider_folder, echo = F)
 }
 \arguments{
-\item{glider_folder}{}
+\item{echo}{if true print name of log file}
 }
 \value{
 data.table containing processed logfiles
 }
 \description{
-read seaglider logfiles, extracts GPS, altimetry, battery data, and targets
+dateTime is from GPS time
 }

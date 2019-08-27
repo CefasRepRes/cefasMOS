@@ -4,13 +4,13 @@
 \alias{bathymap}
 \title{GEBCO Bathymetry base map}
 \usage{
-bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = 8,
+bathymap(lon = c(-14.996, 8.004), lat = c(47, 60), margin = 8,
   breaks = T, highres = F)
 }
 \arguments{
-\item{lat}{vector of latitude coordinates for calculating map extent}
+\item{lon}{vector of longitude coordinates for calculating map extent}
 
-\item{lon}{as above for longitude}
+\item{lat}{as above for latitude}
 
 \item{margin}{integer (default = 8) indicating fraction of range to use for a margin.}
 
@@ -22,7 +22,7 @@ bathymap(lat = c(47, 60), lon = c(-14.996, 8.004), margin = 8,
 ggplot
 }
 \description{
-Basemap using GEBCO 2019 data, if you want something more technical try the marmap package.
+Basemap using GEBCO 2019 data, if you want something more technical, perhaps try the marmap package.
 }
 \references{
 GEBCO data from GEBCO 2019
