@@ -113,10 +113,20 @@ optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
 #' SVU_coef = list(batch="1517M", coef="SVU", C0=0.002757413, C1=0.000115132, C2=2.34E-06, C3=234.4436, C4=-0.3752192, C5=-45.60156, C6=4.630104)
 #' optode.phaseCalc(45, 10, coefs=SVU_coef)
 #'
-#' # For standard optodes:
-#' coefs = data.frame(
+#' # For standard 4330, 4831, 4835 optodes:
+#' coefs = list(batch = "4807E", coef = "mk2",
+#'   FoilCoefA = c(-2.988314E-06, -6.137785E-06, 1.684659E-03, -1.857173E-01, 6.784399E-04, -5.597908E-07, 1.040158E+01,
+#'                 -5.986907E-02, 1.360425E-04, -4.776977E-07, -3.032937E+02, 2.530496E+00, -1.267045E-02, 1.040454E-04),
+#'   FoilCoefB = c(-3.560390E-07, 3.816713E+03, -4.475507E+01, 4.386164E-01, -7.146342E-03, 8.906236E-05, -6.343012E-07,
+#'                 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00),
+#'   FoilPolyDegT = c(1, 0, 0, 0., 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0, 0, 0),
+#'   FoilPolyDegO = c(4, 5, 4, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
+#' optode.phaseCalc(30, 10, coefs=coefs)
+#'
+#' # For standard 3835 optodes:
+#' coefs = list(
 #'   batch = 1707,
-#'   coef = 0:3,
+#'   coef = "mk1",
 #'   C0 = c(5326.5, -192.117, 4.14357, -0.0378695),
 #'   C1 = c(-292.068, 9.71993, -0.214295, 0.00200778),
 #'   C2 = c(6.47595, -0.19808, 0.0044994, -0.0000431),
@@ -124,24 +134,66 @@ optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
 #'   C4 = c(0.000265042, -0.00000683, 0.000000167, -1.62E-09))
 #' optode.phaseCalc(30, 10, coefs=coefs)
 
-optode.phaseCalc <- function(DPhase, Temp, coefs){
+optode.phaseCalc <- function(phase, Temp, coefs){
   with(coefs, {
     if(coef[1] == "SVU"){
       # For 4831 multipoint calibrated optodes
       print(paste("using SVU foil batch coefs", batch))
       Ksv = C0 + C1*Temp + C2*Temp^2
       P0 = C3 + C4*Temp
-      Pc = C5 + C6*DPhase # actually calphase
+      Pc = C5 + C6*phase # actually calphase
       ((P0/Pc)-1) / Ksv
-    } else{
+    }
+    if(coef[1] == "mk1"){
       # for mkl optodes 3830 & 3835
-      print(paste("using foil batch coefs", batch[1]))
+      print(paste("using mk1 foil batch coefs", batch[1]))
       (C0[1]+C0[2]*Temp+C0[3]*Temp^2+C0[4]*Temp^3) +
         (C1[1]+C1[2]*Temp+C1[3]*Temp^2+C1[4]*Temp^3) *
-        DPhase+(C2[1]+C2[2]*Temp+C2[3]*Temp^2+C2[4]*Temp^3) *
-        DPhase^2+(C3[1]+C3[2]*Temp+C3[3]*Temp^2+C3[4]*Temp^3) *
-        DPhase^3+(C4[1]+C4[2]*Temp+C4[3]*Temp^2+C4[4]*Temp^3) *
-        DPhase^4
+        phase+(C2[1]+C2[2]*Temp+C2[3]*Temp^2+C2[4]*Temp^3) *
+        phase^2+(C3[1]+C3[2]*Temp+C3[3]*Temp^2+C3[4]*Temp^3) *
+        phase^3+(C4[1]+C4[2]*Temp+C4[3]*Temp^2+C4[4]*Temp^3) *
+        phase^4 # this is Dphase
+    }
+
+    if(coef[1] == "mk2"){
+      # for mk2 optodes 4330, 4835
+      print(paste("using mk2 foil batch coefs", batch[1]))
+        # calculate partial pressure
+      Pp =
+        FoilCoefA[1]  * Temp^FoilPolyDegT[1]  * phase^FoilPolyDegO[1] +
+        FoilCoefA[2]  * Temp^FoilPolyDegT[2]  * phase^FoilPolyDegO[2] +
+        FoilCoefA[3]  * Temp^FoilPolyDegT[3]  * phase^FoilPolyDegO[3] +
+        FoilCoefA[4]  * Temp^FoilPolyDegT[4]  * phase^FoilPolyDegO[4] +
+        FoilCoefA[5]  * Temp^FoilPolyDegT[5]  * phase^FoilPolyDegO[5] +
+        FoilCoefA[6]  * Temp^FoilPolyDegT[6]  * phase^FoilPolyDegO[6] +
+        FoilCoefA[7]  * Temp^FoilPolyDegT[7]  * phase^FoilPolyDegO[7] +
+        FoilCoefA[8]  * Temp^FoilPolyDegT[8]  * phase^FoilPolyDegO[8] +
+        FoilCoefA[9]  * Temp^FoilPolyDegT[9]  * phase^FoilPolyDegO[9] +
+        FoilCoefA[10] * Temp^FoilPolyDegT[10] * phase^FoilPolyDegO[10] +
+        FoilCoefA[11] * Temp^FoilPolyDegT[11] * phase^FoilPolyDegO[11] +
+        FoilCoefA[12] * Temp^FoilPolyDegT[12] * phase^FoilPolyDegO[12] +
+        FoilCoefA[13] * Temp^FoilPolyDegT[13] * phase^FoilPolyDegO[13] +
+        FoilCoefA[14] * Temp^FoilPolyDegT[14] * phase^FoilPolyDegO[14] +
+        FoilCoefB[1]  * Temp^FoilPolyDegT[15] * phase^FoilPolyDegO[15] +
+        FoilCoefB[2]  * Temp^FoilPolyDegT[16] * phase^FoilPolyDegO[16] +
+        FoilCoefB[3]  * Temp^FoilPolyDegT[17] * phase^FoilPolyDegO[17] +
+        FoilCoefB[4]  * Temp^FoilPolyDegT[18] * phase^FoilPolyDegO[18] +
+        FoilCoefB[5]  * Temp^FoilPolyDegT[19] * phase^FoilPolyDegO[19] +
+        FoilCoefB[6]  * Temp^FoilPolyDegT[20] * phase^FoilPolyDegO[20] +
+        FoilCoefB[7]  * Temp^FoilPolyDegT[21] * phase^FoilPolyDegO[21] +
+        FoilCoefB[8]  * Temp^FoilPolyDegT[22] * phase^FoilPolyDegO[22] +
+        FoilCoefB[9]  * Temp^FoilPolyDegT[23] * phase^FoilPolyDegO[23] +
+        FoilCoefB[10] * Temp^FoilPolyDegT[24] * phase^FoilPolyDegO[24] +
+        FoilCoefB[11] * Temp^FoilPolyDegT[25] * phase^FoilPolyDegO[25] +
+        FoilCoefB[12] * Temp^FoilPolyDegT[26] * phase^FoilPolyDegO[26] +
+        FoilCoefB[13] * Temp^FoilPolyDegT[27] * phase^FoilPolyDegO[27] +
+        FoilCoefB[14] * Temp^FoilPolyDegT[28] * phase^FoilPolyDegO[28]
+      solub = oxygen.sat(Temp, 0) # benson kraus GG solubility
+      VapP = (exp(52.57-6690.9/(Temp+273.15)-4.681*log(Temp+273.15)))
+      Pp * solub / (0.20946*(1013.25-VapP))
+    }
+    else{
+      print("Unable to find matching coef type")
     }
   })
 }
