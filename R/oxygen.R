@@ -142,19 +142,18 @@ optode.phaseCalc <- function(phase, Temp, coefs){
       Ksv = C0 + C1*Temp + C2*Temp^2
       P0 = C3 + C4*Temp
       Pc = C5 + C6*phase # actually calphase
-      ((P0/Pc)-1) / Ksv
+      DO = ((P0/Pc)-1) / Ksv
     }
     if(coef[1] == "mk1"){
       # for mkl optodes 3830 & 3835
       print(paste("using mk1 foil batch coefs", batch[1]))
-      (C0[1]+C0[2]*Temp+C0[3]*Temp^2+C0[4]*Temp^3) +
+      DO = (C0[1]+C0[2]*Temp+C0[3]*Temp^2+C0[4]*Temp^3) +
         (C1[1]+C1[2]*Temp+C1[3]*Temp^2+C1[4]*Temp^3) *
         phase+(C2[1]+C2[2]*Temp+C2[3]*Temp^2+C2[4]*Temp^3) *
         phase^2+(C3[1]+C3[2]*Temp+C3[3]*Temp^2+C3[4]*Temp^3) *
         phase^3+(C4[1]+C4[2]*Temp+C4[3]*Temp^2+C4[4]*Temp^3) *
         phase^4 # this is Dphase
     }
-
     if(coef[1] == "mk2"){
       # for mk2 optodes 4330, 4835
       print(paste("using mk2 foil batch coefs", batch[1]))
@@ -190,11 +189,9 @@ optode.phaseCalc <- function(phase, Temp, coefs){
         FoilCoefB[14] * Temp^FoilPolyDegT[28] * phase^FoilPolyDegO[28]
       solub = oxygen.sat(Temp, 0) # benson kraus GG solubility
       VapP = (exp(52.57-6690.9/(Temp+273.15)-4.681*log(Temp+273.15)))
-      Pp * solub / (0.20946*(1013.25-VapP))
+      DO = Pp * solub / (0.20946*(1013.25-VapP))
     }
-    else{
-      print("Unable to find matching coef type")
-    }
+  return(DO)
   })
 }
 
