@@ -100,6 +100,10 @@ optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
 #'
 #' Uses suppled optode calibration coeffients to calculate oxygen concentration from Dphase/Calphase and temperature.
 #'
+#' For mk1 optodes provide Dphase
+#' for mk2 without SVU multipoint calibtaion provide Calphase (not TCphase!)
+#' remember, for optodes > #1000 two point calibrations will only affect the linear transformation coefs.
+#'
 #' @param DPhase vector of phase values
 #' @param Temp vector of temperature (C)
 #' @param coefs list (or data.frame) consisting of C0..C6 coefs, see examples
@@ -114,14 +118,12 @@ optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
 #' optode.phaseCalc(45, 10, coefs=SVU_coef)
 #'
 #' # For standard 4330, 4831, 4835 optodes:
-#' coefs = list(batch = "4807E", coef = "mk2",
-#'   FoilCoefA = c(-2.988314E-06, -6.137785E-06, 1.684659E-03, -1.857173E-01, 6.784399E-04, -5.597908E-07, 1.040158E+01,
-#'                 -5.986907E-02, 1.360425E-04, -4.776977E-07, -3.032937E+02, 2.530496E+00, -1.267045E-02, 1.040454E-04),
-#'   FoilCoefB = c(-3.560390E-07, 3.816713E+03, -4.475507E+01, 4.386164E-01, -7.146342E-03, 8.906236E-05, -6.343012E-07,
-#'                 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00),
-#'   FoilPolyDegT = c(1, 0, 0, 0., 1, 2, 0, 1, 2, 3, 0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 5, 0, 0, 0, 0, 0, 0, 0),
-#'   FoilPolyDegO = c(4, 5, 4, 3, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0))
-#' optode.phaseCalc(30, 10, coefs=coefs)
+# coefs = list(batch = "4807E", coef = "mk2",
+#   FoilCoefA = c(-2.988314E-06, -6.137785E-06, 1.684659E-03, -1.857173E-01, 6.784399E-04, -5.597908E-07, 1.040158E+01,
+#                 -5.986907E-02, 1.360425E-04, -4.776977E-07, -3.032937E+02, 2.530496E+00, -1.267045E-02, 1.040454E-04),
+#   FoilCoefB = c(-3.560390E-07, 3.816713E+03, -4.475507E+01, 4.386164E-01, -7.146342E-03, 8.906236E-05, -6.343012E-07,
+#                 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00))
+# optode.phaseCalc(30, 10, coefs=coefs)
 #'
 #' # For standard 3835 optodes:
 #' coefs = list(
@@ -158,42 +160,144 @@ optode.phaseCalc <- function(phase, Temp, coefs){
       # for mk2 optodes 4330, 4835
       print(paste("using mk2 foil batch coefs", batch[1]))
         # calculate partial pressure
+
       Pp =
-        FoilCoefA[1]  * Temp^FoilPolyDegT[1]  * phase^FoilPolyDegO[1] +
-        FoilCoefA[2]  * Temp^FoilPolyDegT[2]  * phase^FoilPolyDegO[2] +
-        FoilCoefA[3]  * Temp^FoilPolyDegT[3]  * phase^FoilPolyDegO[3] +
-        FoilCoefA[4]  * Temp^FoilPolyDegT[4]  * phase^FoilPolyDegO[4] +
-        FoilCoefA[5]  * Temp^FoilPolyDegT[5]  * phase^FoilPolyDegO[5] +
-        FoilCoefA[6]  * Temp^FoilPolyDegT[6]  * phase^FoilPolyDegO[6] +
-        FoilCoefA[7]  * Temp^FoilPolyDegT[7]  * phase^FoilPolyDegO[7] +
-        FoilCoefA[8]  * Temp^FoilPolyDegT[8]  * phase^FoilPolyDegO[8] +
-        FoilCoefA[9]  * Temp^FoilPolyDegT[9]  * phase^FoilPolyDegO[9] +
-        FoilCoefA[10] * Temp^FoilPolyDegT[10] * phase^FoilPolyDegO[10] +
-        FoilCoefA[11] * Temp^FoilPolyDegT[11] * phase^FoilPolyDegO[11] +
-        FoilCoefA[12] * Temp^FoilPolyDegT[12] * phase^FoilPolyDegO[12] +
-        FoilCoefA[13] * Temp^FoilPolyDegT[13] * phase^FoilPolyDegO[13] +
-        FoilCoefA[14] * Temp^FoilPolyDegT[14] * phase^FoilPolyDegO[14] +
-        FoilCoefB[1]  * Temp^FoilPolyDegT[15] * phase^FoilPolyDegO[15] +
-        FoilCoefB[2]  * Temp^FoilPolyDegT[16] * phase^FoilPolyDegO[16] +
-        FoilCoefB[3]  * Temp^FoilPolyDegT[17] * phase^FoilPolyDegO[17] +
-        FoilCoefB[4]  * Temp^FoilPolyDegT[18] * phase^FoilPolyDegO[18] +
-        FoilCoefB[5]  * Temp^FoilPolyDegT[19] * phase^FoilPolyDegO[19] +
-        FoilCoefB[6]  * Temp^FoilPolyDegT[20] * phase^FoilPolyDegO[20] +
-        FoilCoefB[7]  * Temp^FoilPolyDegT[21] * phase^FoilPolyDegO[21] +
-        FoilCoefB[8]  * Temp^FoilPolyDegT[22] * phase^FoilPolyDegO[22] +
-        FoilCoefB[9]  * Temp^FoilPolyDegT[23] * phase^FoilPolyDegO[23] +
-        FoilCoefB[10] * Temp^FoilPolyDegT[24] * phase^FoilPolyDegO[24] +
-        FoilCoefB[11] * Temp^FoilPolyDegT[25] * phase^FoilPolyDegO[25] +
-        FoilCoefB[12] * Temp^FoilPolyDegT[26] * phase^FoilPolyDegO[26] +
-        FoilCoefB[13] * Temp^FoilPolyDegT[27] * phase^FoilPolyDegO[27] +
-        FoilCoefB[14] * Temp^FoilPolyDegT[28] * phase^FoilPolyDegO[28]
+        FoilCoefA[1]  * Temp^1 * phase^4 +
+        FoilCoefA[2]  * Temp^0 * phase^5 +
+        FoilCoefA[3]  * Temp^0 * phase^4 +
+        FoilCoefA[4]  * Temp^0 * phase^3 +
+        FoilCoefA[5]  * Temp^1 * phase^3 +
+        FoilCoefA[6]  * Temp^2 * phase^3 +
+        FoilCoefA[7]  * Temp^0 * phase^2 +
+        FoilCoefA[8]  * Temp^1 * phase^2 +
+        FoilCoefA[9]  * Temp^2 * phase^2 +
+        FoilCoefA[10] * Temp^3 * phase^2 +
+        FoilCoefA[11] * Temp^0 * phase^1 +
+        FoilCoefA[12] * Temp^1 * phase^1 +
+        FoilCoefA[13] * Temp^2 * phase^1 +
+        FoilCoefA[14] * Temp^3 * phase^1 +
+        FoilCoefB[1]  * Temp^4 * phase^1 +
+        FoilCoefB[2]  * Temp^0 * phase^0 +
+        FoilCoefB[3]  * Temp^1 * phase^0 +
+        FoilCoefB[4]  * Temp^2 * phase^0 +
+        FoilCoefB[5]  * Temp^3 * phase^0 +
+        FoilCoefB[6]  * Temp^4 * phase^0 +
+        FoilCoefB[7]  * Temp^5 * phase^0 +
+        FoilCoefB[8]  * Temp^0 * phase^0 +
+        FoilCoefB[9]  * Temp^0 * phase^0 +
+        FoilCoefB[10] * Temp^0 * phase^0 +
+        FoilCoefB[11] * Temp^0 * phase^0 +
+        FoilCoefB[12] * Temp^0 * phase^0 +
+        FoilCoefB[13] * Temp^0 * phase^0 +
+        FoilCoefB[14] * Temp^0 * phase^0
       solub = oxygen.sat(Temp, 0) # benson kraus GG solubility
       VapP = (exp(52.57-6690.9/(Temp+273.15)-4.681*log(Temp+273.15)))
       DO = Pp * solub / (0.20946*(1013.25-VapP))
     }
+  # return(list(solub, VapP, Pp, DO))
   return(DO)
   })
 }
+
+
+#' Optode tau
+#'
+#' Calculates Tau as per Bittig & Korsinger 2017
+#'
+#' foil thickness (Im)
+#' 100 µm for the Aanderaa optodes with standard foil
+#' 50 µm for the Aanderaa 4330F optodes with fast response foil
+#'
+#' 3835, 4330 tau/s = 25 s
+#' 4330F tau/s = 8 s
+#' RINKO tau/s = 0.4 s (gas phase)
+#'
+#' Boundary layer thickness (IL) - dependent on platform
+#' CTD-mounted optodes (range 20 – 50 µm), close to 40 at 1 dbar s-1
+#' glider ~
+#' 210 - (110 / 0.095) * vel # if vel < 0.95 dbar s-1
+#' 40 + (60 / 0.905) * (1-vel) # if vel > 0.095 dbar s-1
+#'
+#' @param temp in-situ temperature
+#' @param IL boundary layer thickness
+#' @param type either "fast", "standard" or "SBE63"
+#'
+#' @return
+#' @export
+#'
+optode.tau <- function(temp, IL, type=c("fast", "standard", "SBE63")){
+  # usethis::use_data(optode_tau)
+  data("optode_tau")
+  if(length(type) > 1){type = type[1]}
+  selection = switch(type,
+         "fast" = optode_tau$fast[J(round(temp), round(IL)), roll="nearest", on=c("temp_", "IL_")],
+         "standard" = optode_tau$standard[J(round(temp), round(IL)), roll="nearest", on=c("temp_", "IL_")],
+         "SBE63" = optode_tau$SBE63[J(round(temp), round(IL)), roll="nearest", on=c("temp_", "IL_")]
+         )
+  return(selection$tau)
+}
+
+
+#' Hahn optode lag correction
+#'
+#' Implements the Hahn optode lag correction, as used in UEA seaglider toolbox
+#'
+#' @param dateTime datetime vector (seconds or POSIXct)
+#' @param TCphase optode phase
+#' @param temp in-situ temperature
+#' @param tau default = NA
+#' @param tau_DO default is c(14.8, -0.4)
+#' @param filter default = True to apply a median pre-filter
+#'
+#' @return lagged phase
+#' @export
+#'
+optode.lagcorrect_hahn <- function(dateTime, TCphase, temp, coefs, tau = NA, tau_DO = c(14.8, -0.4), filter = T){
+  if(is.na(tau[1])){
+    tau = tau_DO[1] + tau_DO[2] * (temp - 20)
+  }
+    ts_hr = seq(min(dateTime), max(dateTime), by=0.2)
+        # Interpolate TPhase to 1 Hz, apply filtering/smoothing in case of spikes
+    if(filter){
+        # Interpolate tau to 1 Hz, apply filtering/smoothing in case of spikes
+    # tphase_hr = signal::pchip(dateTime, gt_sg_filter(TCphase), xi = ts_hr)
+    tphase_hr = approx(dateTime, seaglider.gt_sg_filter(TCphase), xout = ts_hr)$y
+    tau_hr = approx(dateTime, seaglider.gt_sg_filter(tau), xout = ts_hr)$y
+    }else{
+      tau_hr = approx(dateTime, tau, xout = ts_hr)$y
+      tphase_hr = approx(dateTime, TCphase, xout = ts_hr)$y
+    }
+        # Pre-allocate for speed
+    tphase_new = tphase_hr
+
+        # Apply step-wise lag correction
+    for(jstep in 2:length(tphase_hr)){
+      tphase_new[jstep] =
+                     (tphase_hr[jstep] - (tphase_hr[jstep-1] *
+                     (exp(-(ts_hr[jstep]-ts_hr[jstep-1]) / tau_hr[jstep-1])))) /
+                     (1-sum(exp(-(ts_hr[jstep]-ts_hr[jstep-1]) / tau_hr[jstep-1])))
+    }
+        # downsample back to original time-array
+    tphase_new = approx(ts_hr, tphase_new, dateTime, rule = 1)$y
+    return(tphase_new)
+}
+
+seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
+  n = length(x)
+  m = matrix(NA_real_, n + range_median*2, range_median*2 + 1)
+  m[(range_median+1):(nrow(m)-range_median),] =  matlab::repmat(x, 1, range_median*2+1)
+  for(i in 1:(range_median*2+1)){
+    m[i:(i+n-1), i] = x
+  }
+  out = apply(m, 1, median, na.rm=T)
+  out = out[(range_median+1):(length(out)-range_median)]
+    # todo convolve low-pass
+
+  # out = conv(out,ones(1,range_lowpass*2 +1)/(range_lowpass*2 +1),'same');
+
+  return(out)
+}
+
 
 #' Calculate RINKO temperature from voltage
 #'
