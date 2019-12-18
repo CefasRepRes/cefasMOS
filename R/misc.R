@@ -390,17 +390,15 @@ ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = 
 #' @param dateTime POSIXct datetime
 #' @param lat latitude in decimal degrees
 #' @param lon longitude in decimal degrees
+#' @import oce
 #'
 #' @return vector of "day" or "night" character values
 #' @export
 markday <- function(dateTime, lat, lon){
-  require(insol)
-  sunrise = as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunrise
-  sunset = as.data.frame(daylength(lat, lon, daydoy(dateTime), 0))$sunset
-  sunrise = as.POSIXct(sunrise*60*60, origin = as.Date(dateTime), tz = "UTC")
-  sunset = as.POSIXct(sunset*60*60, origin = as.Date(dateTime), tz = "UTC")
-  output = rep("day", length(dateTime))
+  alt = oce::sunAngle(dateTime, lon, lat)$altitude
   output[(dateTime < sunrise | dateTime > sunset)] = "night"
+  output = rep("night", length(dateTime))
+  output[alt > 0] = "day"
   return(output)
 }
 
@@ -557,4 +555,19 @@ plt + labs(caption = paste0(
                            signif(summary(fit)$adj.r.squared, 5)
                            )
            )
+}
+
+#' mark up and down casts
+#'
+#' finds the deepest point of pressure record
+#'
+#' @param pressure
+#'
+#' @return vector of same length as pressure, with -1 for desending and 1 for assending (after deepest point)
+#' @export
+dircast <- function(pressure){
+  max_prs_index = min(which(pressure == max(pressure, na.rm=T)))
+  out = rep(-1, length(pressure))
+  out[max_prs_index:length(pressure)] = 1
+  return(out)
 }
