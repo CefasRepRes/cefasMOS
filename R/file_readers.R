@@ -352,3 +352,25 @@ read.nutrients <- function(filename){
   dat = dat[!is.na(value)]
   return(dat)
 }
+
+#' Read CTDQC data
+#'
+#' Extracts in a nice data.table format the nested oce CTD casts from a CTDQC session
+#'
+#' @param session i.e. that loaded with load("CTDQC.rdata")
+#' @param type  either "data" for the trimmed downcasts or "untrimmed" for everything
+#'
+#' @return data.table of all CTDs
+#' @export
+read.CTDQC <- function(session, type = c("data", "untrimmed")){
+  m = list()
+  for(i in session[[type[1]]]){
+    stn = i@metadata$station
+    m[[stn]] = as.data.table(i@data)
+    m[[stn]][, startTime := i@metadata$startTime]
+    fname = strsplit(i@metadata$filename, "\\\\")[[1]]
+    fname = fname[[length(fname)]]
+    m[[stn]][, filename := fname]
+  }
+  return(rbindlist(m, idcol="stn", fill=T))
+}
