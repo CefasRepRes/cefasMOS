@@ -344,7 +344,7 @@ profiler.odz <- function(depth, par){
   kd <- meankd(depth, par)
   odstart <- 0.1
   odstep <- 1
-  odmax <- min(depth)*kd
+  # odmax <- min(depth)*kd
   ztop = odstart/kd
   inc = abs(odstep/kd)
   brks <- c(0,seq(ztop,max(abs(depth)),inc),999)
@@ -354,18 +354,18 @@ profiler.odz <- function(depth, par){
 
 #' estimate euphotic depth from PAR profile
 #'
+#' Euphotic depth defined as 1% of surface
+#'
 #' @param depth vector of depth values
 #' @param par vector of par values
-#' @param surf_par if not supplied attempts to find PAR at 0m depth
+#' @param surf_par surface par
 #'
-#' @return euphotic depth (m)
+#' @return euphotic depth
 #' @export
-profiler.eu_depth <- function(depth, par, surf_par = NA){
+#'
+profiler.eu_depth <-  function(depth, par, surf_par){
   # 1 % of surface value
-  if(is.na(surf_par)){
-    surf_par = mean(par[depth < 0.1 & depth > -0.1])
-  }
-  if(is.nan(surf_par)){stop("no surface PAR detected")}
-  depth[par <= (surf_par/100)]
+  depth = depth[!is.na(par)]
+  par = par[!is.na(par)]
+  min(depth[par <= (surf_par[1]/100)], na.rm=T)
 }
-

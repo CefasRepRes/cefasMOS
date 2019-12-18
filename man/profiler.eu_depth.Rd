@@ -4,18 +4,18 @@
 \alias{profiler.eu_depth}
 \title{estimate euphotic depth from PAR profile}
 \usage{
-profiler.eu_depth(depth, par, surf_par = NA)
+profiler.eu_depth(depth, par, surf_par)
 }
 \arguments{
 \item{depth}{vector of depth values}
 
 \item{par}{vector of par values}
 
-\item{surf_par}{if not supplied attempts to find PAR at 0m depth}
+\item{surf_par}{surface par}
 }
 \value{
-euphotic depth (m)
+euphotic depth
 }
 \description{
-estimate euphotic depth from PAR profile
+Euphotic depth defined as 1% of surface
 }

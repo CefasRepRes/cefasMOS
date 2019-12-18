@@ -7,6 +7,8 @@
 read.seaglider_log(glider_folder, echo = F)
 }
 \arguments{
+\item{glider_folder}{folder containing log files}
+
 \item{echo}{if true print name of log file}
 }
 \value{

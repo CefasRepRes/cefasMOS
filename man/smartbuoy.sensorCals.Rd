@@ -5,14 +5,14 @@
 \title{Sensor calibration query}
 \usage{
 smartbuoy.sensorCals(deployment = NA, deployment_group = NA,
-  parameters = c("FLUORS"), db_name = "smartbuoydblive")
+  parameters = NA, db_name = "smartbuoydblive")
 }
 \arguments{
 \item{deployment}{optional string vector denoting deployment names e.g. "DOWSING/042"}
 
 \item{deployment_group}{optional string vector denoting deployment group names e.g. "DOWSING"}
 
-\item{parameters}{parameter codes to match sensors by e.g. c("FLUORS", "FTU")}
+\item{parameters}{optional parameter codes to match sensors by e.g. c("FLUORS", "FTU")}
 
 \item{db_name}{optional character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }

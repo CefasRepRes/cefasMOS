@@ -4,7 +4,7 @@
 #'
 #' dateTime is from GPS time
 #'
-#' @param glider_folder
+#' @param glider_folder folder containing log files
 #' @param echo if true print name of log file
 #'
 #' @return data.table containing processed logfiles
