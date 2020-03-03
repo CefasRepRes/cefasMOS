@@ -53,7 +53,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
       "CtdConfig.InstId as profiler,",
       "ResultValue AS value,",
       "ParUnit AS unit",
-      "FROM [SmartBuoy].[dbo].[CtdHeader]",
+      "FROM CtdHeader",
       "INNER JOIN CtdConfig ON CtdHeader.CtdConfigId = CtdConfig.CtdConfigId",
       "INNER JOIN CtdData ON CtdHeader.CtdHeaderId = CtdData.CtdHeaderId",
       "INNER JOIN Sensor ON CtdData.SensorId = Sensor.SensorId",
@@ -78,7 +78,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         # if profiler id is suppled build filter into query
     if(!is.na(profiler[1])){
         profiler = paste(profiler, collapse = "', '")
-        query = paste0(query, " AND InstId IN ('", profiler,"')")
+        query = paste0(query, " AND CtdConfig.InstId IN ('", profiler,"')")
     }
       # if area is suppled build filter into query
       # area = c(minLat, minLon, maxLat, maxLon)
