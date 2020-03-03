@@ -33,7 +33,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         # boilerplate query start
     query = {paste(
       "SELECT",
-      "StartDate AS startTime,",
+      "(CAST(StartDate AS NVARCHAR)) AS startTime,",
       "StartTimeOffset AS offset,",
       "0 AS dateTime,",
       "Latitude AS latitude,",
@@ -131,7 +131,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
         stop("no data returned")
     }
 
-    dat[, dateTime := as.POSIXct(dateTime, origin="1970-01-01", tz="UTC")]
+    dat[, startTime := as.POSIXct(startTime, format="%b %d %Y %I:%M%p", tz="UTC")]
     dat[, dateTime := startTime + offset]
 
         # if only CT temp wanted remove non ct data
@@ -162,7 +162,7 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
         query = paste(query, ' WHERE YEAR([StartDate]) = ', yr, sep = '')
     }
     sb = odbcConnect(db_name)
-    cruiseList = sqlQuery(sb, query)
+    cruiseList = sqlQuery(sb, query, stringsAsFactors = F)
     cruiseList = cruiseList[order(cruiseList$CruiseId),]
     odbcCloseAll()
     return(data.frame(cruiseList))
@@ -177,7 +177,7 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @import data.table RODBC
 #' @export
 profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
-    query = paste("SELECT [CtdHeaderId], [CruiseId], [InstId], [Latitude], [Longitude], [StartDate] as startTime FROM",
+    query = paste("SELECT [CtdHeaderId], [CruiseId], [InstId], [Latitude], [Longitude], (CAST([StartDate] AS NVARCHAR)) AS startTime FROM",
                   "[SmartBuoy].[dbo].[CtdHeader]",
                   "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
                   "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
@@ -185,10 +185,11 @@ profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
         query = paste(query, ' WHERE YEAR([StartDate]) = ', yr, sep = '')
     }
     sb = odbcConnect(db_name)
-    header = sqlQuery(sb, query)
-    header = header[order(header$CruiseId),]
+    header = data.table(sqlQuery(sb, query, stringsAsFactors = F))
     odbcCloseAll()
-    return(data.table(header))
+    header = header[order(CtdHeaderId)]
+    header[, startTime := as.POSIXct(startTime, format="%b %d %Y %I:%M%p", tz="UTC")]
+    return(header)
 }
 
 #' ESM2 profiler depth binning
