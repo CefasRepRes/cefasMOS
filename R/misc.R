@@ -332,13 +332,14 @@ ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = 
   require(scales)
 
   if(colors == "viridis"){
-    fill.cols = viridis::viridis(256)
+    grad_scale = scale_fill_viridis_c()
     }
   if(colors == "inferno"){
-    fill.cols = viridis::inferno(256)
+    grad_scale = scale_fill_viridis_c(option="A")
     }
   if(colors == "jet"){
     fill.cols = c("#00007F", "blue", "#007FFF", "cyan", "#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000")
+    grad_scale =  scale_fill_gradientn(colors = fill.cols)
     }
 
   reverselog_trans <- function(base = exp(1)) {
@@ -376,7 +377,7 @@ ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = 
   p1 =  ggplot(x) +
     geom_raster(aes(time, period, fill = power)) +
     scale_y_continuous(trans = reverselog_trans(base), limits = ylim) +
-    scale_fill_gradientn(colors = fill.cols) +
+    grad_scale +
     geom_contour(aes(time, period, z = signif), color = "black", breaks = 1, size = 1) +
     geom_line(data = coi, aes(x = x, y = y), color = "white") +
     theme_bw()

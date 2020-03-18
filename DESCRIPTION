@@ -32,7 +32,6 @@ Imports:
     insol,
     pbapply,
     shiny,
-    viridis,
     cmocean,
     oce,
 Suggests:
