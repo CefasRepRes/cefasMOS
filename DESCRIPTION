@@ -23,7 +23,6 @@ Imports:
     mapdata,
     raster,
     rgdal,
-    ggmap,
     knitr,
     rmarkdown,
     ncdf4,
@@ -38,5 +37,5 @@ Imports:
     oce,
 Suggests:
 License: GPL-2
-RoxygenNote: 7.0.0
+RoxygenNote: 7.0.2
 VignetteBuilder: knitr

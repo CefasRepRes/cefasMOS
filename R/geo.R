@@ -70,44 +70,6 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 }
 
 
-#' fetch localised ggmap
-#'
-#' Creates a base map centred and scaled
-#'
-#' @param lat optional vector of decimal latitudes
-#' @param lon optional vector of decimal longitudes
-#' @param zoom_to_group boolean, if True map is centred and zoomed to input lat/long, if False entire UK is used.
-#' @param scale_factor optional integer, increase set to 1 (or more) to pad to next zoom level
-#' @param crop boolean, if True map is cropped to lat lon + crop_padding (default is False)
-#' @param maptype string of either "satellite", "terrain", "terrain-background", "hybrid"
-#' @return ggmap object
-#' @keywords map
-#' @export
-ggmap.fetch <- function(lat, lon, zoom_to_group = T, scale_factor = 0, crop = F, maptype = "satellite"){
-    ranges = data.frame(zoom = c(3, 4, 5, 6, 7, 8, 4, 2), range = c(120, 60, 30, 14, 8, 4, 2, 1))
-    if(zoom_to_group == TRUE){
-        centre.lat = mean(range(lat, na.rm = T))
-        centre.lon = mean(range(lon, na.rm = T))
-        max.range = max(diff(range(lon)), diff(range(lat)))
-        # add 10% buffer
-        max.range = max.range
-        zoom = max(ranges$zoom[ranges$range > max.range]) - scale_factor
-    }else{
-        centre.lat = 53
-        centre.lon = -2.7
-        max.range = 14
-        zoom = 6
-    }
-    centre = c(centre.lon, centre.lat)
-
-    require(ggmap)
-    mp = ggmap::ggmap(ggmap::get_map(location = centre, zoom = zoom, maptype = maptype))
-    if(crop == TRUE){
-        mp = mp + ylim(range(lat)) + xlim(range(lon))
-    }
-    return(mp)
-}
-
 #' GEBCO Bathymetry base map
 #'
 #' Basemap using GEBCO 2019 data, if you want something more technical, perhaps try the marmap package.
