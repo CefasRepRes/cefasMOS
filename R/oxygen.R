@@ -122,7 +122,8 @@ optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
 #   FoilCoefA = c(-2.988314E-06, -6.137785E-06, 1.684659E-03, -1.857173E-01, 6.784399E-04, -5.597908E-07, 1.040158E+01,
 #                 -5.986907E-02, 1.360425E-04, -4.776977E-07, -3.032937E+02, 2.530496E+00, -1.267045E-02, 1.040454E-04),
 #   FoilCoefB = c(-3.560390E-07, 3.816713E+03, -4.475507E+01, 4.386164E-01, -7.146342E-03, 8.906236E-05, -6.343012E-07,
-#                 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00))
+#                 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00, 0.000000E+00),
+#   ConcCoef = c(0, 1))
 # optode.phaseCalc(30, 10, coefs=coefs)
 #'
 #' # For standard 3835 optodes:
@@ -195,6 +196,9 @@ optode.phaseCalc <- function(phase, Temp, coefs){
       DO = Pp * solub / (0.20946*(1013.25-VapP))
     }
   # return(list(solub, VapP, Pp, DO))
+  if("ConcCoef" %in% names(coefs)){
+    DO = ConcCoef[1] + DO * ConcCoef[2]
+  }
   return(DO)
   })
 }
@@ -282,22 +286,20 @@ optode.lagcorrect_hahn <- function(dateTime, TCphase, temp, coefs, tau = NA, tau
     return(tphase_new)
 }
 
-seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
-  n = length(x)
-  m = matrix(NA_real_, n + range_median*2, range_median*2 + 1)
-  m[(range_median+1):(nrow(m)-range_median),] =  matlab::repmat(x, 1, range_median*2+1)
-  for(i in 1:(range_median*2+1)){
-    m[i:(i+n-1), i] = x
+optode.lagcorrect_bittig <- function(dateTime, oxygen, tau){
+  ts_hr = seq(min(dateTime), max(dateTime), by=1)
+  C_hr = approx(dateTime, runmed(oxygen, 5), xout = ts_hr)$y
+  tau_hr = rep(tau, length.out = length(C_hr))
+  out_hr = rep(C_hr[1], length.out = length(C_hr))
+
+  for(i in 2:length(C_hr)){
+    b = (1 + 2 * (tau_hr[i] / 1))^-1
+    a = 1 - 2*b
+    out_hr[i] = (1/(2*b)) * (C_hr[i] - a * C_hr[i-1])
   }
-  out = apply(m, 1, median, na.rm=T)
-  out = out[(range_median+1):(length(out)-range_median)]
-    # todo convolve low-pass
-
-  # out = conv(out,ones(1,range_lowpass*2 +1)/(range_lowpass*2 +1),'same');
-
+  out = approx(ts_hr, out_hr, xout=dateTime, rule = 2)$y
   return(out)
 }
-
 
 #' Calculate RINKO temperature from voltage
 #'
