@@ -335,3 +335,31 @@ seaglider.temp <- function(tempFreq, calib_file){
   return(tempPrelim)
 }
 
+seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
+  # as used by toolbox, compare with standard median filter
+  n = length(x)
+  m = matrix(NA_real_, n + range_median*2, range_median*2 + 1)
+  m[(range_median+1):(nrow(m)-range_median),] =  matlab::repmat(x, 1, range_median*2+1)
+  for(i in 1:(range_median*2+1)){
+    m[i:(i+n-1), i] = x
+  }
+  out = apply(m, 1, median, na.rm=T)
+  out = out[(range_median+1):(length(out)-range_median)]
+    # todo convolve low-pass
+
+  # out = conv(out,ones(1,range_lowpass*2 +1)/(range_lowpass*2 +1),'same');
+
+  return(out)
+}
+
+
+
+seaglider.optode_boundary_layer <- function(speed){
+  # technicall this is just for the slocum
+  speed = abs(speed)
+  IL = 210 - (110/0.095) * speed
+  IL[speed > 0.095] = 40 + (60/0.905) * (1-speed[speed > 0.095])
+  return(IL)
+}
+
+
