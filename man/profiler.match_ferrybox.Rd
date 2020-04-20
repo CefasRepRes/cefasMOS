@@ -4,9 +4,13 @@
 \alias{profiler.match_ferrybox}
 \title{ESM2 profiler ferrybox matching}
 \usage{
-profiler.match_ferrybox(cruiseID = NA, parameters = c("TEMP"),
-  min_QA_reached = F, ferrybox_db_name = "ferrybox",
-  smartbuoy_db_name = "smartbuoydblive")
+profiler.match_ferrybox(
+  cruiseID = NA,
+  parameters = c("TEMP"),
+  min_QA_reached = F,
+  ferrybox_db_name = "ferrybox",
+  smartbuoy_db_name = "smartbuoydblive"
+)
 }
 \arguments{
 \item{cruiseID}{cruise ID string, e.g. "CEND_02_14"}

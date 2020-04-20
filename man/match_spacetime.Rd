@@ -4,8 +4,13 @@
 \alias{match_spacetime}
 \title{Spatial-temporal matching}
 \usage{
-match_spacetime(x, y, distance_threshold = 5000, time_threshold = 3600,
-  merge = T)
+match_spacetime(
+  x,
+  y,
+  distance_threshold = 5000,
+  time_threshold = 3600,
+  merge = T
+)
 }
 \arguments{
 \item{x}{data.table with lat, lon and dateTime columns}

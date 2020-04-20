@@ -4,8 +4,15 @@
 \alias{optode.lagcorrect_hahn}
 \title{Hahn optode lag correction}
 \usage{
-optode.lagcorrect_hahn(dateTime, TCphase, temp, coefs, tau = NA,
-  tau_DO = c(14.8, -0.4), filter = T)
+optode.lagcorrect_hahn(
+  dateTime,
+  TCphase,
+  temp,
+  coefs,
+  tau = NA,
+  tau_DO = c(14.8, -0.4),
+  filter = T
+)
 }
 \arguments{
 \item{dateTime}{datetime vector (seconds or POSIXct)}

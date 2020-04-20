@@ -4,8 +4,9 @@
 \alias{read.SmartBuoyLiveAquireExport}
 \title{SmartBuoy live aquire export reader}
 \usage{
-read.SmartBuoyLiveAquireExport(file = svDialogs::dlgOpen(title =
-  "Open LiveAquire file...")$res)
+read.SmartBuoyLiveAquireExport(
+  file = svDialogs::dlgOpen(title = "Open LiveAquire file...")$res
+)
 }
 \arguments{
 \item{file}{location of live aquire file, leave blank to use dialog box}

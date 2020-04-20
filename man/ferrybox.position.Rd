@@ -4,8 +4,7 @@
 \alias{ferrybox.position}
 \title{ferrybox cruise tracks}
 \usage{
-ferrybox.position(cruiseID = NA, after = NA, before = NA,
-  db_name = "ferrybox")
+ferrybox.position(cruiseID = NA, after = NA, before = NA, db_name = "ferrybox")
 }
 \arguments{
 \item{cruiseID}{optional character string matching cruise ID}

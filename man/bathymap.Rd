@@ -4,8 +4,13 @@
 \alias{bathymap}
 \title{GEBCO Bathymetry base map}
 \usage{
-bathymap(lon = c(-14.996, 8.004), lat = c(47, 60), margin = 8,
-  breaks = T, highres = F)
+bathymap(
+  lon = c(-14.996, 8.004),
+  lat = c(47, 60),
+  margin = 8,
+  breaks = T,
+  highres = F
+)
 }
 \arguments{
 \item{lon}{vector of longitude coordinates for calculating map extent}

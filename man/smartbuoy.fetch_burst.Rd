@@ -4,8 +4,11 @@
 \alias{smartbuoy.fetch_burst}
 \title{SmartBuoy burst level data query tool}
 \usage{
-smartbuoy.fetch_burst(deployment = NA, parameters = NA,
-  db_name = "smartbuoydblive")
+smartbuoy.fetch_burst(
+  deployment = NA,
+  parameters = NA,
+  db_name = "smartbuoydblive"
+)
 }
 \arguments{
 \item{deployment}{optional string matching smartbuoy deployment}

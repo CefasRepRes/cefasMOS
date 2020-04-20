@@ -4,8 +4,14 @@
 \alias{ggwavelet}
 \title{ggplot biwavelet}
 \usage{
-ggwavelet(wt, base = 2, colors = "viridis", isPOSIXct = T,
-  yscale = "hours", ylim = NA)
+ggwavelet(
+  wt,
+  base = 2,
+  colors = "viridis",
+  isPOSIXct = T,
+  yscale = "hours",
+  ylim = NA
+)
 }
 \arguments{
 \item{wt}{a wavelet object created with biwavelet::wt}

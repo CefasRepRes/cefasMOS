@@ -4,8 +4,14 @@
 \alias{profiler.binning}
 \title{ESM2 profiler depth binning}
 \usage{
-profiler.binning(x, bin_height = 1, method = round, use_cast = "UP",
-  return_bin = "all", O2_trim = F)
+profiler.binning(
+  x,
+  bin_height = 1,
+  method = round,
+  use_cast = "UP",
+  return_bin = "all",
+  O2_trim = F
+)
 }
 \arguments{
 \item{x}{data.frame matching output from fetch.profiler}

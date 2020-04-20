@@ -4,9 +4,16 @@
 \alias{lims.fetch}
 \title{Fetch nutrients data from LIMS}
 \usage{
-lims.fetch(parameters = c("SAL", "CHLOROPHYLL", "SPM", "TOXN", "SIO4",
-  "NH4", "PHAEOP", "NO2", "PO4", "DO2"), cruise = NA, after = NA,
-  before = NA, convert = T, area = NA, db_name = "lims")
+lims.fetch(
+  parameters = c("SAL", "CHLOROPHYLL", "SPM", "TOXN", "SIO4", "NH4", "PHAEOP", "NO2",
+    "PO4", "DO2"),
+  cruise = NA,
+  after = NA,
+  before = NA,
+  convert = T,
+  area = NA,
+  db_name = "lims"
+)
 }
 \arguments{
 \item{parameters}{character string of LIMS parameter names}

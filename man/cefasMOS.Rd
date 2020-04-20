@@ -3,7 +3,6 @@
 \docType{package}
 \name{cefasMOS}
 \alias{cefasMOS}
-\alias{cefasMOS-package}
 \title{cefasMOS.}
 \description{
 cefasMOS.

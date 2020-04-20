@@ -4,8 +4,10 @@
 \alias{read.seaglider_toolbox_ts_nc}
 \title{read UEA seaglider toolbox timeseries netcdf}
 \usage{
-read.seaglider_toolbox_ts_nc(ncfile, variables = c("sigma0", "salinity",
-  "oxygen", "temp"))
+read.seaglider_toolbox_ts_nc(
+  ncfile,
+  variables = c("sigma0", "salinity", "oxygen", "temp")
+)
 }
 \arguments{
 \item{ncfile}{UEA glider netcdf timeseries file}
