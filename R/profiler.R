@@ -59,8 +59,11 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
       "INNER JOIN Sensor ON CtdData.SensorId = Sensor.SensorId",
       "INNER JOIN Instrument ON CtdConfig.InstId = Instrument.InstId",
       "INNER JOIN SensorParameter ON Sensor.SensorId = SensorParameter.SensorId",
+      "AND CtdData.ParCode = SensorParameter.ParCode",
       "WHERE CtdData.ParCode IN"
     )}
+
+    options(digits.secs=3)
 
         # collapse down parameters vector and wrap with quotes to work with IN (xxx)
     parameters = paste(parameters, collapse = "', '")
@@ -135,6 +138,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
     dat[, dateTime := startTime + offset]
 
         # if only CT temp wanted remove non ct data
+    dat[grepl("optode", sensor) & par == "TEMP", par := "O2TEMP"]
     if(ct_temp_only == TRUE){
         ctSensors = 'Aanderaa Conductivity Sensor|FSI CT Module|Seabird'
         dat = dat[!(!sensor %like% ctSensors & par == 'TEMP')]

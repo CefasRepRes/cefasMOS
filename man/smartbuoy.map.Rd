@@ -4,10 +4,16 @@
 \alias{smartbuoy.map}
 \title{Deployment Map}
 \usage{
-smartbuoy.map(platforms = c(1, 4, 8), deployment_group_id = "ALL",
-  style = "gsat", point_size = 5, labels = TRUE,
-  active_only = TRUE, zoom_to_group = TRUE,
-  db_name = "smartbuoydblive")
+smartbuoy.map(
+  platforms = c(1, 4, 8),
+  deployment_group_id = "ALL",
+  style = "gsat",
+  point_size = 5,
+  labels = TRUE,
+  active_only = TRUE,
+  zoom_to_group = TRUE,
+  db_name = "smartbuoydblive"
+)
 }
 \arguments{
 \item{platforms}{optional integer vector, if supplied only these platforms will be displayed. see details. default is c(1, 4, 8)}

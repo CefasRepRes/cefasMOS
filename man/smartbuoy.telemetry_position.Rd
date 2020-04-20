@@ -4,8 +4,11 @@
 \alias{smartbuoy.telemetry_position}
 \title{Query smartbuoy deployment position from telemetry messages}
 \usage{
-smartbuoy.telemetry_position(deployment = NA, deployment_group = NA,
-  db_name = "smartbuoydblive")
+smartbuoy.telemetry_position(
+  deployment = NA,
+  deployment_group = NA,
+  db_name = "smartbuoydblive"
+)
 }
 \arguments{
 \item{deployment}{provide if you want a specific buoy deployment e.g. "DOWSING/040"}

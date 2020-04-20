@@ -6,7 +6,7 @@ output:
   pdf_document: 
     highlight: espresso
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Using cefasMOS}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

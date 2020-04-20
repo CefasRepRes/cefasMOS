@@ -4,8 +4,12 @@
 \alias{smartbuoy.sensorCals}
 \title{Sensor calibration query}
 \usage{
-smartbuoy.sensorCals(deployment = NA, deployment_group = NA,
-  parameters = NA, db_name = "smartbuoydblive")
+smartbuoy.sensorCals(
+  deployment = NA,
+  deployment_group = NA,
+  parameters = NA,
+  db_name = "smartbuoydblive"
+)
 }
 \arguments{
 \item{deployment}{optional string vector denoting deployment names e.g. "DOWSING/042"}

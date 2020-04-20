@@ -4,8 +4,7 @@
 \alias{fuzzymatch}
 \title{Fast fuzzy matcher}
 \usage{
-fuzzymatch(dat, reference, index = "dateTime", threshold = Inf,
-  return = F)
+fuzzymatch(dat, reference, index = "dateTime", threshold = Inf, return = F)
 }
 \arguments{
 \item{dat}{data.table of variables you want to look up, typically contain a POSIXct "dateTime" index column.}

@@ -6,7 +6,7 @@ output:
   pdf_document: 
     highlight: espresso
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{ESM2 Drop Camera Processing}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -19,7 +19,7 @@ require(cefasMOS)
 
 - Make sure the ESM2 headers have been updated with at least the cruise ID.
 
-```{r extract}
+```{r extract, eval=F}
   # check cruise ID's
 profiler.cruiselist(yr=2017)
 d = profiler.fetch(profiler="PR006", cruiseID="CEND_06x_17",
@@ -35,7 +35,7 @@ d[grepl("Cabled sensor", sensor) & par == "FTU", par := "FTU2"]
 
 # isolate and combine dips
 
-```{r combine_dips}
+```{r combine_dips, eval=F}
   # reshape
 x = dcast.data.table(d, startTime + offset + dateTime + cruise ~ par,
                      fun.aggregate=mean, na.rm=T)[order(startTime, offset)]
@@ -66,12 +66,12 @@ x[dip == 3 & offset > 550, dip := dip + 100]
 ```{r calc_depth}
 
   # calculate cumulative window pressure standard deviation
-require(TTR) # timeseries functions
-x[, cum_sd := TTR::runSD(PRSADC, n=10, cumulative=T), by=dip]
-x[cum_sd < 0.02 & PRSADC < 11, AIRPRS := PRSADC, by=dip]
+# require(TTR) # timeseries functions
+# x[, cum_sd := TTR::runSD(PRSADC, n=10, cumulative=T), by=dip]
+# x[cum_sd < 0.02 & PRSADC < 11, AIRPRS := PRSADC, by=dip]
 
-x[, PRS := mean(AIRPRS, na.rm=T), by=dip]
-x[, DEPTH := oce::swDepth(PRSADC, 52)]
+# x[, PRS := mean(AIRPRS, na.rm=T), by=dip]
+# x[, DEPTH := oce::swDepth(PRSADC, 52)]
 
 ```
 
