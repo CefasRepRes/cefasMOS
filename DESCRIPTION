@@ -1,37 +1,39 @@
 Package: cefasMOS
 Title: Tools for Cefas MOS
-Version: 0.4.0
-Date: 2019-08-26
+Version: 0.4.1
+Date: 2020-04-29
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
 Description: Provides tools for Cefas MOS activities
 Depends:
     R (>= 3.0.0),
-    ggplot2 (>= 2.0.0),
-    lubridate,
-    sp,
     data.table (>= 1.9.5),
+    ggplot2 (>= 2.0.0),
 Imports:
     RColorBrewer,
-    dygraphs,
-    xts,
-    zoo,
-    stringr,
-    svDialogs,
     RODBC,
-    mapdata,
-    raster,
-    rgdal,
-    ncdf4,
-    openxlsx,
-    rworldmap,
+    cmocean,
+    dygraphs,
     geosphere,
     insol,
-    pbapply,
-    shiny,
-    cmocean,
-    oce,
     knitr,
+    lubridate,
+    mapdata,
+    ncdf4,
+    oce,
+    openxlsx,
+    pbapply,
+    raster,
+    rgdal,
+    rworldmap,
+    shiny,
+    sp,
+    stringr,
+    svDialogs,
+    xts,
+    zoo,
 Suggests:
 License: GPL-2
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 VignetteBuilder: knitr
+LazyData: true
+Encoding: UTF-8
