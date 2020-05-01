@@ -384,25 +384,6 @@ ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = 
   return(p1)
 }
 
-#' Calculate day or night
-#'
-#' Calculates if a given datetime is during day or night based on sun angle.
-#'
-#' @param dateTime POSIXct datetime
-#' @param lat latitude in decimal degrees
-#' @param lon longitude in decimal degrees
-#' @import oce
-#'
-#' @return vector of "day" or "night" character values
-#' @export
-markday <- function(dateTime, lat, lon){
-  alt = oce::sunAngle(dateTime, lon, lat)$altitude
-  output[(dateTime < sunrise | dateTime > sunset)] = "night"
-  output = rep("night", length(dateTime))
-  output[alt > 0] = "day"
-  return(output)
-}
-
 #' uniform random numbers from percentage
 #'
 #' This is a wrapper for runif that calculates the upper and lower bounds based on a percentage of a given mean
@@ -447,7 +428,10 @@ qpercentunif = function(p, mean, percent){
 #' function designed to flag data based on specified start times
 #' This is mostly used for flagging data for x minutes after an event
 #'
+#' TODO needs testing and documention
+#'
 #' @param dateTime a vector of times which are to be flagged, this does not need to be POSIXct
+#' @param init POSIXct times of event
 #' @param lag integer period to add to times, should be in the same units i.e. seconds for POSIXct
 #' @import data.table
 #'
@@ -457,7 +441,8 @@ qpercentunif = function(p, mean, percent){
 #' @examples
 #'
 #' wash_times = as.POSIXct("2017-01-01 11:05:00")
-#' fb[, flag := lagged_flag(dateTime, wash_times, 600)] # flag for 10 minutes after wash
+#' # NOT RUN
+#' # fb[, flag := lagged_flag(dateTime, wash_times, 600)] # flag for 10 minutes after wash
 lagged_flag <- function(dateTime, init, lag = 300){
   init = data.table("start" = unique(init))
   init[, end := init + lag]

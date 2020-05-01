@@ -115,13 +115,9 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     }
     dat$dateTime = as.POSIXct(dat$dateTime, format="%b %d %Y %I:%M%p", tz="UTC")
 
-      # if we only want night fluorometery, use the insol package to work out when sunrise is and subset
+      # if we only want night fluorometery
     if(night_flu_only & "FLUORS" %in% parameters){
-      dat[, sunrise := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunrise]
-      dat[, sunset := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunset]
-      dat[, dhour := lubridate::hour(dateTime) + (lubridate::minute(dateTime)/60)]
-      dat = dat[(par == "FLUORS" & (dhour < sunrise | dhour > sunset)) | par != "FLUORS",]
-      dat = dat[,!c("sunrise", "sunset", "dhour"), with = F]
+      dat = dat[!(oce::sunAngle(dateTime, lon, lat)$altitude > -1 & par == "FLUORS")] # not daytime & FLUORS
     }
 
     if(ct_temp_only == TRUE & 'TEMP' %in% parameters){
