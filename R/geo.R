@@ -242,7 +242,7 @@ match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 36
 #' @param dt distance in meters to match within
 #' @param tt time in seconds to match within
 #' @param merge bool
-#' @import geosphere scales data.table
+#' @import geosphere ggplot2 data.table
 #'
 #' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
 #' @export
@@ -254,7 +254,7 @@ fuzzy_spacetime <- function(A, Z, tt=3600, dt=5000){
   if(!all(c("lat", "lon", "dateTime") %in% names(A)))stop("lat, lon and dateTime columns must be present in A")
   if(!all(c("lat", "lon", "dateTime") %in% names(Z)))stop("lat, lon and dateTime columns must be present in Z")
 
-  d_lon = distHaversine(c(mean(Z$lon), min(Z$lat)), c(mean(Z$lon), max(Z$lat))) / (max(Z$lat) - min(Z$lat)) # meters per degree at this lat
+  d_lon = geosphere::distGeo(c(mean(Z$lon), min(Z$lat)), c(mean(Z$lon), max(Z$lat))) / (max(Z$lat) - min(Z$lat)) # meters per degree at this lat
   dt_deg = (dt / d_lon) * 1.1
   # subset the two sets of data to make sure we only calculate what we need to
   A = A[dateTime %between% c(min(Z$dateTime) - tt, max(Z$dateTime) + tt)]

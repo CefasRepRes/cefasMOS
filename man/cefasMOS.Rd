@@ -4,6 +4,3 @@
 \name{cefasMOS}
 \alias{cefasMOS}
 \title{cefasMOS.}
-\description{
-cefasMOS.
-}

@@ -6,8 +6,8 @@
 \usage{
 read.liveAquireAnalog(
   x,
-  channels_table = data.frame(channel = c(0, 1, 6), type = c("OBS", "FLU", "OBS"), slope
-    = c(1.22, 1.22, 1.22), offset = c(0, 0, 0))
+  channels_table = data.frame(channel = c(0, 1, 6), type = c("OBS", "FLU", "OBS"),
+    slope = c(1.22, 1.22, 1.22), offset = c(0, 0, 0))
 )
 }
 \arguments{
