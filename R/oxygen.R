@@ -559,3 +559,28 @@ oxygen.sat <- function(temp, salinity, unit = "molm"){
       stop("unit not recognised")
     }
 }
+
+
+#' Winkler titration equation
+#'
+#' Calculates oxygen concentration from Winkler titation
+#'
+#'
+#' @param Vthio volume of thiosulfate at endpoint (ml)
+#' @param Vblank V1 - V2 for blank (ml)
+#' @param Mthio Molarity of thiosulfate (typically 0.1)
+#' @param Vbot volume of sample bottle (ml)
+#' @param Tfix temperature of sample when reagents added
+#' @param Tcal temperature of thiosulfate during standardisation (default = 20)
+#' @param Vreag volume of reagents added to sample (default = 2ml)
+#'
+#' @return oxygen concentration in umol l-1 (mmol m-3)
+#'
+#' @examples
+#' oxygen.winkler(1.2807, 0.001, 0.11801, 143.34, 11.5, 20, 2)
+#'
+#' @export
+oxygen.winkler <- function(Vthio, Vblank, Mthio, Vbot, Tfix, Tcal = 20, Vreag = 2){
+  reagent_O2 = 3.8E-5 * Vreag # mmol oxygen in 1 ml reagents
+  ((Vthio - Vblank)*Mthio/4 - reagent_O2)/(Vbot*(1+0.00001*(Tfix-Tcal))-Vreag)*1000000
+}
