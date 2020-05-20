@@ -8,10 +8,10 @@ Depends:
     R (>= 3.0.0),
     data.table (>= 1.9.5),
     ggplot2 (>= 2.0.0),
+    cmocean,
 Imports:
     RColorBrewer,
     RODBC,
-    cmocean,
     dygraphs,
     geosphere,
     insol,
