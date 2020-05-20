@@ -22,7 +22,7 @@ oxygen.winkler(Vthio, Vblank, Mthio, Vbot, Tfix, Tcal = 20, Vreag = 2)
 \item{Vreag}{volume of reagents added to sample (default = 2ml)}
 }
 \value{
-oxygen concentration in \eqn{\mu*mol l^{-1}}
+oxygen concentration in umol l-1 (mmol m-3)
 }
 \description{
 Calculates oxygen concentration from Winkler titation

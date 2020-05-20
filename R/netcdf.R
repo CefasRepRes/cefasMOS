@@ -1,6 +1,6 @@
 #' print the variables in a netcdf (ncdump lite)
 #'
-#' @param ncfile
+#' @param ncfile a netcdf filename
 #'
 #' @return variable names
 #' @export

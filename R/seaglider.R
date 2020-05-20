@@ -8,9 +8,9 @@
 #' @param echo if true print name of log file
 #'
 #' @return data.table containing processed logfiles
+#' @import data.table
 #' @export
 read.seaglider_log <- function(glider_folder, echo=F){
-  require(data.table)
   file_list = list.files(glider_folder, full.names = T, pattern = "\\d+\\.log")
   if(length(file_list) < 1){stop("No log files found")}
   logs = list()
@@ -114,8 +114,8 @@ read.seaglider_log <- function(glider_folder, echo=F){
 }
 
 read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
-  require(ncdf4)
-  require(data.table)
+  # require(ncdf4)
+  # require(data.table)
   variables = c("dive", "time", "direction", "pressure", "lat", "lon", variables)
   nc = nc_open(ncfile)
   if(!grepl("UEA gt_sg_", ncatt_get(nc, varid=0, attname="About")$value)){
@@ -148,11 +148,10 @@ read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity"
 #' @param ncfile UEA glider netcdf timeseries file
 #' @param variables varibles to extract as named in netcdf, e.g. c("salinity", "temp")
 #'
+#' @import data.table ncdf4
 #' @return data.table containing extracted fields
 #' @export
 read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
-  require(ncdf4)
-  require(data.table)
   # ncfile = "SG510_Alter Eco May new edit_timeseries.nc"
   variables = c("dive", "direction", "pressure", "lat", "lon", variables)
   nc = nc_open(ncfile)
@@ -213,7 +212,7 @@ read.seaglider_eng <- function(folder=NA, files=NA){
 
 read.seaglider_basestation_binned_nc <- function(ncfile, variables = c("sigma_theta", "pressure", "salinity", "temperature")){
   # for binned basestation NC
-    require(ncdf4)
+    # require(ncdf4)
     nc = nc_open(ncfile)
     my_vars = c("dive_number", "start_time", "start_latitude", "start_longitude",
                 "end_latitude", "end_longitude", variables)
@@ -280,10 +279,10 @@ read.seaglider_basestation_nc <- function(folder, variables = c("sigma_theta", "
 #' @param ncfile ego netcdf file
 #' @param vars character vector of variables to extract, e.g. c("DOXY", "PRES")
 #'
+#' @import ncdf4
 #' @return data.table containing extracted fields
 #' @export
 read.ego <- function(ncfile, vars = c("DOXY", "PRES", "TEMP", "CNDC", "CHLA", "BBP700")){
-  require(ncdf4)
   d = list()
   metadata = list()
   nc = nc_open(ncfile)
@@ -335,24 +334,22 @@ seaglider.temp <- function(tempFreq, calib_file){
   return(tempPrelim)
 }
 
-seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
-  # as used by toolbox, compare with standard median filter
-  n = length(x)
-  m = matrix(NA_real_, n + range_median*2, range_median*2 + 1)
-  m[(range_median+1):(nrow(m)-range_median),] =  matlab::repmat(x, 1, range_median*2+1)
-  for(i in 1:(range_median*2+1)){
-    m[i:(i+n-1), i] = x
-  }
-  out = apply(m, 1, median, na.rm=T)
-  out = out[(range_median+1):(length(out)-range_median)]
-    # todo convolve low-pass
-
-  # out = conv(out,ones(1,range_lowpass*2 +1)/(range_lowpass*2 +1),'same');
-
-  return(out)
-}
-
-
+# seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
+#   # as used by toolbox, compare with standard median filter
+#   n = length(x)
+#   m = matrix(NA_real_, n + range_median*2, range_median*2 + 1)
+#   m[(range_median+1):(nrow(m)-range_median),] =  matlab::repmat(x, 1, range_median*2+1)
+#   for(i in 1:(range_median*2+1)){
+#     m[i:(i+n-1), i] = x
+#   }
+#   out = apply(m, 1, median, na.rm=T)
+#   out = out[(range_median+1):(length(out)-range_median)]
+#     # todo convolve low-pass
+#
+#   # out = conv(out,ones(1,range_lowpass*2 +1)/(range_lowpass*2 +1),'same');
+#
+#   return(out)
+# }
 
 seaglider.optode_boundary_layer <- function(speed){
   # technicall this is just for the slocum

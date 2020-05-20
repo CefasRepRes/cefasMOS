@@ -7,7 +7,7 @@
 read.ULP000(file)
 }
 \arguments{
-\item{file}{}
+\item{file}{an extracted ESM2 .000 filename}
 }
 \value{
 data.table

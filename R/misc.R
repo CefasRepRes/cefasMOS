@@ -547,7 +547,7 @@ plt + labs(caption = paste0(
 #'
 #' finds the deepest point of pressure record
 #'
-#' @param pressure
+#' @param pressure a order vector of pressures, any unit
 #'
 #' @return vector of same length as pressure, with -1 for desending and 1 for assending (after deepest point)
 #' @export
