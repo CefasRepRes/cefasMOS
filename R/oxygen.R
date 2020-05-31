@@ -321,13 +321,13 @@ rinko.temp <- function(V, tC = list(A = -5.326887e+00, B = +1.663288e+01, C = -2
 #' @param V output oxygen voltage
 #' @param t temperature from rinko_temp
 #' @param oC list of named calibration coefs A-F, defaults to #0263 ARO-CAV
-#' @param p in-situ pressure in dBar, default to atmospheric (10.1325)
+#' @param p hydrostatic pressure (default = 0)
 #' @param G alpha calibration coef
 #' @param H beta calibration coef
 #'
 #' @return vector of RINKO oxygen in mmol m-3
 #' @export
-rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 10.1325, G = 0, H = 1){
+rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 0, G = 0, H = 1){
 
   # V = output voltage
   # t = tempeture from rinko_temp
@@ -343,30 +343,30 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
     # G and H are calibration coefs
   DO = G + H * P
     # pressure correction
-  d = p * 0.01 # convert from decibar to MPa
+  d = 0.101325 + (p * 0.01) # convert from decibar to MPa, and include 1 atm
   DO = DO * (1 + oC$E * d) # DO = oxygen saturation %, corrected for pressure
 
   # from garcia and gordon
-    A0 = 2.00856
-    A1 = 3.224
-    A2 = 3.99063
-    A3 = 4.80299
-    A4 = 0.978188
-    A5 = 1.71069
-    B0 = -0.00624097
-    B1 = -0.00693498
-    B2 = -0.00690358
-    B3 = -0.00429155
-    C0 = -3.1168E-07
-    Ts = log((298.15-t)/(273.15+t))
+  # Benson & Krause cm3 dm-3 coefficents (ml/l)
+  A0 = 2.00907
+  A1 = 3.22014
+  A2 = 4.05010
+  A3 = 4.94457
+  A4 = -0.256847
+  A5 = 3.88767
+  B0 = -0.00624523
+  B1 = -0.00737614
+  B2 = -0.0103410
+  B3 = -0.00817083
+  C0 = -4.88682E-07
+  Ts = log((298.15-t)/(273.15+t))
 
-    Cstar = exp(A0+(A1*Ts)+(A2*Ts^2)+
-                    (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
-                    S*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
-                    (C0*S^2))
-
-    DO = ((Cstar * 44.614 * DO) / 100) * 0.0319988 # mg/l
-    DO = (DO/31.9988) * 1000 # mg/l to mmol m-3
+  Csat = exp(A0+(A1*Ts)+(A2*Ts^2)+
+               (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
+               S*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
+               (C0*S^2))
+  Csat = Csat * 44.6596 # convert ml/l to mmol m-3 as per SCOR WG 142
+  DO = Csat * (DO/100)
 
   return(DO)
 }
@@ -376,13 +376,13 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
 #' @param V output oxygen voltage
 #' @param t temperature from rinko_temp
 #' @param oC list of named calibration coefs A-F, defaults to #0263 ARO-CAV
-#' @param p in-situ pressure in dBar, default to atmospheric (10.1325)
+#' @param p hydrostatic pressure in dBar, default = 0
 #' @param G alpha calibration coef
 #' @param H beta calibration coef
 #'
 #' @return vector of RINKO oxygen in % saturation
 #' @export
-rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 10.1325, G = 0, H = 1){
+rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 0, G = 0, H = 1){
   # G & H = RINKO calibration coefs (alpha and beta)
   P1 = oC$A / (1 + oC$D * (t - 25) + oC$F * (t - 25)^2)
   P2 = oC$B / (V * (1 + oC$D * (t - 25) + oC$F * (t - 25)^2) + oC$C)
@@ -390,7 +390,7 @@ rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C =
 
   DO = G + H * P
   # pressure correction
-  d = p * 0.01 # convert from decibar to MPa
+  d = 0.101325 + (p * 0.01) # convert from decibar to MPa, and include 1 atm
   DO = DO * (1 + oC$E * d) # pressure corrected DO in %
   return(P)
 }
@@ -543,8 +543,8 @@ oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
     # adjust for in-situ pressure # as per SCOR WG 142
     Vm = 0.317  # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
     R = 8.314  # universal gas constant in J mol-1 K-1
-    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+T)/100)))-0.000544*S)) # saturated water vapor in mbar
-    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)/exp(Vm*P/(R*(TEMP+273.15)))
+    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(temp+273.15)))-(4.8489*log(((273.15+T)/100)))-0.000544*salinity)) # saturated water vapor in mbar
+    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)/exp(Vm*P/(R*(temp+273.15)))
 
     if(unit == "mmolm"){
       return(exp(Csat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
@@ -614,14 +614,6 @@ oxygen.sat.combined <- function(temp, salinity, unit = "molm"){
     (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
     salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
     (C0*salinity^2)
-
-    # adjust for in-situ pressure # as per SCOR WG 142
-    p_atm = 1013.25
-    Vm = 0.317  # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
-    R = 8.314  # universal gas constant in J mol-1 K-1
-    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+T)/100)))-0.000544*S)) # saturated water vapor in mbar
-    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)/exp(Vm*P/(R*(TEMP+273.15)))
-
 
     if(unit == "molm"){
       return(exp(Csat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
