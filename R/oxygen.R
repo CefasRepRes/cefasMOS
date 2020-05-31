@@ -495,14 +495,16 @@ oxygen.air_conc <- function(TEMP, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){
 #'
 #' @param temp numeric vector of water temperature in degrees Celsius
 #' @param salinity numeric vector of salinity (PSU)
-#' @param unit "molm" for mmol m-3 (default), "mgl" for mg l-1 or "molkg" for umol kg-1.
+#' @param unit "mmolm" for mmol m-3 (default), "mgl" for mg l-1 or "umolkg" for umol kg-1.
+#' @param P hydrosatic pressure in dbar (default = 0)
+#' @param p_atm atmospheric (air) pressure in hPa (default = 1013.25)
 #' @return vector of saturation concentration in mmol m-3
 #' @keywords oxygen
 #' @examples
 #' oxygen.sat(10, 35)  # saturation concentration at 10 degrees and 35 salinity
 #' oxygen.sat(10, 35, "molkg")  # saturation concentration at 10 degrees and 35 salinity in umol kg-1
 #' @export
-oxygen.sat <- function(temp, salinity, unit = "molm"){
+oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
 
   if(unit == "molkg"){
     # umol kg coefficents
@@ -533,24 +535,28 @@ oxygen.sat <- function(temp, salinity, unit = "molm"){
   }
     Ts = log((298.15-temp)/(273.15+temp))
 
-    O2.sat = A0+(A1*Ts)+(A2*Ts^2)+
+    Csat = A0+(A1*Ts)+(A2*Ts^2)+
     (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
     salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
     (C0*salinity^2)
 
-    # molar volume of O2 of 22,39 1.6 cm3 mol-1
+    # adjust for in-situ pressure # as per SCOR WG 142
+    Vm = 0.317  # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
+    R = 8.314  # universal gas constant in J mol-1 K-1
+    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+T)/100)))-0.000544*S)) # saturated water vapor in mbar
+    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)/exp(Vm*P/(R*(TEMP+273.15)))
 
-    if(unit == "molm"){
-      return(exp(O2.sat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
+    if(unit == "mmolm"){
+      return(exp(Csat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
     }
     if(unit == "mll"){
-      return(exp(O2.sat)) # no conversion
+      return(exp(Csat)) # no conversion
     }
     if(unit == "mgl"){
-      return(exp(O2.sat) / 0.699745)     # convert ml/l to mg/l
+      return(exp(Csat) / 0.699745)     # convert ml/l to mg/l
     }
-    if(unit == "molkg"){
-      return(exp(O2.sat)) # no conversion
+    if(unit == "umolkg"){
+      return(exp(Csat)) # no conversion
     }
 
     # 1 μmol O2 = .022391 ml at sea surface pressure
@@ -604,28 +610,31 @@ oxygen.sat.combined <- function(temp, salinity, unit = "molm"){
   }
     Ts = log((298.15-temp)/(273.15+temp))
 
-    O2.sat = A0+(A1*Ts)+(A2*Ts^2)+
+    Csat = A0+(A1*Ts)+(A2*Ts^2)+
     (A3*Ts^3)+(A4*Ts^4)+(A5*Ts^5)+
     salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
     (C0*salinity^2)
 
-    # molar volume of O2 of 22,39 1.6 cm3 mol-1
+    # adjust for in-situ pressure # as per SCOR WG 142
+    p_atm = 1013.25
+    Vm = 0.317  # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
+    R = 8.314  # universal gas constant in J mol-1 K-1
+    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+T)/100)))-0.000544*S)) # saturated water vapor in mbar
+    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)/exp(Vm*P/(R*(TEMP+273.15)))
+
 
     if(unit == "molm"){
-      return(exp(O2.sat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
+      return(exp(Csat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
     }
     if(unit == "mll"){
-      return(exp(O2.sat)) # no conversion
+      return(exp(Csat)) # no conversion
     }
     if(unit == "mgl"){
-      return(exp(O2.sat) / 0.699745)     # convert ml/l to mg/l
+      return(exp(Csat) / 0.699745)     # convert ml/l to mg/l
     }
     if(unit == "molkg"){
-      return(exp(O2.sat)) # no conversion
+      return(exp(Csat)) # no conversion
     }
-
-    # 1 μmol O2 = .022391 ml at sea surface pressure
-    # 1 mg/l = 22.391 ml/31.998 = 0.699745 ml/l
 
     else{
       stop("unit not recognised")
