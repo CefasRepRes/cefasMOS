@@ -476,12 +476,12 @@ RH_from_dewtemp <- function(t2m, d2m, unit="C"){
 #'
 #' @param TEMP vector of temperature
 #' @param unit "C" default or "K"
-#' @param method options are "Wagner", "Buck" and "Weiss"
+#' @param method options are "Wagner", "Buck" and "Weiss", default ("Weiss")
 #'
 #' @return saturation vapour pressure in hPa (mBar)
 #' @export
 #'
-saturation_vapour_pressure <- function(TEMP, unit="C", method="Wagner"){
+saturation_vapour_pressure <- function(TEMP, unit="C", method="Weiss"){
   if(unit == "C"){
     KTEMP = TEMP + 273.15
   }else{
@@ -508,7 +508,7 @@ saturation_vapour_pressure <- function(TEMP, unit="C", method="Wagner"){
     return(6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP)))) # hPa/mbar
   }
   if(method == "Weiss")
-    # weiss1970 [mbar]
+    # weiss1980 [mbar]
     return(
       (exp(24.4543 - 67.4509 * (100/(273.15 + TEMP)) - 4.8489 * log((273.15 + TEMP)/100) - 0.000544 * 0)) * 1013.25
     )

@@ -321,7 +321,7 @@ rinko.temp <- function(V, tC = list(A = -5.326887e+00, B = +1.663288e+01, C = -2
 #' @param V output oxygen voltage
 #' @param t temperature from rinko_temp
 #' @param oC list of named calibration coefs A-F, defaults to #0263 ARO-CAV
-#' @param p hydrostatic pressure (default = 0)
+#' @param p hydrostatic pressure (dbar) (default = 0)
 #' @param G alpha calibration coef
 #' @param H beta calibration coef
 #'
@@ -343,6 +343,7 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
     # G and H are calibration coefs
   DO = G + H * P
     # pressure correction
+    # adjustment suggestion from Jan Kaiser, sensor can only measure partial pressure!
   d = 0.101325 + (p * 0.01) # convert from decibar to MPa, and include 1 atm
   DO = DO * (1 + oC$E * d) # DO = oxygen saturation %, corrected for pressure
 
@@ -382,7 +383,7 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
 #'
 #' @return vector of RINKO oxygen in % saturation
 #' @export
-rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 0, G = 0, H = 1){
+rinko.p <- function(V, t, S, oC = list(A = -3.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 0, G = 0, H = 1){
   # G & H = RINKO calibration coefs (alpha and beta)
   P1 = oC$A / (1 + oC$D * (t - 25) + oC$F * (t - 25)^2)
   P2 = oC$B / (V * (1 + oC$D * (t - 25) + oC$F * (t - 25)^2) + oC$C)
@@ -392,7 +393,7 @@ rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C =
   # pressure correction
   d = 0.101325 + (p * 0.01) # convert from decibar to MPa, and include 1 atm
   DO = DO * (1 + oC$E * d) # pressure corrected DO in %
-  return(P)
+  return(DO)
 }
 
 #' convert oxygen partial pressure to molar oxygen concentration
@@ -430,14 +431,13 @@ oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0, APRS = 1013.25){
 #' @param TEMP temperature
 #' @param SAL salinity (if correction has been applied, default = 0)
 #' @param PRS hydrostatic pressure in dbar (default = 0)
-#' @param APRS air pressure in mbar (default = 1013.25)
 #'
 #' @return partial pressure of oxygen in mbar
 #' @export
-oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0, APRS=1013.25){
+oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 
   xO2 = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
-  pH2Osat = APRS * (exp(24.4543 -(67.4509 * (100 / (T + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
+  pH2Osat = 1013.25 * (exp(24.4543 -(67.4509 * (100 / (T + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   sca_T   = log((298.15 - TEMP)/(273.15 + TEMP)) # scaled temperature for use in TCorr and SCorr
   TCorr   = 44.6596 * exp(2.00907 + 3.22014 * sca_T + 4.05010 * sca_T^2 + 4.94457 * sca_T^3 - 2.56847e-1 * sca_T^4 + 3.88767 * sca_T^5) # temperature correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit mL(STP) L-1; and conversion from mL(STP) L-1 to umol L-1
   Scorr   = exp(SAL * (-6.24523e-3-7.37614e-3 * sca_T - 1.03410e-2 * sca_T^2-8.17083e-3*sca_T^3)-4.88682e-7*SAL^2) # salinity correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit ml(STP) L-1
@@ -445,6 +445,7 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0, APRS=1013.25){
   R       = 8.314 # universal gas constant in J mol-1 K-1
 
   pO2 = O2*(xO2*(1013.25-pH2Osat))/(TCorr*Scorr)*exp(Vm*PRS/(R*(TEMP+273.15)))
+  return(pO2)
 }
 
 #' Oxygen in-air concentration
@@ -541,10 +542,9 @@ oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
     (C0*salinity^2)
 
     # adjust for in-situ pressure # as per SCOR WG 142
-    Vm = 0.317  # molar volume of O2 in m3 mol-1 Pa dbar-1 (Enns et al. 1965)
-    R = 8.314  # universal gas constant in J mol-1 K-1
+    # using vapour pressure correction, but still always at 1 atm so ignore the exp(Vm*P...
     pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(temp+273.15)))-(4.8489*log(((273.15+T)/100)))-0.000544*salinity)) # saturated water vapor in mbar
-    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)/exp(Vm*P/(R*(temp+273.15)))
+    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)
 
     if(unit == "mmolm"){
       return(exp(Csat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
