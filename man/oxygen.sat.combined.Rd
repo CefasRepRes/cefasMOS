@@ -4,14 +4,14 @@
 \alias{oxygen.sat.combined}
 \title{Equilibrium Oxygen saturation concentration (combined fit)}
 \usage{
-oxygen.sat.combined(temp, salinity, unit = "molm")
+oxygen.sat.combined(temp, salinity, unit = "mmolm")
 }
 \arguments{
 \item{temp}{numeric vector of water temperature in degrees Celsius}
 
 \item{salinity}{numeric vector of salinity (PSU)}
 
-\item{unit}{"molm" for mmol m-3 (default), "mgl" for mg l-1 or "molkg" for umol kg-1.}
+\item{unit}{"mmolm" for mmol m-3 (default), "mgl" for mg l-1 or "umolkg" for umol kg-1.}
 }
 \value{
 vector of saturation concentration in mmol m-3

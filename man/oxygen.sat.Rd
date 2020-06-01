@@ -4,14 +4,18 @@
 \alias{oxygen.sat}
 \title{Equilibrium Oxygen saturation concentration}
 \usage{
-oxygen.sat(temp, salinity, unit = "molm")
+oxygen.sat(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25)
 }
 \arguments{
 \item{temp}{numeric vector of water temperature in degrees Celsius}
 
 \item{salinity}{numeric vector of salinity (PSU)}
 
-\item{unit}{"molm" for mmol m-3 (default), "mgl" for mg l-1 or "molkg" for umol kg-1.}
+\item{unit}{"mmolm" for mmol m-3 (default), "mgl" for mg l-1 or "umolkg" for umol kg-1.}
+
+\item{P}{hydrosatic pressure in dbar (default = 0)}
+
+\item{p_atm}{atmospheric (air) pressure in hPa (default = 1013.25)}
 }
 \value{
 vector of saturation concentration in mmol m-3

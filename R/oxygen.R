@@ -507,7 +507,7 @@ oxygen.air_conc <- function(TEMP, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){
 #' @export
 oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
 
-  if(unit == "molkg"){
+  if(unit == "umolkg"){
     # umol kg coefficents
     A0 = 5.80871;
     A1 = 3.20291;
@@ -575,13 +575,13 @@ oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
 #'
 #' @param temp numeric vector of water temperature in degrees Celsius
 #' @param salinity numeric vector of salinity (PSU)
-#' @param unit "molm" for mmol m-3 (default), "mgl" for mg l-1 or "molkg" for umol kg-1.
+#' @param unit "mmolm" for mmol m-3 (default), "mgl" for mg l-1 or "umolkg" for umol kg-1.
 #' @return vector of saturation concentration in mmol m-3
 #' @keywords oxygen
 #'
-oxygen.sat.combined <- function(temp, salinity, unit = "molm"){
+oxygen.sat.combined <- function(temp, salinity, unit = "mmolm"){
 
-  if(unit == "molkg"){
+  if(unit == "umolkg"){
     # umol kg coefficents
     A0 = 5.80818
     A1 = 3.20684
@@ -615,7 +615,7 @@ oxygen.sat.combined <- function(temp, salinity, unit = "molm"){
     salinity*(B0+(B1*Ts)+(B2*Ts^2)+(B3*Ts^3))+
     (C0*salinity^2)
 
-    if(unit == "molm"){
+    if(unit == "mmolm"){
       return(exp(Csat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
     }
     if(unit == "mll"){
@@ -624,7 +624,7 @@ oxygen.sat.combined <- function(temp, salinity, unit = "molm"){
     if(unit == "mgl"){
       return(exp(Csat) / 0.699745)     # convert ml/l to mg/l
     }
-    if(unit == "molkg"){
+    if(unit == "umolkg"){
       return(exp(Csat)) # no conversion
     }
 
