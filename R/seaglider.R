@@ -334,6 +334,30 @@ seaglider.temp <- function(tempFreq, calib_file){
   return(tempPrelim)
 }
 
+#' Calculate seaglider conductivity
+#'
+#' Direct method, uses temperature and depth at cond sample time.
+#' No correction for flow speed or thermal inertia applied
+#'
+#' @param condFreq vector of seaglider SBE temperature frequency
+#' @param temp temperature as calculated with `seaglider.temp`
+#' @param sgdepth seaglider depth (pressure really) in cm, as per .eng file
+#' @param calib_file path to seaglider calibration.mat file
+#'
+#' @return vector of calibrated conductivity in mS/cm
+#' @export
+seaglider.cond <- function(condFreq, temp, sgdepth, calib_file){
+  cal = read.seaglider_calib(calib_file)
+  cal = suppressWarnings(lapply(cal, as.numeric)) # convert all to numeric
+  condPrelim = condFreq / 1000
+  condPrelim = (cal$c_g + condPrelim * condPrelim * (cal$c_h + condPrelim * (cal$c_i + condPrelim * cal$c_j))) /
+    ( 10 * ( 1.0 + cal$ctcor * temp + cal$cpcor * sgdepth / 100 ));
+  if("sbe_cond_offset" %in% names(cal)){
+    condPrelim = condPrelim + cal$sbe_cond_offset
+  }
+  return(condPrelim * 10)
+}
+
 # seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
 #   # as used by toolbox, compare with standard median filter
 #   n = length(x)
