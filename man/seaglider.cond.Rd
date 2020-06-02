@@ -4,19 +4,19 @@
 \alias{seaglider.cond}
 \title{Calculate seaglider conductivity}
 \usage{
-seaglider.cond(condFreq, temp, sgdepth, calib_file)
+seaglider.cond(condFreq, temp, pressure, calib_file)
 }
 \arguments{
 \item{condFreq}{vector of seaglider SBE temperature frequency}
 
 \item{temp}{temperature as calculated with `seaglider.temp`}
 
-\item{sgdepth}{seaglider depth (pressure really) in cm, as per .eng file}
+\item{pressure}{in dbar as calculated with `seaglider.pressure`}
 
 \item{calib_file}{path to seaglider calibration.mat file}
 }
 \value{
-vector of calibrated conductivity in mS/cm
+vector of calibrated conductivity in S/m
 }
 \description{
 Direct method, uses temperature and depth at cond sample time.

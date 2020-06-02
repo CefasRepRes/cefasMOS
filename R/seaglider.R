@@ -341,22 +341,40 @@ seaglider.temp <- function(tempFreq, calib_file){
 #'
 #' @param condFreq vector of seaglider SBE temperature frequency
 #' @param temp temperature as calculated with `seaglider.temp`
-#' @param sgdepth seaglider depth (pressure really) in cm, as per .eng file
+#' @param pressure in dbar as calculated with `seaglider.pressure`
 #' @param calib_file path to seaglider calibration.mat file
 #'
-#' @return vector of calibrated conductivity in mS/cm
+#' @return vector of calibrated conductivity in S/m
 #' @export
-seaglider.cond <- function(condFreq, temp, sgdepth, calib_file){
+seaglider.cond <- function(condFreq, temp, pressure, calib_file){
   cal = read.seaglider_calib(calib_file)
   cal = suppressWarnings(lapply(cal, as.numeric)) # convert all to numeric
   condPrelim = condFreq / 1000
   condPrelim = (cal$c_g + condPrelim * condPrelim * (cal$c_h + condPrelim * (cal$c_i + condPrelim * cal$c_j))) /
-    ( 10 * ( 1.0 + cal$ctcor * temp + cal$cpcor * sgdepth / 100 ));
+    ( 10 * ( 1.0 + cal$ctcor * temp + cal$cpcor * pressure / 100 ));
   if("sbe_cond_offset" %in% names(cal)){
     condPrelim = condPrelim + cal$sbe_cond_offset
   }
-  return(condPrelim * 10)
+  return(condPrelim)
 }
+
+
+#' Calculate seaglider pressure
+#'
+#' calculates true pressure from .eng file "depth" variable
+#'
+#' @param depth vector of seaglider depth (cm)
+#'
+#' @return vector of calibrated pressure in dbar
+#' @export
+seaglider.pressure <- function(depth){
+  # The glider converts pressure readings to PSI onboard using Z = PSI * 0.685.
+  # So we backcalculate to PSI, then convert to dbar.
+  sgdpth2psi = 1 / 0.685
+  psi2bar = 1 / 14.5037738007
+  depth / 100 * sgdpth2psi * psi2bar * 10
+}
+
 
 # seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
 #   # as used by toolbox, compare with standard median filter
