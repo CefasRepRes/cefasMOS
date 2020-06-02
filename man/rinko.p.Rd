@@ -9,8 +9,8 @@ rinko.p(
   t,
   S,
   oC = list(A = -42.34162, B = +127.6475, C = -0.3677435, D = +0.01137, E = +0.0046, F
-    = +7.57e-05),
-  p = 10.1325,
+    = +7.57e-05, G = +0, H = +1),
+  p = 0,
   G = 0,
   H = 1
 )
@@ -22,14 +22,14 @@ rinko.p(
 
 \item{oC}{list of named calibration coefs A-F, defaults to #0263 ARO-CAV}
 
-\item{p}{in-situ pressure in dBar, default to atmospheric (10.1325)}
+\item{p}{hydrostatic pressure in dBar, default = 0}
 
 \item{G}{alpha calibration coef}
 
 \item{H}{beta calibration coef}
 }
 \value{
-vector of RINKO oxygen in % saturation
+vector of RINKO oxygen in \% saturation
 }
 \description{
 Calculate RINKO saturation from voltage

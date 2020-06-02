@@ -10,7 +10,7 @@ rinko.o2(
   S,
   oC = list(A = -42.34162, B = +127.6475, C = -0.3677435, D = +0.01137, E = +0.0046, F
     = +7.57e-05),
-  p = 10.1325,
+  p = 0,
   G = 0,
   H = 1
 )
@@ -22,7 +22,7 @@ rinko.o2(
 
 \item{oC}{list of named calibration coefs A-F, defaults to #0263 ARO-CAV}
 
-\item{p}{in-situ pressure in dBar, default to atmospheric (10.1325)}
+\item{p}{hydrostatic pressure (dbar) (default = 0)}
 
 \item{G}{alpha calibration coef}
 

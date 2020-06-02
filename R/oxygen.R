@@ -381,10 +381,9 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
 #' @param G alpha calibration coef
 #' @param H beta calibration coef
 #'
-#' @return vector of RINKO oxygen in % saturation
+#' @return vector of RINKO oxygen in \% saturation
 #' @export
-rinko.p <- function(V, t, S, oC = list(A = -3.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 0, G = 0, H = 1){
-  # G & H = RINKO calibration coefs (alpha and beta)
+rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05, G = +0.000000e+00, H = +1.000000e+00), p = 0, G = 0, H = 1){ # G & H = RINKO calibration coefs (alpha and beta)
   P1 = oC$A / (1 + oC$D * (t - 25) + oC$F * (t - 25)^2)
   P2 = oC$B / (V * (1 + oC$D * (t - 25) + oC$F * (t - 25)^2) + oC$C)
   P = P1 + P2
