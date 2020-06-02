@@ -36,19 +36,20 @@ read.ecmwf <- function(file, convert_units = F){
   dateTime = nc$dim$time$vals # hours since 1900-01-01
   dateTime = as.POSIXct(dateTime * time_scale, origin = time_origin, tz = "UTC")
   met = list()
+
   for(var in vars){
     print(paste("extracting", var))
     dat = ncvar_get(nc, var, collapse_degen=F)
-    unit = ncatt_get(nc, var, "units")
-    dat = data.table(melt(dat))
+    v_unit = ncatt_get(nc, var, "units")
+    dat = as.data.table(dat)
     var_dim_index = nc$var[[var]]$dimids + 1 # get dim indexes
     colnames(dat) = c(dims[var_dim_index], "value")
-    if(unit$hasatt == T & convert_units == T){
-      if(unit$value == "K"){
+    if(v_unit$hasatt == T & convert_units == T){
+      if(v_unit$value == "K"){
         print("converting Kelvin to Celcius")
         dat[, value := value - 273.15]
       }
-      if(unit$value == "Pa"){
+      if(v_unit$value == "Pa"){
         print("converting Pa to hPa/mbar")
         dat[, value := value * 0.01]
       }
