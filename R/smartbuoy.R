@@ -45,12 +45,18 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                   "[Sensor Description] as sensor,",
                   "[SerialNumber] as sensor_serial,",
                   "[Parameter code] as par,",
-                  "[Parameter Unit] as unit",
+                  "[Parameter Unit] as unit,",
+                  "[ParCodeFrom] as calculated_from,",
+                  "[Slope] as calibration_slope,",
+                  "[Intercept] as calibration_intercept",
                   "FROM v_BurstMean_QaData",
                   "INNER JOIN DeploymentSensor ON",
                   "v_BurstMean_QaData.[Deployment/Sensor Id] = DeploymentSensor.DepSensorId",
                   "INNER JOIN Sensor ON",
-                  "DeploymentSensor.SensorId = Sensor.SensorId"
+                  "DeploymentSensor.SensorId = Sensor.SensorId",
+                  "LEFT JOIN DeploymentAuditQa3Derived ON",
+                  "v_BurstMean_QaData.[Deployment/Sensor Id] = DeploymentAuditQa3Derived.[DepSensorId] AND",
+                  "v_BurstMean_QaData.[Parameter Code] = DeploymentAuditQa3Derived.[ParCodeDerived]"
                   )
     }else{
         query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
