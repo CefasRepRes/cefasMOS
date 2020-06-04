@@ -151,8 +151,7 @@ read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity"
 #' @import data.table ncdf4
 #' @return data.table containing extracted fields
 #' @export
-read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
-  # ncfile = "SG510_Alter Eco May new edit_timeseries.nc"
+read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp"), keep_flag = F){
   variables = c("dive", "direction", "pressure", "lat", "lon", variables)
   nc = nc_open(ncfile)
   if(!grepl("UEA gt_sg_", ncatt_get(nc, varid=0, attname="About")$value) | nc$ndims != 1){
@@ -161,21 +160,31 @@ read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salini
   }
   d = list()
   time_val =  ncvar_get(nc, "time")
+  time_unit = ncatt_get(nc, "time", "unit")
   for(var in variables){
     print(paste("extracting", var))
-    x = ncvar_get(nc, var)
-    x = melt(x)
-    dims = "time"
-    colnames(x) = c(dims, "value")
-    x = as.data.table(x)
-    x[, variable := var]
-    d[[var]] = x
+    dat = ncvar_get(nc, var)
+    dat = data.table(time_val, "value" = dat)
+    if(paste0(var,"_flag") %in% names(nc$var)){
+      flag = ncvar_get(nc, paste0(var,"_flag"))
+      if(keep_flag == T){
+        d[[paste0(var, "_flag")]] = data.table(time_val, "value" = flag)
+      }else{
+        dat[flag != 0, value := NA]
+      }
+    }
+    d[[var]] = dat
   }
   nc_close(nc)
-  d = rbindlist(d)
-  d[, time := time_val[time]]
-  d[, time := as.POSIXct((time - 719529)*86400, origin = "1970-01-01", tz = "UTC")] # convert
-  d = dcast.data.table(d, time ~ variable)
+  d = rbindlist(d, idcol = "variable")
+  if(exists("value", time_unit)){
+    if(time_unit$value == "seconds"){
+      d[, time := as.POSIXct(time_val, origin = "1970-01-01", tz = "UTC")] # convert
+    }
+  }else{
+    d[, time := as.POSIXct((time_val - 719529)*86400, origin = "1970-01-01", tz = "UTC")] # convert
+  }
+  d = dcast.data.table(d, time ~ variable, value.var = "value")
   return(d)
 }
 
