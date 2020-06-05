@@ -542,7 +542,7 @@ oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
 
     # adjust for in-situ pressure # as per SCOR WG 142
     # using vapour pressure correction, but still always at 1 atm so ignore the exp(Vm*P...
-    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(temp+273.15)))-(4.8489*log(((273.15+T)/100)))-0.000544*salinity)) # saturated water vapor in mbar
+    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(temp+273.15)))-(4.8489*log(((273.15+temp)/100)))-0.000544*salinity)) # saturated water vapor in mbar
     Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)
 
     if(unit == "mmolm"){
