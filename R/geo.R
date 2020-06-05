@@ -77,8 +77,8 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @param lon vector of longitude coordinates for calculating map extent
 #' @param lat as above for latitude
 #' @param highres default = False, if true fetch the full half degree GEBCO 2019 data
-#' @param margin integer (default = 8) indicating fraction of range to use for a margin.
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
+#' @param expand expansion factor for margins, default = 0.02
 #'
 #' @references GEBCO data from GEBCO 2019
 #' @references Coastlines from rworldmap
@@ -87,18 +87,18 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @import ggplot2 rworldmap cmocean
 #' @export
 #'
-bathymap <- function(lon = c(-14.996, 8.004), lat = c(47, 60), margin=8, breaks=T, highres=F){
-  max.lat = abs(min(lat) - max(lat))
-  max.lon = abs(min(lon) - max(lon))
-  xlim = c(min(lon) - max.lon / margin, max(lon) + max.lon / margin)
-  ylim = c(min(lat) - max.lat / margin, max(lat) + max.lat / margin)
+bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, expand = 0.02){
+  xlim = range(lon, na.rm = T)
+  ylim = range(lat, na.rm = T)
+  xlim_exp = scales::expand_range(xlim, expand)
+  ylim_exp = scales::expand_range(ylim, expand)
 
   if(highres){
-    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 15 arc second grid")}
-    bathy = gebco_2019[lon %between% xlim & lat %between% ylim]
+    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 0.01 degree grid")}
+    bathy = gebco_2019[lon %between% xlim_exp & lat %between% ylim_exp]
   }else{
     if(!exists("gebco_2019_low")){data("gebco_2019_low");print("loaded GEBCO 2019, 0.05 degree grid")}
-    bathy = gebco_2019_low[lon %between% xlim & lat %between% ylim]
+    bathy = gebco_2019_low[lon %between% xlim_exp & lat %between% ylim_exp]
   }
 
   GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
@@ -117,6 +117,7 @@ bathymap <- function(lon = c(-14.996, 8.004), lat = c(47, 60), margin=8, breaks=
   # mapdata = mapdata[mapdata[,.I[any(long %between% c(-50, 25)) & any(lat %between% c(45, 70))], by = list(group)]$V1]
   # devtools::use_data(mapdata, overwrite=T)
   data("mapdata") # saved for speed
+  mapdata = mapdata[mapdata[,.I[any(long %between% xlim_exp) & any(lat %between% ylim_exp)], by = list(group)]$V1]
 
   # make geom
   coast.poly = geom_polygon(data=mapdata, aes(x=long, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
@@ -126,9 +127,7 @@ bathymap <- function(lon = c(-14.996, 8.004), lat = c(47, 60), margin=8, breaks=
     bathy_raster + bathy_scale +
     coast.poly + coast.outline +
     labs(x = NULL, y = NULL) +
-    scale_x_continuous(expand=c(0, 0)) +
-    scale_y_continuous(expand=c(0, 0)) +
-    coord_quickmap(xlim, ylim)
+    coord_quickmap(xlim_exp, ylim_exp, expand = F)
 
   # mp +  geom_contour(aes(lon, lat, z=depth), binwidth=20, color="black")
   return(mp)
