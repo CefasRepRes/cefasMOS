@@ -29,7 +29,7 @@ rinko.p(
 \item{H}{beta calibration coef}
 }
 \value{
-vector of RINKO oxygen in \% saturation
+vector of RINKO oxygen in \\% saturation
 }
 \description{
 Calculate RINKO saturation from voltage

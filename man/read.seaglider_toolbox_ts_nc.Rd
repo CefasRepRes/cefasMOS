@@ -6,7 +6,8 @@
 \usage{
 read.seaglider_toolbox_ts_nc(
   ncfile,
-  variables = c("sigma0", "salinity", "oxygen", "temp")
+  variables = c("sigma0", "salinity", "oxygen", "temp"),
+  keep_flag = F
 )
 }
 \arguments{

@@ -11,20 +11,20 @@ fuzzymatch(dat, reference, index = "dateTime", threshold = Inf, return = F)
 
 \item{reference}{data.table of variable you want to search against, must contain the same named index column.}
 
-\item{index}{column name in `reference` you want to match against (typically "dateTime")}
+\item{index}{column name in \code{reference} you want to match against (typically "dateTime")}
 
 \item{threshold}{integer value for maximum permissible gap between lookup value, unit = seconds for "dateTime".}
 
 \item{return}{if false (default) values with no match, or outside threshold are dropped}
 }
 \value{
-data.table with added variable column and index from `reference`
+data.table with added variable column and index from \code{reference}
 }
 \description{
 Fast fuzzy matcher
 }
 \details{
-finded closest index in `reference`.
+finded closest index in \code{reference}.
 
 Matches values from a reference data.table to another. Typically used for fuzzy dateTime matching.
 note, make sure the index column is the same data type in both dat and reference. e.g. as.numeric

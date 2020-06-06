@@ -53,7 +53,7 @@ Fetches CTD data from ESM2 profiler records
 \details{
 This function querys the Smartbuoy database and returns ESM2 profiler data matching the provided critiera.
 Note that startTime is the time at which the instrument started logging.
-remember to do `options(digits.secs=3)` if you want to display POSIXct miliseconds.
+remember to do \code{options(digits.secs=3)} if you want to display POSIXct miliseconds.
 }
 \keyword{ctd}
 \keyword{esm2}

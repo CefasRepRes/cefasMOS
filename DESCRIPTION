@@ -32,6 +32,7 @@ Imports:
     xts,
     zoo,
 Suggests:
+Roxygen: list(markdown = TRUE)
 License: GPL-2
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr

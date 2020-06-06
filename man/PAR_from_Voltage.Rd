@@ -18,6 +18,6 @@ numeric PAR in uE m-2 s-1
 }
 \description{
 Calculates PAR from Licor Li-198 sensors
- fitted with Cefas inline low-light amplifier.
- Refer to calibration documents for factor and offset.
+fitted with Cefas inline low-light amplifier.
+Refer to calibration documents for factor and offset.
 }

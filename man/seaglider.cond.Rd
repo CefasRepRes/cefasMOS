@@ -9,9 +9,9 @@ seaglider.cond(condFreq, temp, pressure, calib_file)
 \arguments{
 \item{condFreq}{vector of seaglider SBE temperature frequency}
 
-\item{temp}{temperature as calculated with `seaglider.temp`}
+\item{temp}{temperature as calculated with \code{seaglider.temp}}
 
-\item{pressure}{in dbar as calculated with `seaglider.pressure`}
+\item{pressure}{in dbar as calculated with \code{seaglider.pressure}}
 
 \item{calib_file}{path to seaglider calibration.mat file}
 }
