@@ -2,10 +2,7 @@
 % Please edit documentation in R/oxygen.R
 \name{oxygen.conc_to_pp}
 \alias{oxygen.conc_to_pp}
-\title{convert (salinity uncorrected) molar oxygen concentration to oxygen partial pressure
-according to recommendations by SCOR WG 142 "Quality Control Procedures
-for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
-Henry Bittig}
+\title{convert molar oxygen concentration to oxygen partial pressure}
 \usage{
 oxygen.conc_to_pp(O2, TEMP, SAL = 0, PRS = 0)
 }
@@ -16,14 +13,19 @@ oxygen.conc_to_pp(O2, TEMP, SAL = 0, PRS = 0)
 
 \item{SAL}{salinity (if correction has been applied, default = 0)}
 
-\item{PRS}{hydrostatic pressure in dbar (default = 0)}
+\item{PRS}{hydrostatic pressure in hPa (default = 0)}
 }
 \value{
-partial pressure of oxygen in mbar
+partial pressure of oxygen in hPa
 }
 \description{
-convert (salinity uncorrected) molar oxygen concentration to oxygen partial pressure
 according to recommendations by SCOR WG 142 "Quality Control Procedures
 for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
 Henry Bittig
+}
+\examples{
+oxygen.conc_to_pp(267, 10, 0, 50) # 159.7683 hPa
+}
+\references{
+Bittig, H., Körtzinger, A., Johnson, K., Claustre, H., Emerson, S., Fennel, K., Garcia, H., Gilbert, D., Gruber, N., Kang, D.-J., Naqvi, W., Prakash, S., Riser, S., Thierry, V., Tilbrook, B., Uchida, H., Ulloa, O., Xing, X., 2018. SCOR WG 142: Quality Control Procedures for Oxygen and Other Biogeochemical Sensors on Floats and Gliders. Recommendations on the conversion between oxygen quantities for Bio-Argo floats and other autonomous sensor platforms. https://doi.org/10/ggzjj3
 }

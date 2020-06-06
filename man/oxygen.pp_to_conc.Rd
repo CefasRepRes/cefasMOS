@@ -2,15 +2,12 @@
 % Please edit documentation in R/oxygen.R
 \name{oxygen.pp_to_conc}
 \alias{oxygen.pp_to_conc}
-\title{convert oxygen partial pressure to molar oxygen concentration
-according to recommendations by SCOR WG 142 "Quality Control Procedures
-for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
-Henry Bittig}
+\title{convert oxygen partial pressure to molar oxygen concentration}
 \usage{
 oxygen.pp_to_conc(pO2, TEMP, SAL = 0, PRS = 0, APRS = 1013.25)
 }
 \arguments{
-\item{pO2}{partial pressure of oxygen in mbar}
+\item{pO2}{partial pressure of oxygen in hPa}
 
 \item{TEMP}{temperature}
 
@@ -25,7 +22,10 @@ oxygen concentration in mmol m-3
 }
 \description{
 convert oxygen partial pressure to molar oxygen concentration
-according to recommendations by SCOR WG 142 "Quality Control Procedures
-for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
-Henry Bittig
+}
+\examples{
+oxygen.pp_to_conc(200, 10, 35, 50) # 267.1465 mmol m-3
+}
+\references{
+Bittig, H., Körtzinger, A., Johnson, K., Claustre, H., Emerson, S., Fennel, K., Garcia, H., Gilbert, D., Gruber, N., Kang, D.-J., Naqvi, W., Prakash, S., Riser, S., Thierry, V., Tilbrook, B., Uchida, H., Ulloa, O., Xing, X., 2018. SCOR WG 142: Quality Control Procedures for Oxygen and Other Biogeochemical Sensors on Floats and Gliders. Recommendations on the conversion between oxygen quantities for Bio-Argo floats and other autonomous sensor platforms. https://doi.org/10/ggzjj3
 }

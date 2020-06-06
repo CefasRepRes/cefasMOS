@@ -18,7 +18,7 @@ optode.correction(O2, t, S, depth = 0, optode_salinity = 0)
 \item{optode_salinity}{internal optode setting default is 0}
 }
 \value{
-corrected oxygen concentration in units of `O2`
+corrected oxygen concentration in units of \code{O2}
 }
 \description{
 Optode salinity and pressure compensation

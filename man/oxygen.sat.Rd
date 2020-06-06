@@ -4,7 +4,7 @@
 \alias{oxygen.sat}
 \title{Equilibrium Oxygen saturation concentration}
 \usage{
-oxygen.sat(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25)
+oxygen.sat(temp, salinity, unit = "mmolm", p_atm = 1013.25)
 }
 \arguments{
 \item{temp}{numeric vector of water temperature in degrees Celsius}
@@ -13,22 +13,35 @@ oxygen.sat(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25)
 
 \item{unit}{"mmolm" for mmol m-3 (default), "mgl" for mg l-1 or "umolkg" for umol kg-1.}
 
-\item{P}{hydrosatic pressure in dbar (default = 0)}
-
 \item{p_atm}{atmospheric (air) pressure in hPa (default = 1013.25)}
 }
 \value{
 vector of saturation concentration in mmol m-3
 }
 \description{
-Calculates oxygen saturation concentration in equilibrium with the atmosphere
-as per Garcia & Gordon, 1992
+Calculates oxygen saturation concentration (C_sat) in equilibrium with the atmosphere
+as per Garcia & Gordon, 1992, using the Benson and Kraus data.
 }
 \details{
+This is also known as C* in some literature.
+
 conversions via SCOR WG 142
+
+check values from Garcia and Gordon
+10oC 35 salinity
+6.315 ml/l
+274.610 umol kg-1
 }
 \examples{
-oxygen.sat(10, 35)  # saturation concentration at 10 degrees and 35 salinity
-oxygen.sat(10, 35, "molkg")  # saturation concentration at 10 degrees and 35 salinity in umol kg-1
+oxygen.sat(10, 35)  # 282.015 mmol m-3, saturation concentration at 10 degrees and 35 salinity
+oxygen.sat(10, 35, "mll")  # 6.314767 ml/l kg-1 saturation concentration at 10 degrees and 35 salinity
+oxygen.sat(10, 35, "umolkg")  # 274.6095 umol kg-1 saturation concentration at 10 degrees and 35 salinity
+oxygen.sat(20, 35, p_atm = 1020.5)  # 284.06 true saturation concentration at 20 degrees and 35 salinity in mmol m-3 when local air pressure is 1020.5 hPa
+}
+\references{
+\enumerate{
+\item Bittig, H., Körtzinger, A., Johnson, K., Claustre, H., Emerson, S., Fennel, K., Garcia, H., Gilbert, D., Gruber, N., Kang, D.-J., Naqvi, W., Prakash, S., Riser, S., Thierry, V., Tilbrook, B., Uchida, H., Ulloa, O., Xing, X., 2018. SCOR WG 142: Quality Control Procedures for Oxygen and Other Biogeochemical Sensors on Floats and Gliders. Recommendations on the conversion between oxygen quantities for Bio-Argo floats and other autonomous sensor platforms. \url{https://doi.org/10/ggzjj3}
+\item Garcia, H.E., Gordon, L.I., 1992. Oxygen solubility in seawater: Better fitting equations. Limnology and Oceanography 37, 1307–1312. \url{https://doi.org/10/dxf339}
+}
 }
 \keyword{oxygen}

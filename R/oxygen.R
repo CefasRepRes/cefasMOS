@@ -396,21 +396,23 @@ rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C =
 }
 
 #' convert oxygen partial pressure to molar oxygen concentration
-#' according to recommendations by SCOR WG 142 "Quality Control Procedures
-#' for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
-#' Henry Bittig
 #'
-#' @param pO2 partial pressure of oxygen in mbar
+#' @param pO2 partial pressure of oxygen in hPa
 #' @param TEMP temperature
 #' @param SAL salinity
 #' @param PRS hydrostatic pressure in dbar (default = 0)
 #' @param APRS air pressure in mbar (default = 1013.25)
 #'
+#' @references
+#' Bittig, H., Körtzinger, A., Johnson, K., Claustre, H., Emerson, S., Fennel, K., Garcia, H., Gilbert, D., Gruber, N., Kang, D.-J., Naqvi, W., Prakash, S., Riser, S., Thierry, V., Tilbrook, B., Uchida, H., Ulloa, O., Xing, X., 2018. SCOR WG 142: Quality Control Procedures for Oxygen and Other Biogeochemical Sensors on Floats and Gliders. Recommendations on the conversion between oxygen quantities for Bio-Argo floats and other autonomous sensor platforms. https://doi.org/10/ggzjj3
+#'
 #' @return oxygen concentration in mmol m-3
+#' @examples
+#' oxygen.pp_to_conc(200, 10, 35, 50) # 267.1465 mmol m-3
 #' @export
 oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0, APRS = 1013.25){
   xO2     = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
-  pH2Osat = APRS*(exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+TEMP)/100)))-0.000544*SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
+  pH2Osat = 1013.25*(exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+TEMP)/100)))-0.000544*SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   # pH2Osat = 6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP))) # mbar , Buck 1996 equation for over water , TEMP = air temp ?more accurate
   sca_T   = log((298.15-TEMP)/(273.15+TEMP)) # scaled temperature for use in TCorr and SCorr
   TCorr   = 44.6596*exp(2.00907+3.22014*sca_T+4.05010*sca_T^2+4.94457*sca_T^3-2.56847e-1*sca_T^4+3.88767*sca_T^5) # temperature correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit mL(STP) L-1; and conversion from mL(STP) L-1 to umol L-1
@@ -421,7 +423,8 @@ oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0, APRS = 1013.25){
   pO2/(xO2*(1013.25-pH2Osat))*(TCorr*Scorr)/exp(Vm*PRS/(R*(TEMP+273.15)))
 }
 
-#' convert (salinity uncorrected) molar oxygen concentration to oxygen partial pressure
+#' convert molar oxygen concentration to oxygen partial pressure
+#'
 #' according to recommendations by SCOR WG 142 "Quality Control Procedures
 #' for Oxygen and Other Biogeochemical Sensors on Floats and Gliders"
 #' Henry Bittig
@@ -429,14 +432,17 @@ oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0, APRS = 1013.25){
 #' @param O2 molar concentration of oxygen in mmol m-3
 #' @param TEMP temperature
 #' @param SAL salinity (if correction has been applied, default = 0)
-#' @param PRS hydrostatic pressure in dbar (default = 0)
+#' @param PRS hydrostatic pressure in hPa (default = 0)
+#' @references Bittig, H., Körtzinger, A., Johnson, K., Claustre, H., Emerson, S., Fennel, K., Garcia, H., Gilbert, D., Gruber, N., Kang, D.-J., Naqvi, W., Prakash, S., Riser, S., Thierry, V., Tilbrook, B., Uchida, H., Ulloa, O., Xing, X., 2018. SCOR WG 142: Quality Control Procedures for Oxygen and Other Biogeochemical Sensors on Floats and Gliders. Recommendations on the conversion between oxygen quantities for Bio-Argo floats and other autonomous sensor platforms. https://doi.org/10/ggzjj3
 #'
-#' @return partial pressure of oxygen in mbar
+#' @return partial pressure of oxygen in hPa
+#' @examples
+#' oxygen.conc_to_pp(267, 10, 0, 50) # 159.7683 hPa
 #' @export
 oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 
   xO2 = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
-  pH2Osat = 1013.25 * (exp(24.4543 -(67.4509 * (100 / (T + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
+  pH2Osat = 1013.25 * (exp(24.4543 -(67.4509 * (100 / (TEMP + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   sca_T   = log((298.15 - TEMP)/(273.15 + TEMP)) # scaled temperature for use in TCorr and SCorr
   TCorr   = 44.6596 * exp(2.00907 + 3.22014 * sca_T + 4.05010 * sca_T^2 + 4.94457 * sca_T^3 - 2.56847e-1 * sca_T^4 + 3.88767 * sca_T^5) # temperature correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit mL(STP) L-1; and conversion from mL(STP) L-1 to umol L-1
   Scorr   = exp(SAL * (-6.24523e-3-7.37614e-3 * sca_T - 1.03410e-2 * sca_T^2-8.17083e-3*sca_T^3)-4.88682e-7*SAL^2) # salinity correction part from Garcia and Gordon (1992), Benson and Krause (1984) refit ml(STP) L-1
@@ -452,23 +458,25 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 #' Calculates in-air concentration of oxygen, given temperature, pressure and relative humidity.
 #' If only given dewpoint will use Sargent (1980) approximation to derive relative humidity
 #'
-#' Bittig2018
-#'
 #' @param TEMP air temperature in Celsius
-#' @param AIRPRS air pressure in mbar/hPa
+#' @param AIRPRS air pressure in mbar (hPa)
 #' @param RH relative humidity in \%
 #' @param DTEMP dewpoint temperature in Celsius
 #' @param return_conc if True (default) return concentration, otherwise returns partial pressure in hPa
 #' @keywords oxygen
-#'
+#' @references Bittig, H.C., Körtzinger, A., Neill, C., van Ooijen, E., Plant, J.N., Hahn, J., Johnson, K.S., Yang, B., Emerson, S.R., 2018. Oxygen Optode Sensors: Principle, Characterization, Calibration, and Application in the Ocean. Frontiers in Marine Science 4, 1–25. https://doi.org/10/ggc8m9
+#' @examples
+#' oxygen.air_conc(10, 1019.5, 80, return_con=F) # partial pressure of oxygen at 10oC and 1019.5 hPa local air pressure and 80% relative humidity
 #' @return oxygen concentration in mmol m-3
 #' @export
 oxygen.air_conc <- function(TEMP, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){
-  if(any(is.na(RH)) & any(is.na(DTEMP))){stop("tool requires relative humidity or dew temp")}
+  if(any(is.na(RH)) & any(is.na(DTEMP))){stop("function requires relative humidity or dew temp")}
   if(any(is.na(RH)) & !any(is.na(DTEMP))){
     RH = RH_from_dewtemp(TEMP, DTEMP)
   }
-  pVap = saturation_vapour_pressure(TEMP) # should be mbar
+  # pVap = saturation_vapour_pressure(TEMP) # should be mbar
+  SAL = 0 # right?
+  pVap = 1013.25 * (exp(24.4543 -(67.4509 * (100 / (TEMP + 273.15))) - (4.8489 * log(((273.15 + TEMP) / 100)))-0.000544 * SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   xO2     = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
   pO2air = xO2 * (AIRPRS - (pVap * (RH / 100))) # partial pressure of oxygen in air
 
@@ -488,23 +496,34 @@ oxygen.air_conc <- function(TEMP, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){
 
 #' Equilibrium Oxygen saturation concentration
 #'
-#' Calculates oxygen saturation concentration in equilibrium with the atmosphere
-#' as per Garcia & Gordon, 1992
+#' Calculates oxygen saturation concentration (C_sat) in equilibrium with the atmosphere
+#' as per Garcia & Gordon, 1992, using the Benson and Kraus data.
+#'
+#' This is also known as C* in some literature.
 #'
 #' conversions via SCOR WG 142
+#'
+#' check values from Garcia and Gordon
+#' 10oC 35 salinity
+#' 6.315 ml/l
+#' 274.610 umol kg-1
 #'
 #' @param temp numeric vector of water temperature in degrees Celsius
 #' @param salinity numeric vector of salinity (PSU)
 #' @param unit "mmolm" for mmol m-3 (default), "mgl" for mg l-1 or "umolkg" for umol kg-1.
-#' @param P hydrosatic pressure in dbar (default = 0)
 #' @param p_atm atmospheric (air) pressure in hPa (default = 1013.25)
 #' @return vector of saturation concentration in mmol m-3
 #' @keywords oxygen
+#' @references
+#' 1. Bittig, H., Körtzinger, A., Johnson, K., Claustre, H., Emerson, S., Fennel, K., Garcia, H., Gilbert, D., Gruber, N., Kang, D.-J., Naqvi, W., Prakash, S., Riser, S., Thierry, V., Tilbrook, B., Uchida, H., Ulloa, O., Xing, X., 2018. SCOR WG 142: Quality Control Procedures for Oxygen and Other Biogeochemical Sensors on Floats and Gliders. Recommendations on the conversion between oxygen quantities for Bio-Argo floats and other autonomous sensor platforms. <https://doi.org/10/ggzjj3>
+#' 1. Garcia, H.E., Gordon, L.I., 1992. Oxygen solubility in seawater: Better fitting equations. Limnology and Oceanography 37, 1307–1312. <https://doi.org/10/dxf339>
 #' @examples
-#' oxygen.sat(10, 35)  # saturation concentration at 10 degrees and 35 salinity
-#' oxygen.sat(10, 35, "molkg")  # saturation concentration at 10 degrees and 35 salinity in umol kg-1
+#' oxygen.sat(10, 35)  # 282.015 mmol m-3, saturation concentration at 10 degrees and 35 salinity
+#' oxygen.sat(10, 35, "mll")  # 6.314767 ml/l kg-1 saturation concentration at 10 degrees and 35 salinity
+#' oxygen.sat(10, 35, "umolkg")  # 274.6095 umol kg-1 saturation concentration at 10 degrees and 35 salinity
+#' oxygen.sat(20, 35, p_atm = 1020.5)  # 284.06 true saturation concentration at 20 degrees and 35 salinity in mmol m-3 when local air pressure is 1020.5 hPa
 #' @export
-oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
+oxygen.sat <- function(temp, salinity, unit = "mmolm", p_atm = 1013.25){
 
   if(unit == "umolkg"){
     # umol kg coefficents
@@ -542,20 +561,20 @@ oxygen.sat <- function(temp, salinity, unit = "mmolm", P = 0, p_atm = 1013.25){
 
     # adjust for in-situ pressure # as per SCOR WG 142
     # using vapour pressure correction, but still always at 1 atm so ignore the exp(Vm*P...
-    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100./(temp+273.15)))-(4.8489*log(((273.15+temp)/100)))-0.000544*salinity)) # saturated water vapor in mbar
-    Csat = Csat * (p_atm-pH2Osat)/(1013.25-pH2Osat)
+    pH2Osat = 1013.25 * (exp(24.4543-(67.4509*(100/(temp+273.15)))-(4.8489*log(((273.15+temp)/100)))-0.000544*salinity)) # saturated water vapour in mbar
+    Csat = exp(Csat) * (p_atm-pH2Osat)/(1013.25-pH2Osat)
 
     if(unit == "mmolm"){
-      return(exp(Csat) * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
+      return(Csat * 44.6596)     # convert ml/l to mmol m-3  as per SCOR WG 142
     }
     if(unit == "mll"){
-      return(exp(Csat)) # no conversion
+      return(Csat) # no conversion
     }
     if(unit == "mgl"){
-      return(exp(Csat) / 0.699745)     # convert ml/l to mg/l
+      return(Csat / 0.699745)     # convert ml/l to mg/l
     }
     if(unit == "umolkg"){
-      return(exp(Csat)) # no conversion
+      return(Csat) # no conversion
     }
 
     # 1 μmol O2 = .022391 ml at sea surface pressure
