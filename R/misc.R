@@ -236,23 +236,29 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 
 #' Find mixed layer depth
 #'
-#' @description  simple threshold technique, mld where p +/- 0.125 of surface p
+#' @description  simple threshold technique
 #' @details returns max depth if threshold not met
 #' @param depth numeric vector of depth
 #' @param density vector of density
 #' @param threshold numeric density threshold, default is 0.125
+#' @param ref_depth reference depth for threshold, default is shallowest depth available
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #' @param band default is false, if true function returns paired vector of interval which meets threshold
 #'
 #' @return mld
 #' @import data.table
 #' @export
-findMLD <- function(depth, density, threshold = 0.125, surface = T, band=F){
+findMLD <- function(depth, density, threshold = 0.125, ref_depth = NA, surface = T, band=F){
   depth = depth[order(depth)]
   density = density[order(depth)]
 
   if(anyNA(depth)){ warning("NA's found in depth record") }
   if(anyNA(density)){ warning("NA's found in density record") }
+
+  if(!is.na(ref_depth)){
+    density = density[depth >= ref_depth]
+    depth = depth[depth >= ref_depth]
+  }
 
   bottom = density[match(max(depth, na.rm = T), depth)] # density at max depth
   top = density[match(min(depth, na.rm = T), depth)] # density at min depth

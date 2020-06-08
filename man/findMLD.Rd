@@ -4,7 +4,14 @@
 \alias{findMLD}
 \title{Find mixed layer depth}
 \usage{
-findMLD(depth, density, threshold = 0.125, surface = T, band = F)
+findMLD(
+  depth,
+  density,
+  threshold = 0.125,
+  ref_depth = NA,
+  surface = T,
+  band = F
+)
 }
 \arguments{
 \item{depth}{numeric vector of depth}
@@ -12,6 +19,8 @@ findMLD(depth, density, threshold = 0.125, surface = T, band = F)
 \item{density}{vector of density}
 
 \item{threshold}{numeric density threshold, default is 0.125}
+
+\item{ref_depth}{reference depth for threshold, default is shallowest depth available}
 
 \item{surface}{default is true, set to false for bottom mixed layer threshold (base of gradient)}
 
@@ -21,7 +30,7 @@ findMLD(depth, density, threshold = 0.125, surface = T, band = F)
 mld
 }
 \description{
-simple threshold technique, mld where p +/- 0.125 of surface p
+simple threshold technique
 }
 \details{
 returns max depth if threshold not met
