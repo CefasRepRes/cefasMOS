@@ -101,10 +101,10 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
     bathy = gebco_2019_low[lon %between% xlim_exp & lat %between% ylim_exp]
   }
 
-  GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
-
   # classify
   if(breaks == T){
+    GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
+    bathy[, label := cut(depth, breaks = c(-Inf, 25, 50, 100, 200, Inf), labels = c('< 25','25-50','50-100','100-200','> 200'))]
     bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth [m]')
     bathy_raster = geom_raster(aes(lon, lat, fill=label))
   }else{
