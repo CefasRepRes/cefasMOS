@@ -1,3 +1,59 @@
+
+
+
+#' propagate errors for data.table
+#'
+#' This function serves as a wrapper for `propagate::propagate` to make it easier to calculate errors in a data.table
+#'
+#' Errors are calculated though a 2nd order Taylor expansion (`mode = "prop"`) or though Monte-Carlo (`mode = "MC"`).
+#'
+#' @param expr an expression, such as `expression(x / y)`
+#' @param dat a matrix denoting the mean and standard deviation, see examples
+#' @param mode either `"prop"` or `"MC`
+#' @param n number of iterations for Monte-Carlo, minimum is 10000
+#' @import propagate
+#'
+#' @return a list of mean and standard deviations
+#' @export
+#'
+#' @examples
+#' dx = data.table(
+#'   index = c(500, 1000),
+#'   A = c(0, 5),
+#'   A_sd = c(0.1, 0.1),
+#'   B = c(1, 9),
+#'   B_sd = c(0.1, 0.1))
+#'
+#' eq = expression(A + B^2)
+#'
+#' dx[, c("mean", "sd") := prop_dt(eq, cbind("A" = c(A, A_sd), "B" = c(B, B_sd))), by=index]
+#'
+#' # Can also be applied to a standard function, if you create a wrapper
+#' d2 = data.table(
+#'   time = c(1, 2),
+#'   temp = c(20, 5),
+#'   temp_sd = c(0.2, 0.1),
+#'   sal = c(35.5, 34.5),
+#'   sal_sd = c(0.01, 0.05))
+#'
+#' f = function(temp, sal){
+#'   # a wrapper is needed if you don't supply every variable, and you can't have non-numeric variables
+#'   oxygen.sat(temp, sal)
+#' }
+#'
+#' d2[, c("mean", "sd") := prop_dt(f, cbind("temp" = c(temp, temp_sd), "sal" = c(sal, sal_sd))), by=time]
+prop_dt <- function(expr, dat, mode = c("prop", "MC"), n = 1E+06){
+  if(mode[1] == "prop"){
+    res = propagate::propagate(expr, dat, do.sim = F)$prop
+    mean_sd = as.list(res)[c(1, 3)]
+  }
+  if(mode[1] == "MC"){
+    res = propagate::propagate(expr, dat, second.order = F, nsim = n)
+    mean_sd = as.list(res)[1:2]
+  }
+  return(mean_sd)
+}
+
 #' Round dateTime to x minutes
 #'
 #' @param x vector of POSIXct datetimes
