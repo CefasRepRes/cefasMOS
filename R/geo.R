@@ -133,6 +133,20 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
   return(mp)
 }
 
+#' Extract depth for position from GEBCO
+#'
+#' extract nearest point from GEBCO2019
+#'
+#' @param x latitude in decimal degrees
+#' @param y longitude in decimal degrees
+#'
+#' @return depth in meters
+#' @export
+bathy_match <- function(x, y){
+  if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 0.01 degree grid")}
+  gebco_2019[lon == lon[which.min(abs(lon - x))] & lat == lat[which.min(abs(lat - y))]]$depth
+}
+
 #' Convert degrees + decimal minutes to decimal degrees
 #'
 #' @param degrees numeric vector of whole degrees, if negative will convert to W or S.
