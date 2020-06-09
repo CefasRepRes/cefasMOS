@@ -48,7 +48,7 @@ prop_dt <- function(expr, dat, mode = c("prop", "MC"), n = 1E+06){
     mean_sd = as.list(res)[c(1, 3)]
   }
   if(mode[1] == "MC"){
-    res = propagate::propagate(expr, dat, second.order = F, nsim = n)
+    res = propagate::propagate(expr, dat, second.order = F, nsim = n)$sim
     mean_sd = as.list(res)[1:2]
   }
   return(mean_sd)
