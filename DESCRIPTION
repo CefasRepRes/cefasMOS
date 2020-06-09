@@ -2,7 +2,7 @@ Package: cefasMOS
 Title: Tools for Cefas MOS
 Version: 0.4.1
 Date: 2020-06-04
-Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
+Authors@R: c(person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = c("cre", "aut")), person("Kate", "Collingridge", email = "kate.collingridge@cefas.co.uk", role = "aut"))
 Description: Provides tools for Cefas MOS activities
 Depends:
     R (>= 3.0.0),
@@ -33,5 +33,5 @@ Imports:
     knitr,
 Suggests:
 License: GPL-2
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 VignetteBuilder: knitr
