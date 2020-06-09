@@ -4,12 +4,12 @@
 \alias{bathy_match}
 \title{Extract depth for position from GEBCO}
 \usage{
-bathy_match(lons, lats)
+bathy_match(lon, lat)
 }
 \arguments{
-\item{lons}{longitude in decimal degrees}
+\item{lon}{longitude in decimal degrees}
 
-\item{lats}{latitude in decimal degrees}
+\item{lat}{latitude in decimal degrees}
 }
 \value{
 depth in meters

@@ -137,8 +137,8 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
 #'
 #' extract nearest point from GEBCO2019
 #'
-#' @param lons longitude in decimal degrees
-#' @param lats latitude in decimal degrees
+#' @param lon longitude in decimal degrees
+#' @param lat latitude in decimal degrees
 #'
 #' @return depth in meters
 #' @export
@@ -146,15 +146,14 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
 #' lons = c(0.0001, -15)
 #' lats = c(54.001, 60)
 #' bathy_match(lons, lats)
-bathy_match <- function(lons, lats){
-  if(length(x) == length(y)){
+bathy_match <- function(lon, lat){
+  if(length(lon) == length(lat)){
     if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 0.01 degree grid")}
-    pos = cbind(lons, lats)
-    sapply(1:nrow(pos), function(r){
-      gebco_2019[lon == lon[which.min(abs(lon - pos[r, 1]))] & lat == lat[which.min(abs(lat - pos[r, 2]))]]$depth
-    })
+    res = 0.01 # resolution of gebco bathmetry
+    pos = data.table(lon = round(lon/res)*res, lat = round(lat/res)*res)
+    round(gebco_2019[pos, on=list(lon, lat)]$depth, 1)
   }else{
-    error("lons and lats are not the same length")
+    error("lon and lat are not the same length")
   }
 }
 
