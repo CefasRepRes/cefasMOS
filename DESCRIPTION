@@ -2,7 +2,7 @@ Package: cefasMOS
 Title: Tools for Cefas MOS
 Version: 0.4.2
 Date: 2020-05-31
-Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = "cre")
+Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = c("aut", "cre"))
 Description: Provides tools for Cefas MOS activities
 Depends:
     R (>= 3.0.0),
@@ -20,18 +20,19 @@ Imports:
     mapdata,
     ncdf4,
     oce,
-    openxlsx,
     pbapply,
     raster,
     rgdal,
     rworldmap,
-    shiny,
     sp,
     stringr,
-    svDialogs,
     xts,
     zoo,
 Suggests:
+    svDialogs,
+    shiny,
+    openxlsx,
+    propagate
 Roxygen: list(markdown = TRUE)
 License: GPL-2
 RoxygenNote: 7.1.0
