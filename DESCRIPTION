@@ -28,11 +28,11 @@ Imports:
     stringr,
     xts,
     zoo,
-Suggests:
     svDialogs,
     shiny,
     openxlsx,
     propagate
+Suggests:
 Roxygen: list(markdown = TRUE)
 License: GPL-2
 RoxygenNote: 7.1.0

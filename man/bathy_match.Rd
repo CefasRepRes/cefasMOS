@@ -4,16 +4,21 @@
 \alias{bathy_match}
 \title{Extract depth for position from GEBCO}
 \usage{
-bathy_match(x, y)
+bathy_match(lons, lats)
 }
 \arguments{
-\item{x}{latitude in decimal degrees}
+\item{lons}{longitude in decimal degrees}
 
-\item{y}{longitude in decimal degrees}
+\item{lats}{latitude in decimal degrees}
 }
 \value{
 depth in meters
 }
 \description{
 extract nearest point from GEBCO2019
+}
+\examples{
+lons = c(0.0001, -15)
+lats = c(54.001, 60)
+bathy_match(lons, lats)
 }
