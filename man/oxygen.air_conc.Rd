@@ -11,7 +11,7 @@ oxygen.air_conc(TEMP, AIRPRS, RH = NA, DTEMP = NA, return_conc = T)
 
 \item{AIRPRS}{air pressure in mbar (hPa)}
 
-\item{RH}{relative humidity in \\%}
+\item{RH}{relative humidity in \%}
 
 \item{DTEMP}{dewpoint temperature in Celsius}
 

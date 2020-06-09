@@ -460,7 +460,7 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 #'
 #' @param TEMP air temperature in Celsius
 #' @param AIRPRS air pressure in mbar (hPa)
-#' @param RH relative humidity in \%
+#' @param RH relative humidity in %
 #' @param DTEMP dewpoint temperature in Celsius
 #' @param return_conc if True (default) return concentration, otherwise returns partial pressure in hPa
 #' @keywords oxygen
