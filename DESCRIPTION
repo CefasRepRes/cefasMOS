@@ -1,6 +1,6 @@
 Package: cefasMOS
 Title: Tools for Cefas MOS
-Version: 0.4.2
+Version: 0.4.3
 Date: 2020-05-31
 Authors@R: person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = c("aut", "cre"))
 Description: Provides tools for Cefas MOS activities
