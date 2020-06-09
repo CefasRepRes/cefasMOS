@@ -256,8 +256,13 @@ findMLD <- function(depth, density, threshold = 0.125, ref_depth = NA, surface =
   if(anyNA(density)){ warning("NA's found in density record") }
 
   if(!is.na(ref_depth)){
+    # Subset to ref_depth
     density = density[depth >= ref_depth]
     depth = depth[depth >= ref_depth]
+  }
+  if(length(depth) < 5){
+    # need some actual data to calculate MLD
+    return(NA)
   }
 
   bottom = density[match(max(depth, na.rm = T), depth)] # density at max depth
