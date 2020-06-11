@@ -237,61 +237,69 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' Find mixed layer depth
 #'
 #' @description  simple threshold technique
-#' @details returns max depth if threshold not met
-#' @param depth numeric vector of depth
-#' @param density vector of density
-#' @param threshold numeric density threshold, default is 0.125
-#' @param ref_depth reference depth for threshold, default is shallowest depth available
+#' @details returns max z if threshold not met
+#' @param z numeric vector of z (either pressure or depth)
+#' @param y vector of MLD indicating variable, typically temperature, or density
+#' @param threshold numeric y threshold, default is 0.125 (assuming y)
+#' @param ref_z reference z for threshold, default is shallowest z available
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #' @param band default is false, if true function returns paired vector of interval which meets threshold
 #'
 #' @return mld
 #' @import data.table
 #' @export
-findMLD <- function(depth, density, threshold = 0.125, ref_depth = NA, surface = T, band=F){
-  depth = depth[order(depth)]
-  density = density[order(depth)]
+#' @examples
+#' x = data.table(pressure = 1:100,
+#'                density = approx(c(1, 40, 50, 80, 100),
+#'                                 c(1.125, 1.125, 1.293, 1.308, 1.308),
+#'                                 xout = 1:100)$y)
+#'
+#' findMLD(x$pressure, x$density)
+findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F){
+  y = y[order(z)] # make sure you sort y first
+  z = z[order(z)]
 
-  if(anyNA(depth)){ warning("NA's found in depth record") }
-  if(anyNA(density)){ warning("NA's found in density record") }
+  if(anyNA(z)){ error("NA's found in z record") }
+  if(anyNA(y)){ warning("NA's found in y record") }
 
-  if(!is.na(ref_depth)){
-    # Subset to ref_depth
-    density = density[depth >= ref_depth]
-    depth = depth[depth >= ref_depth]
+  if(!is.na(ref_z)){
+    # Subset to ref_z
+    y = y[z >= ref_z]
+    z = z[z >= ref_z]
   }
-  if(length(depth) < 5){
+  if(length(na.omit(z)) < 5 | length(na.omit(y)) < 5 ){
     # need some actual data to calculate MLD
-    return(NA)
+    warning("n < 5, too few points to calculate MLD, returning NA")
+    return(as.numeric(NA))
   }
 
-  bottom = density[match(max(depth, na.rm = T), depth)] # density at max depth
-  top = density[match(min(depth, na.rm = T), depth)] # density at min depth
+  bottom = y[match(max(z, na.rm = T), z)] # y at max z
+  top = y[match(min(z, na.rm = T), z)] # y at min z
 
   if(surface == T){
-    # done this way as some dips have min density !@ surface
+    # done this way as some dips have min y @ surface
     if(abs(top - bottom) > threshold){ # is there strat?
       if(band){
-        index = min(which(abs(density - top) > threshold))
-        return(list("upper" = depth[index-1], "lower" = depth[index]))
+        index = min(which(abs(y - top) > threshold))
+        return(list("upper" = z[index-1], "lower" = z[index]))
       }else{
-        return(min(depth[abs(density - top) > threshold], na.rm = T))
+        return(min(z[abs(y - top) > threshold], na.rm = T))
       }
     }else{
-      return(max(depth, na.rm = T)) # fully mixed
+      return(max(z, na.rm = T)) # fully mixed
     }
   }
   if(surface == F){
-    # done this way as some dips have min density !@ surface
+    # done this way as some dips have min y @ surface
     if(abs(top - bottom) > threshold){ # is there strat?
       if(band){
-        index = max(which(abs(density - bottom) > threshold))
-        return(list("upper" = depth[index], "lower" = depth[index+1]))
+        index = max(which(abs(y - bottom) > threshold))
+        return(list("upper" = z[index], "lower" = z[index+1]))
       }else{
-        return(max(depth[abs(density - bottom) > threshold], na.rm = T))
+        return(max(z[abs(y - bottom) > threshold], na.rm = T))
       }
     }else{
-      return(max(depth, na.rm = T)) # fully mixed
+      return(max(z, na.rm = T)) # fully mixed
     }
   }
 }
