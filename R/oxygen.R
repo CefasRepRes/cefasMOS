@@ -588,8 +588,8 @@ oxygen.sat <- function(temp, salinity, unit = "mmolm", p_atm = 1013.25){
 #' Equilibrium Oxygen saturation concentration (combined fit)
 #'
 #' Calculates oxygen saturation concentration in equilibrium with the atmosphere
-#' as per Garcia & Gordon, 1992, using the combined fit, which is not recomended.
-#' This is however the fomulation used on all Aanderaa optodes.
+#' as per Garcia & Gordon, 1992, using the combined fit, which is not recommended.
+#' This is however the formulation used on all Aanderaa optodes.
 #'
 #' @param temp numeric vector of water temperature in degrees Celsius
 #' @param salinity numeric vector of salinity (PSU)
