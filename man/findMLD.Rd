@@ -11,7 +11,7 @@ findMLD(z, y, threshold = 0.125, ref_z = NA, surface = T, band = F)
 
 \item{y}{vector of MLD indicating variable, typically temperature, or density}
 
-\item{threshold}{numeric y threshold, default is 0.125 (assuming y)}
+\item{threshold}{numeric y threshold, default is 0.125 (assuming you using density in kg L-1)}
 
 \item{ref_z}{reference z for threshold, default is shallowest z available}
 

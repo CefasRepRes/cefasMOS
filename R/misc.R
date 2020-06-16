@@ -240,7 +240,7 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' @details returns max z if threshold not met
 #' @param z numeric vector of z (either pressure or depth)
 #' @param y vector of MLD indicating variable, typically temperature, or density
-#' @param threshold numeric y threshold, default is 0.125 (assuming y)
+#' @param threshold numeric y threshold, default is 0.125 (assuming you using density in kg L-1)
 #' @param ref_z reference z for threshold, default is shallowest z available
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #' @param band default is false, if true function returns paired vector of interval which meets threshold
