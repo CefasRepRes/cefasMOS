@@ -4,7 +4,7 @@
 \alias{ferrybox.speed}
 \title{calculate speed from GPS}
 \usage{
-ferrybox.speed(dateTime, lat, lon, threshold = 65)
+ferrybox.speed(dateTime, lat, lon, threshold = 65, unit = "knots")
 }
 \arguments{
 \item{dateTime}{in POSIXct}
@@ -14,6 +14,8 @@ ferrybox.speed(dateTime, lat, lon, threshold = 65)
 \item{lon}{in decimal degrees}
 
 \item{threshold}{maximum time interval between gps points (seconds)}
+
+\item{unit}{"knots" (default) or "ms" for meters per second}
 }
 \value{
 vector of speeds
