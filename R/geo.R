@@ -242,7 +242,7 @@ match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 36
 #' @param dt distance in meters to match within
 #' @param tt time in seconds to match within
 #' @param merge bool
-#' @import geosphere scales data.table
+#' @import geosphere data.table
 #'
 #' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
 #' @export
