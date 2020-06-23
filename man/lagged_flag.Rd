@@ -9,6 +9,8 @@ lagged_flag(dateTime, init, lag = 300)
 \arguments{
 \item{dateTime}{a vector of times which are to be flagged, this does not need to be POSIXct}
 
+\item{init}{POSIXct times of event}
+
 \item{lag}{integer period to add to times, should be in the same units i.e. seconds for POSIXct}
 }
 \value{
@@ -18,8 +20,12 @@ logical vector of same length as dateTime, True denotes flagged
 function designed to flag data based on specified start times
 This is mostly used for flagging data for x minutes after an event
 }
+\details{
+TODO needs testing and documention
+}
 \examples{
 
 wash_times = as.POSIXct("2017-01-01 11:05:00")
-fb[, flag := lagged_flag(dateTime, wash_times, 600)] # flag for 10 minutes after wash
+# NOT RUN
+# fb[, flag := lagged_flag(dateTime, wash_times, 600)] # flag for 10 minutes after wash
 }
