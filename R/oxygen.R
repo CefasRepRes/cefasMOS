@@ -330,7 +330,7 @@ rinko.temp <- function(V, tC = list(A = -5.326887e+00, B = +1.663288e+01, C = -2
 rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C = -3.677435e-01, D = +1.137000e-02, E = +4.600000e-03, F = +7.570000e-05), p = 0, G = 0, H = 1){
 
   # V = output voltage
-  # t = tempeture from rinko_temp
+  # t = temperature from rinko_temp
   # p = in-situ pressure in decibar
   # G & H = RINKO calibration coefs (alpha and beta)
 
@@ -343,12 +343,11 @@ rinko.o2 <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C 
     # G and H are calibration coefs
   DO = G + H * P
     # pressure correction
-    # adjustment suggestion from Jan Kaiser, sensor can only measure partial pressure!
-  d = 0.101325 + (p * 0.01) # convert from decibar to MPa, and include 1 atm
+  d = p * 0.01 # convert from decibar to MPa, and don't include 1 atm (Rinko manual is wrong)
   DO = DO * (1 + oC$E * d) # DO = oxygen saturation %, corrected for pressure
 
   # from garcia and gordon
-  # Benson & Krause cm3 dm-3 coefficents (ml/l)
+  # Benson & Krause cm3 dm-3 coefficients (ml/l)
   A0 = 2.00907
   A1 = 3.22014
   A2 = 4.05010
