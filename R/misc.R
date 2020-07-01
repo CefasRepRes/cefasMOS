@@ -54,6 +54,25 @@ prop_dt <- function(expr, dat, mode = c("prop", "MC"), n = 1E+06){
   return(mean_sd)
 }
 
+#' Time group
+#'
+#' given a timeseries with gaps, this returns a vector which can serve as a label for each unbroken period
+#'
+#' in short, it calcualtes the median time between all observations,
+#'  and assigns a new group number when there is a gap.
+#'
+#' @param x vector or timestamps
+#' @param fuzz amount of extra leeway to give the function to avoid small gaps
+#'
+#' @return
+#' @export
+time_group <- function(x, fuzz = 0){
+  dt = diff(as.numeric(x[order(x)]))
+  breaks = c(F, dt > (median(dt) + fuzz))
+  grps = cumsum(as.numeric(breaks)) + 1
+  return()
+}
+
 #' Round dateTime to x minutes
 #'
 #' @param x vector of POSIXct datetimes
