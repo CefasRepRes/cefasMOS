@@ -9,7 +9,7 @@ ydaytime(x, from = "year")
 \arguments{
 \item{x}{as POSIXct vector}
 
-\item{from}{either "year" or "start" see details. "year is default"}
+\item{from}{either "year", "start" or provide a "YYYY-mm-dd" date to start from. "year is default"}
 }
 \value{
 numeric vector of day of the year with decimal time

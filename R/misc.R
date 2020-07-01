@@ -313,7 +313,7 @@ findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F){
 #' This differs from the value provided by the `yday` lubridate  function
 #'
 #' @param x as POSIXct vector
-#' @param from either "year" or "start" see details. "year is default"
+#' @param from either "year", "start" or provide a "YYYY-mm-dd" date to start from. "year is default"
 #'
 #' @return numeric vector of day of the year with decimal time
 #' @export
@@ -324,13 +324,15 @@ ydaytime <- function(x, from = "year"){
     yr = lubridate::year(x)
     origin = as.numeric(as.POSIXct(paste0(yr,"-01-01"), format = "%Y-%m-%d", tz = "UTC"))
   }
-  if(from == "start"){
+  else if(from == "start"){
     origin = as.numeric(min(x))
+  }
+  else{
+    origin = as.numeric(as.POSIXct(from, tz="UTC", format = "%Y-%m-%d"))
   }
   r = (n - origin) / (60 * 60 * 24)
   return(r)
 }
-
 
 #' Fast fuzzy matcher
 #'
