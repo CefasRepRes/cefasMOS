@@ -18,7 +18,7 @@ vector of saturation concentration in mmol m-3
 }
 \description{
 Calculates oxygen saturation concentration in equilibrium with the atmosphere
-as per Garcia & Gordon, 1992, using the combined fit, which is not recomended.
-This is however the fomulation used on all Aanderaa optodes.
+as per Garcia & Gordon, 1992, using the combined fit, which is not recommended.
+This is however the formulation used on all Aanderaa optodes.
 }
 \keyword{oxygen}
