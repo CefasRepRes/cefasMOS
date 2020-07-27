@@ -653,3 +653,30 @@ dircast <- function(pressure){
   out[max_prs_index:length(pressure)] = 1
   return(out)
 }
+
+#' First order differentitation
+#'
+#' This is an implemention of Sunke Schmidtko's method for a first order differentation of a vector.
+#' Unlike the standard R diff function this returns a vector of the same length, coping with end effects.
+#' If time is supplied to the optional "t" variable then the value returned will be dx/dt.
+#' Otherwise it will just be dx.
+#'
+#' @param x vector of values to differentiate
+#' @param t optional time in seconds, or POSIXct
+#'
+#' @return
+#' @export
+fdiff <- function(x, t = NA){
+  # this is Sunke's method for first order differentiation with an vector of same length
+  dx = diff(x)
+  Xx = cbind(c(NA, dx), c(dx, NA))
+  dx = apply(Xx, 1, mean, na.rm=T)
+  if(!all(is.na(t))){
+    dt = diff(as.numeric(t))
+    Xt = cbind(c(NA, dt), c(dt, NA))
+    dt = apply(Xt, 1, mean, na.rm=T)
+    return(dx / dt)
+  }else{
+    return(dx)
+  }
+}
