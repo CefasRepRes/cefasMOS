@@ -680,3 +680,15 @@ fdiff <- function(x, t = NA){
     return(dx)
   }
 }
+
+# replacement for reshape2::melt for netcdf arrays
+melt_dt_array <- function(x){
+  # tested and is 3x faster than data.table(reshape2::melt(x))
+  dimnames(x) <- list(NULL, 1:ncol(x))
+  d = as.data.table(x)
+  d[ , row := 1:.N]
+  d = melt.data.table(d, id.vars = "row", variable.name = "col")
+  d[ , col := as.integer(col)]
+  return(d)
+}
+
