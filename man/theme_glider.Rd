@@ -4,7 +4,15 @@
 \alias{theme_glider}
 \title{Glider ggplot2 theme}
 \usage{
-theme_glider()
+theme_glider(
+  base_size = 11,
+  font_size = 12,
+  font_family = "",
+  line_size = 0.5,
+  rel_small = 12/14,
+  rel_tiny = 11/14,
+  rel_large = 16/14
+)
 }
 \value{
 ggplot2 theme
