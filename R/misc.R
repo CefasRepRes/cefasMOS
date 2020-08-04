@@ -298,11 +298,11 @@ findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F){
   if(surface == T){
     # done this way as some dips have min y @ surface
     if(abs(top - bottom) > threshold){ # is there strat?
+      index = min(which(abs(y - top) > threshold))
       if(band){
-        index = min(which(abs(y - top) > threshold))
         return(list("upper" = z[index-1], "lower" = z[index]))
       }else{
-        return(min(z[abs(y - top) > threshold], na.rm = T))
+        return(z[index])
       }
     }else{
       return(max(z, na.rm = T)) # fully mixed
@@ -311,18 +311,17 @@ findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F){
   if(surface == F){
     # done this way as some dips have min y @ surface
     if(abs(top - bottom) > threshold){ # is there strat?
+      index = max(which(abs(y - bottom) > threshold))
       if(band){
-        index = max(which(abs(y - bottom) > threshold))
         return(list("upper" = z[index], "lower" = z[index+1]))
       }else{
-        return(max(z[abs(y - bottom) > threshold], na.rm = T))
+        return(z[index])
       }
     }else{
       return(max(z, na.rm = T)) # fully mixed
     }
   }
 }
-
 
 #' yday with decimal time
 #'
