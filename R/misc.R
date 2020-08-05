@@ -54,6 +54,35 @@ prop_dt <- function(expr, dat, mode = c("prop", "MC"), n = 1E+06){
   return(mean_sd)
 }
 
+#' Fast melt to long data.table for large 2d matrix
+#'
+#' Provides a fast method to melt a large 2D matrix into a long format data.table
+#' this is particularly useful for converting gridded data into a format for using with ggplot2
+#'
+#' @param m a 2d matrix
+#' @param value_name text string for the data column, default is "value"
+#'
+#' @return a long data.table with row and col columns
+#' @export
+#'
+#' @examples
+#' m = matrix(1:9, nrow = 3, ncol = 3)
+#' as.melt.data.table(m) # long format data
+as.melt.data.table <- function(m, value_name = "value"){
+  if(is.matrix(m) & length(dim(m)) == 2){
+    DT = data.table(
+      row = rep(seq_len(nrow(m)), ncol(m)),
+      col = rep(seq_len(ncol(m)), each = nrow(m)),
+      value = c(m)
+    )
+    setnames(DT, "value", value_name)
+    return(DT)
+  }else{
+    error("m is not a 2D matrix, can't melt!")
+  }
+}
+
+
 #' Time group
 #'
 #' given a timeseries with gaps, this returns a vector which can serve as a label for each unbroken period
