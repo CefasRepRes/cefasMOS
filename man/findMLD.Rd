@@ -4,7 +4,15 @@
 \alias{findMLD}
 \title{Find mixed layer depth}
 \usage{
-findMLD(z, y, threshold = 0.125, ref_z = NA, surface = T, band = F)
+findMLD(
+  z,
+  y,
+  threshold = 0.125,
+  ref_z = NA,
+  surface = T,
+  band = F,
+  mean_ref = F
+)
 }
 \arguments{
 \item{z}{numeric vector of z (either pressure or depth)}
@@ -13,14 +21,16 @@ findMLD(z, y, threshold = 0.125, ref_z = NA, surface = T, band = F)
 
 \item{threshold}{numeric y threshold, default is 0.125 (assuming you using density in kg L-1)}
 
-\item{ref_z}{reference z for threshold, default is shallowest z available}
+\item{ref_z}{reference \code{z} for threshold, default is shallowest \code{z} available}
 
 \item{surface}{default is true, set to false for bottom mixed layer threshold (base of gradient)}
 
 \item{band}{default is false, if true function returns paired vector of interval which meets threshold}
+
+\item{mean_ref}{if T will take the mean of the values above \code{ref_z} as the reference \code{y}}
 }
 \value{
-mld
+mld in units of \code{z}
 }
 \description{
 simple threshold technique

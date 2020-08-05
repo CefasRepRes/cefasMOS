@@ -260,11 +260,12 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' @param z numeric vector of z (either pressure or depth)
 #' @param y vector of MLD indicating variable, typically temperature, or density
 #' @param threshold numeric y threshold, default is 0.125 (assuming you using density in kg L-1)
-#' @param ref_z reference z for threshold, default is shallowest z available
+#' @param ref_z reference `z` for threshold, default is shallowest `z` available
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #' @param band default is false, if true function returns paired vector of interval which meets threshold
+#' @param mean_ref if T will take the mean of the values above `ref_z` as the reference `y`
 #'
-#' @return mld
+#' @return mld in units of `z`
 #' @import data.table
 #' @export
 #' @examples
@@ -274,12 +275,16 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #'                                 xout = 1:100)$y)
 #'
 #' findMLD(x$pressure, x$density)
-findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F){
+findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F, mean_ref=F){
   y = y[order(z)] # make sure you sort y first
   z = z[order(z)]
 
   if(anyNA(z)){ error("NA's found in z record") }
   if(anyNA(y)){ warning("NA's found in y record") }
+
+  if(!is.na(ref_z) & mean_ref == T){
+    y[z <= ref_z] = mean(y[z <= ref_z])
+  }
 
   if(!is.na(ref_z)){
     # Subset to ref_z

@@ -1,10 +1,10 @@
 ---
 title: "Using the cefasMOS package"
 author: "Tom Hull"
-date: "26 June 2017"
+date: "26 June 2020"
 output: 
   pdf_document: 
-    highlight: espresso
+    # highlight: espresso
 vignette: >
   %\VignetteIndexEntry{Using cefasMOS}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,21 +18,37 @@ vignette: >
 The `cefasMOS` package is in development and has not been submitted to CRAN.
 You can install it directly from bitbucket (A github analog) using the `devtools` package.
 
-The package does not handle all of it's dependencies at the moment so it is best to install the core ones first:
+The package should now handle all of it's dependencies.
 Other rarely used functions may require additional packages, install these later if you have problems.
+Please report any issues to Tom.
 
 
 ```{r install, eval=F}
 install.packages("devtools")
 
-install.packages(c("ggplot2", "lubridate", "RODBC", "dygraphs", "data.table", "insol"))
-
 devtools::install_bitbucket("betascoo8/cefasmos")
+
+  # optionally if you want the development version
+devtools::install_bitbucket("betascoo8/cefasmos", subdir = "dev")
+
+  # install_bitbucket considers a package built under a different version of R an error
+  # (it's not)
+  # if it fails to install with such and error try
+devtools::install_bitbucket("betascoo8/cefasmos", force = T)
+
 ```
+
 ```{r load, results='asis', warning=F}
 library("cefasMOS") # load the package
-sessionInfo("cefasMOS")$otherPkgs
 ```
+
+## data.table
+
+Due to the large number of rows we tend to be dealing with `cefasMOS` leans heavily on the `data.table` package.
+This is a highly optimised extension of the typical data.frame.
+A `data.table` inherits from a `data.frame` such that it *is* a `data.frame` and all of the usual functions that can be used with a `data.frame` will work.
+However, it does have some powerful features which allow fast grouping and assingment, and these use different syntax that base R and differs from the `tidyverse` style of data manipulation.
+It's suggested you familarise yourself with the `data.table` package; datacamp provide a useful [cheat sheet]( https://www.datacamp.com/community/tutorials/data-table-cheat-sheet).
 
 ## Extracting SmartBuoy data
 
@@ -53,14 +69,15 @@ By default only data where min QC level has been reached is returned, this can b
 lbdat = smartbuoy.fetch(deployment_group = "LIVBAY", after = "2014-01-01", parameters = c("FLUORS", "TOXN"))
 
   # save the data
-write.csv(lbdat, file = "lbdat.csv", row.names = F) # row names not needed
+fwrite(lbdat, file = "lbdat.csv") # fread is a data.table optimisation of write.csv
 ```
 
 When pivoting (dcast), make sure to use the data.table version to preserve the data.table and for speed.
 from data.table v1.9.6 dcast is a S3 method, i.e. you can use `dcast` rather than `dcast.data.table`.
 When there are multiple measurements for the same parameter at the same dateTime we have two options.
 pass `fun.aggregate = mean` to average the values, for example take the mean temperature from the optode and FSI.
-Alternativlty we can keep the duplicates, but we need to add an identifiying column first.
+Alternatively we can keep the duplicates, but we need to add an identifying column first.
+Another option is to rename the duplicate variable, e.g. rename a second OBS to "FTU2".
 
 ```{r data.table_pivot, eval=F}
 wp = smartbuoy.fetch(deployment = "DOWSING/038", ct_temp_only = F)
@@ -71,6 +88,7 @@ dcast.data.table(wp, dateTime + deployment ~ par, value.var = "value")
 dcast.data.table(wp, dateTime + deployment ~ par, value.var = "value", fun.aggregate = mean)
 
   # keeping the values
-wp[,sen := length(value), by = list(dateTime, deployment, par)]
+wp[,sen := .GRP, by = list(dateTime, deployment, par)]
 dcast.data.table(wp, dateTime + deployment + sen ~ par, value.var = "value")
+
 ```
