@@ -244,33 +244,30 @@ optode.tau <- function(temp, IL, type=c("fast", "standard", "SBE63")){
 
 #' Hahn optode lag correction
 #'
-#' Implements the Hahn optode lag correction, as used in UEA seaglider toolbox
+#' Implements the Hahn optode lag correction
 #'
 #' @param dateTime datetime vector (seconds or POSIXct)
 #' @param TCphase optode phase
 #' @param temp in-situ temperature
 #' @param tau default = NA
 #' @param tau_DO default is c(14.8, -0.4)
-#' @param filter default = True to apply a median pre-filter
+#' @param k width of the median filter, default = 3
 #'
 #' @return lagged phase
 #' @export
 #'
-optode.lagcorrect_hahn <- function(dateTime, TCphase, temp, coefs, tau = NA, tau_DO = c(14.8, -0.4), filter = T){
+optode.lagcorrect_hahn <- function(dateTime, TCphase, temp, coefs, tau = NA, tau_DO = c(14.8, -0.4), k = 3){
   if(is.na(tau[1])){
     tau = tau_DO[1] + tau_DO[2] * (temp - 20)
   }
-    ts_hr = seq(min(dateTime), max(dateTime), by=0.2)
-        # Interpolate TPhase to 1 Hz, apply filtering/smoothing in case of spikes
-    if(filter){
-        # Interpolate tau to 1 Hz, apply filtering/smoothing in case of spikes
-    # tphase_hr = signal::pchip(dateTime, gt_sg_filter(TCphase), xi = ts_hr)
-    tphase_hr = approx(dateTime, seaglider.gt_sg_filter(TCphase), xout = ts_hr)$y
-    tau_hr = approx(dateTime, seaglider.gt_sg_filter(tau), xout = ts_hr)$y
-    }else{
-      tau_hr = approx(dateTime, tau, xout = ts_hr)$y
-      tphase_hr = approx(dateTime, TCphase, xout = ts_hr)$y
-    }
+    ts_hr = seq(min(dateTime), max(dateTime), by=1)
+        # apply filtering/smoothing in case of spikes
+    tau = runmed(tau, k)
+    TCphase = runmed(TCphase, k)
+
+        # Interpolate tau and phase to 1 Hz
+    tphase_hr = approx(dateTime, runmed(TCphase, 3), xout = ts_hr)$y
+    tau_hr = approx(dateTime, runmed(tau, 3), xout = ts_hr)$y
         # Pre-allocate for speed
     tphase_new = tphase_hr
 
