@@ -14,7 +14,7 @@ RH_from_dewtemp(t2m, d2m, unit = "C")
 \item{unit}{"K" or "C" (default)}
 }
 \value{
-relative humidity (%)
+relative humidity (\%)
 }
 \description{
 Calculate relative humidity from air temperature and dewpoint

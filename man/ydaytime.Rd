@@ -9,16 +9,16 @@ ydaytime(x, from = "year")
 \arguments{
 \item{x}{as POSIXct vector}
 
-\item{from}{either "year" or "start" see details. "year is default"}
+\item{from}{either "year", "start" or provide a "YYYY-mm-dd" date to start from. "year is default"}
 }
 \value{
 numeric vector of day of the year with decimal time
 }
 \description{
 converts POSIXct to decimal day of year with decimal time.
- or optionally, decimal day since start
+or optionally, decimal day since start
 }
 \details{
 The first day of the year is treated as zero, i.e. midday on Jan 1st will return 0.5.
-This differs from the value provided by the `yday` lubridate  function
+This differs from the value provided by the \code{yday} lubridate  function
 }

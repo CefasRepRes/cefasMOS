@@ -17,5 +17,5 @@ profiler.eu_depth(depth, par, surf_par)
 euphotic depth
 }
 \description{
-Euphotic depth defined as 1% of surface
+Euphotic depth defined as 1\% of surface
 }

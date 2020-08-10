@@ -4,25 +4,45 @@
 \alias{findMLD}
 \title{Find mixed layer depth}
 \usage{
-findMLD(depth, density, threshold = 0.125, surface = T, band = F)
+findMLD(
+  z,
+  y,
+  threshold = 0.125,
+  ref_z = NA,
+  surface = T,
+  band = F,
+  mean_ref = F
+)
 }
 \arguments{
-\item{depth}{numeric vector of depth}
+\item{z}{numeric vector of z (either pressure or depth)}
 
-\item{density}{vector of density}
+\item{y}{vector of MLD indicating variable, typically temperature, or density}
 
-\item{threshold}{numeric density threshold, default is 0.125}
+\item{threshold}{numeric y threshold, default is 0.125 (assuming you using density in kg L-1)}
+
+\item{ref_z}{reference \code{z} for threshold, default is shallowest \code{z} available}
 
 \item{surface}{default is true, set to false for bottom mixed layer threshold (base of gradient)}
 
 \item{band}{default is false, if true function returns paired vector of interval which meets threshold}
+
+\item{mean_ref}{if T will take the mean of the values above \code{ref_z} as the reference \code{y}}
 }
 \value{
-mld
+mld in units of \code{z}
 }
 \description{
-simple threshold technique, mld where p +/- 0.125 of surface p
+simple threshold technique
 }
 \details{
-returns max depth if threshold not met
+returns max z if threshold not met
+}
+\examples{
+x = data.table(pressure = 1:100,
+               density = approx(c(1, 40, 50, 80, 100),
+                                c(1.125, 1.125, 1.293, 1.308, 1.308),
+                                xout = 1:100)$y)
+
+findMLD(x$pressure, x$density)
 }

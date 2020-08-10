@@ -4,14 +4,14 @@
 \alias{saturation_vapour_pressure}
 \title{Calculate water vapour saturation pressure}
 \usage{
-saturation_vapour_pressure(TEMP, unit = "C", method = "Wagner")
+saturation_vapour_pressure(TEMP, unit = "C", method = "Weiss")
 }
 \arguments{
 \item{TEMP}{vector of temperature}
 
 \item{unit}{"C" default or "K"}
 
-\item{method}{options are "Wagner", "Buck" and "Weiss"}
+\item{method}{options are "Wagner", "Buck" and "Weiss", default ("Weiss")}
 }
 \value{
 saturation vapour pressure in hPa (mBar)

@@ -7,7 +7,7 @@
 printvars(ncfile)
 }
 \arguments{
-\item{ncfile}{}
+\item{ncfile}{a netcdf filename}
 }
 \value{
 variable names

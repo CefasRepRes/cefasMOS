@@ -250,11 +250,12 @@ ferrybox.haserror <- function(x, code){
 #' @param lat in decimal degrees
 #' @param lon in decimal degrees
 #' @param threshold maximum time interval between gps points (seconds)
+#' @param unit "knots" (default) or "ms" for meters per second
 #'
 #' @return vector of speeds
 #' @export
 #'
-ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
+ferrybox.speed <- function(dateTime, lat, lon, threshold = 65, unit = "knots"){
   dat = data.table(dateTime, lat, lon)
   if(all.equal(dat, dat[order(dateTime)]) != T){
     stop("ERROR - data.table is not ordered")
@@ -262,8 +263,12 @@ ferrybox.speed <- function(dateTime, lat, lon, threshold = 65){
   dat[, diff := c(NA, diff(as.numeric(dateTime)))]
   dat[, lats := data.table::shift(dat$lat, type = "lag")]
   dat[, lons := data.table::shift(dat$lon, type = "lag")]
-  dat[, dist := geosphere::distHaversine(cbind(lons, lats), cbind(lon, lat))]
-  dat[, speed := abs((dist / diff) / 0.51444)] # knots
+  dat[, dist := geosphere::distGeo(cbind(lons, lats), cbind(lon, lat))]
+  if(unit == "knots"){
+    dat[, speed := abs((dist / diff) / 0.51444)] # knots
+  }else{
+    dat[, speed := abs((dist / diff))] # m/s
+  }
   dat[diff > threshold | speed > 24, speed := NA]
   dat[lats == lat & lons == lon, speed := NA]
   return(dat$speed)

@@ -8,9 +8,9 @@
 #' @param echo if true print name of log file
 #'
 #' @return data.table containing processed logfiles
+#' @import data.table
 #' @export
 read.seaglider_log <- function(glider_folder, echo=F){
-  require(data.table)
   file_list = list.files(glider_folder, full.names = T, pattern = "\\d+\\.log")
   if(length(file_list) < 1){stop("No log files found")}
   logs = list()
@@ -114,8 +114,8 @@ read.seaglider_log <- function(glider_folder, echo=F){
 }
 
 read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
-  require(ncdf4)
-  require(data.table)
+  # require(ncdf4)
+  # require(data.table)
   variables = c("dive", "time", "direction", "pressure", "lat", "lon", variables)
   nc = nc_open(ncfile)
   if(!grepl("UEA gt_sg_", ncatt_get(nc, varid=0, attname="About")$value)){
@@ -148,12 +148,10 @@ read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity"
 #' @param ncfile UEA glider netcdf timeseries file
 #' @param variables varibles to extract as named in netcdf, e.g. c("salinity", "temp")
 #'
+#' @import data.table ncdf4
 #' @return data.table containing extracted fields
 #' @export
-read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
-  require(ncdf4)
-  require(data.table)
-  # ncfile = "SG510_Alter Eco May new edit_timeseries.nc"
+read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp"), keep_flag = F){
   variables = c("dive", "direction", "pressure", "lat", "lon", variables)
   nc = nc_open(ncfile)
   if(!grepl("UEA gt_sg_", ncatt_get(nc, varid=0, attname="About")$value) | nc$ndims != 1){
@@ -162,21 +160,31 @@ read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salini
   }
   d = list()
   time_val =  ncvar_get(nc, "time")
+  time_unit = ncatt_get(nc, "time", "unit")
   for(var in variables){
     print(paste("extracting", var))
-    x = ncvar_get(nc, var)
-    x = melt(x)
-    dims = "time"
-    colnames(x) = c(dims, "value")
-    x = as.data.table(x)
-    x[, variable := var]
-    d[[var]] = x
+    dat = ncvar_get(nc, var)
+    dat = data.table(time_val, "value" = dat)
+    if(paste0(var,"_flag") %in% names(nc$var)){
+      flag = ncvar_get(nc, paste0(var,"_flag"))
+      if(keep_flag == T){
+        d[[paste0(var, "_flag")]] = data.table(time_val, "value" = flag)
+      }else{
+        dat[flag != 0, value := NA]
+      }
+    }
+    d[[var]] = dat
   }
   nc_close(nc)
-  d = rbindlist(d)
-  d[, time := time_val[time]]
-  d[, time := as.POSIXct((time - 719529)*86400, origin = "1970-01-01", tz = "UTC")] # convert
-  d = dcast.data.table(d, time ~ variable)
+  d = rbindlist(d, idcol = "variable")
+  if(exists("value", time_unit)){
+    if(time_unit$value == "seconds"){
+      d[, time := as.POSIXct(time_val, origin = "1970-01-01", tz = "UTC")] # convert
+    }
+  }else{
+    d[, time := as.POSIXct((time_val - 719529)*86400, origin = "1970-01-01", tz = "UTC")] # convert
+  }
+  d = dcast.data.table(d, time ~ variable, value.var = "value")
   return(d)
 }
 
@@ -213,7 +221,7 @@ read.seaglider_eng <- function(folder=NA, files=NA){
 
 read.seaglider_basestation_binned_nc <- function(ncfile, variables = c("sigma_theta", "pressure", "salinity", "temperature")){
   # for binned basestation NC
-    require(ncdf4)
+    # require(ncdf4)
     nc = nc_open(ncfile)
     my_vars = c("dive_number", "start_time", "start_latitude", "start_longitude",
                 "end_latitude", "end_longitude", variables)
@@ -280,10 +288,10 @@ read.seaglider_basestation_nc <- function(folder, variables = c("sigma_theta", "
 #' @param ncfile ego netcdf file
 #' @param vars character vector of variables to extract, e.g. c("DOXY", "PRES")
 #'
+#' @import ncdf4
 #' @return data.table containing extracted fields
 #' @export
 read.ego <- function(ncfile, vars = c("DOXY", "PRES", "TEMP", "CNDC", "CHLA", "BBP700")){
-  require(ncdf4)
   d = list()
   metadata = list()
   nc = nc_open(ncfile)
@@ -335,24 +343,64 @@ seaglider.temp <- function(tempFreq, calib_file){
   return(tempPrelim)
 }
 
-seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
-  # as used by toolbox, compare with standard median filter
-  n = length(x)
-  m = matrix(NA_real_, n + range_median*2, range_median*2 + 1)
-  m[(range_median+1):(nrow(m)-range_median),] =  matlab::repmat(x, 1, range_median*2+1)
-  for(i in 1:(range_median*2+1)){
-    m[i:(i+n-1), i] = x
+#' Calculate seaglider conductivity
+#'
+#' Direct method, uses temperature and depth at cond sample time.
+#' No correction for flow speed or thermal inertia applied
+#'
+#' @param condFreq vector of seaglider SBE temperature frequency
+#' @param temp temperature as calculated with `seaglider.temp`
+#' @param pressure in dbar as calculated with `seaglider.pressure`
+#' @param calib_file path to seaglider calibration.mat file
+#'
+#' @return vector of calibrated conductivity in S/m
+#' @export
+seaglider.cond <- function(condFreq, temp, pressure, calib_file){
+  cal = read.seaglider_calib(calib_file)
+  cal = suppressWarnings(lapply(cal, as.numeric)) # convert all to numeric
+  condPrelim = condFreq / 1000
+  condPrelim = (cal$c_g + condPrelim * condPrelim * (cal$c_h + condPrelim * (cal$c_i + condPrelim * cal$c_j))) /
+    ( 10 * ( 1.0 + cal$ctcor * temp + cal$cpcor * pressure / 100 ));
+  if("sbe_cond_offset" %in% names(cal)){
+    condPrelim = condPrelim + cal$sbe_cond_offset
   }
-  out = apply(m, 1, median, na.rm=T)
-  out = out[(range_median+1):(length(out)-range_median)]
-    # todo convolve low-pass
-
-  # out = conv(out,ones(1,range_lowpass*2 +1)/(range_lowpass*2 +1),'same');
-
-  return(out)
+  return(condPrelim)
 }
 
 
+#' Calculate seaglider pressure
+#'
+#' calculates true pressure from .eng file "depth" variable
+#'
+#' @param depth vector of seaglider depth (cm)
+#'
+#' @return vector of calibrated pressure in dbar
+#' @export
+seaglider.pressure <- function(depth){
+  # The glider converts pressure readings to PSI onboard using Z = PSI * 0.685.
+  # So we backcalculate to PSI, then convert to dbar.
+  sgdpth2psi = 1 / 0.685
+  psi2bar = 1 / 14.5037738007
+  depth / 100 * sgdpth2psi * psi2bar * 10
+}
+
+
+# seaglider.gt_sg_filter <- function(x, range_median = 2, range_lowpass = 0){
+#   # as used by toolbox, compare with standard median filter
+#   n = length(x)
+#   m = matrix(NA_real_, n + range_median*2, range_median*2 + 1)
+#   m[(range_median+1):(nrow(m)-range_median),] =  matlab::repmat(x, 1, range_median*2+1)
+#   for(i in 1:(range_median*2+1)){
+#     m[i:(i+n-1), i] = x
+#   }
+#   out = apply(m, 1, median, na.rm=T)
+#   out = out[(range_median+1):(length(out)-range_median)]
+#     # todo convolve low-pass
+#
+#   # out = conv(out,ones(1,range_lowpass*2 +1)/(range_lowpass*2 +1),'same');
+#
+#   return(out)
+# }
 
 seaglider.optode_boundary_layer <- function(speed){
   # technicall this is just for the slocum

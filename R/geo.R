@@ -77,8 +77,8 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @param lon vector of longitude coordinates for calculating map extent
 #' @param lat as above for latitude
 #' @param highres default = False, if true fetch the full half degree GEBCO 2019 data
-#' @param margin integer (default = 8) indicating fraction of range to use for a margin.
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
+#' @param expand expansion factor for margins, default = 0.02
 #'
 #' @references GEBCO data from GEBCO 2019
 #' @references Coastlines from rworldmap
@@ -87,24 +87,24 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @import ggplot2 rworldmap cmocean
 #' @export
 #'
-bathymap <- function(lon = c(-14.996, 8.004), lat = c(47, 60), margin=8, breaks=T, highres=F){
-  max.lat = abs(min(lat) - max(lat))
-  max.lon = abs(min(lon) - max(lon))
-  xlim = c(min(lon) - max.lon / margin, max(lon) + max.lon / margin)
-  ylim = c(min(lat) - max.lat / margin, max(lat) + max.lat / margin)
+bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, expand = 0.02){
+  xlim = range(lon, na.rm = T)
+  ylim = range(lat, na.rm = T)
+  xlim_exp = scales::expand_range(xlim, expand)
+  ylim_exp = scales::expand_range(ylim, expand)
 
   if(highres){
-    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 15 arc second grid")}
-    bathy = gebco_2019[lon %between% xlim & lat %between% ylim]
+    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 0.01 degree grid")}
+    bathy = gebco_2019[lon %between% xlim_exp & lat %between% ylim_exp]
   }else{
     if(!exists("gebco_2019_low")){data("gebco_2019_low");print("loaded GEBCO 2019, 0.05 degree grid")}
-    bathy = gebco_2019_low[lon %between% xlim & lat %between% ylim]
+    bathy = gebco_2019_low[lon %between% xlim_exp & lat %between% ylim_exp]
   }
-
-  GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
 
   # classify
   if(breaks == T){
+    GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
+    bathy[, label := cut(depth, breaks = c(-Inf, 25, 50, 100, 200, Inf), labels = c('< 25','25-50','50-100','100-200','> 200'))]
     bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth [m]')
     bathy_raster = geom_raster(aes(lon, lat, fill=label))
   }else{
@@ -117,6 +117,7 @@ bathymap <- function(lon = c(-14.996, 8.004), lat = c(47, 60), margin=8, breaks=
   # mapdata = mapdata[mapdata[,.I[any(long %between% c(-50, 25)) & any(lat %between% c(45, 70))], by = list(group)]$V1]
   # devtools::use_data(mapdata, overwrite=T)
   data("mapdata") # saved for speed
+  mapdata = mapdata[mapdata[,.I[any(long %between% xlim_exp) & any(lat %between% ylim_exp)], by = list(group)]$V1]
 
   # make geom
   coast.poly = geom_polygon(data=mapdata, aes(x=long, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
@@ -126,12 +127,34 @@ bathymap <- function(lon = c(-14.996, 8.004), lat = c(47, 60), margin=8, breaks=
     bathy_raster + bathy_scale +
     coast.poly + coast.outline +
     labs(x = NULL, y = NULL) +
-    scale_x_continuous(expand=c(0, 0)) +
-    scale_y_continuous(expand=c(0, 0)) +
-    coord_quickmap(xlim, ylim)
+    coord_quickmap(xlim_exp, ylim_exp, expand = F)
 
   # mp +  geom_contour(aes(lon, lat, z=depth), binwidth=20, color="black")
   return(mp)
+}
+
+#' Extract depth for position from GEBCO
+#'
+#' extract nearest point from GEBCO2019
+#'
+#' @param lon longitude in decimal degrees
+#' @param lat latitude in decimal degrees
+#'
+#' @return depth in meters
+#' @export
+#' @examples
+#' lons = c(0.0001, -15)
+#' lats = c(54.001, 60)
+#' bathy_match(lons, lats)
+bathy_match <- function(lon, lat){
+  if(length(lon) == length(lat)){
+    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 0.01 degree grid")}
+    res = 0.01 # resolution of gebco bathmetry
+    pos = data.table(lon = round(lon/res)*res, lat = round(lat/res)*res)
+    round(gebco_2019[pos, on=list(lon, lat)]$depth, 1)
+  }else{
+    error("lon and lat are not the same length")
+  }
 }
 
 #' Convert degrees + decimal minutes to decimal degrees
@@ -242,7 +265,7 @@ match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 36
 #' @param dt distance in meters to match within
 #' @param tt time in seconds to match within
 #' @param merge bool
-#' @import geosphere data.table
+#' @import geosphere ggplot2 data.table
 #'
 #' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
 #' @export
@@ -254,7 +277,7 @@ fuzzy_spacetime <- function(A, Z, tt=3600, dt=5000){
   if(!all(c("lat", "lon", "dateTime") %in% names(A)))stop("lat, lon and dateTime columns must be present in A")
   if(!all(c("lat", "lon", "dateTime") %in% names(Z)))stop("lat, lon and dateTime columns must be present in Z")
 
-  d_lon = distHaversine(c(mean(Z$lon), min(Z$lat)), c(mean(Z$lon), max(Z$lat))) / (max(Z$lat) - min(Z$lat)) # meters per degree at this lat
+  d_lon = geosphere::distGeo(c(mean(Z$lon), min(Z$lat)), c(mean(Z$lon), max(Z$lat))) / (max(Z$lat) - min(Z$lat)) # meters per degree at this lat
   dt_deg = (dt / d_lon) * 1.1
   # subset the two sets of data to make sure we only calculate what we need to
   A = A[dateTime %between% c(min(Z$dateTime) - tt, max(Z$dateTime) + tt)]

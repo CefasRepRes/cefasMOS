@@ -118,7 +118,7 @@ read.profiler.ULP <- function(f){
 #'
 #' Process ESM2 .000 files
 #'
-#' @param file
+#' @param file an extracted ESM2 .000 filename
 #'
 #' @return data.table
 #' @export

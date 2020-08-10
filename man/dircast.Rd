@@ -7,7 +7,7 @@
 dircast(pressure)
 }
 \arguments{
-\item{pressure}{}
+\item{pressure}{a order vector of pressures, any unit}
 }
 \value{
 vector of same length as pressure, with -1 for desending and 1 for assending (after deepest point)

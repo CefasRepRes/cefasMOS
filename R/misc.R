@@ -1,3 +1,107 @@
+
+
+
+#' propagate errors for data.table
+#'
+#' This function serves as a wrapper for `propagate::propagate` to make it easier to calculate errors in a data.table
+#'
+#' Errors are calculated though a 2nd order Taylor expansion (`mode = "prop"`) or though Monte-Carlo (`mode = "MC"`).
+#'
+#' @param expr an expression, such as `expression(x / y)`
+#' @param dat a matrix denoting the mean and standard deviation, see examples
+#' @param mode either `"prop"` or `"MC`
+#' @param n number of iterations for Monte-Carlo, minimum is 10000
+#' @import propagate
+#'
+#' @return a list of mean and standard deviations
+#' @export
+#'
+#' @examples
+#' dx = data.table(
+#'   index = c(500, 1000),
+#'   A = c(0, 5),
+#'   A_sd = c(0.1, 0.1),
+#'   B = c(1, 9),
+#'   B_sd = c(0.1, 0.1))
+#'
+#' eq = expression(A + B^2)
+#'
+#' dx[, c("mean", "sd") := prop_dt(eq, cbind("A" = c(A, A_sd), "B" = c(B, B_sd))), by=index]
+#'
+#' # Can also be applied to a standard function, if you create a wrapper
+#' d2 = data.table(
+#'   time = c(1, 2),
+#'   temp = c(20, 5),
+#'   temp_sd = c(0.2, 0.1),
+#'   sal = c(35.5, 34.5),
+#'   sal_sd = c(0.01, 0.05))
+#'
+#' f = function(temp, sal){
+#'   # a wrapper is needed if you don't supply every variable, and you can't have non-numeric variables
+#'   oxygen.sat(temp, sal)
+#' }
+#'
+#' d2[, c("mean", "sd") := prop_dt(f, cbind("temp" = c(temp, temp_sd), "sal" = c(sal, sal_sd))), by=time]
+prop_dt <- function(expr, dat, mode = c("prop", "MC"), n = 1E+06){
+  if(mode[1] == "prop"){
+    res = propagate::propagate(expr, dat, do.sim = F)$prop
+    mean_sd = as.list(res)[c(1, 3)]
+  }
+  if(mode[1] == "MC"){
+    res = propagate::propagate(expr, dat, second.order = F, nsim = n)$sim
+    mean_sd = as.list(res)[1:2]
+  }
+  return(mean_sd)
+}
+
+#' Fast melt to long data.table for large 2d matrix
+#'
+#' Provides a fast method to melt a large 2D matrix into a long format data.table
+#' this is particularly useful for converting gridded data into a format for using with ggplot2
+#'
+#' @param m a 2d matrix
+#' @param value_name text string for the data column, default is "value"
+#'
+#' @return a long data.table with row and col columns
+#' @export
+#'
+#' @examples
+#' m = matrix(1:9, nrow = 3, ncol = 3)
+#' as.melt.data.table(m) # long format data
+as.melt.data.table <- function(m, value_name = "value"){
+  if(is.matrix(m) & length(dim(m)) == 2){
+    DT = data.table(
+      row = rep(seq_len(nrow(m)), ncol(m)),
+      col = rep(seq_len(ncol(m)), each = nrow(m)),
+      value = c(m)
+    )
+    setnames(DT, "value", value_name)
+    return(DT)
+  }else{
+    error("m is not a 2D matrix, can't melt!")
+  }
+}
+
+
+#' Time group
+#'
+#' given a timeseries with gaps, this returns a vector which can serve as a label for each unbroken period
+#'
+#' in short, it calcualtes the median time between all observations,
+#'  and assigns a new group number when there is a gap.
+#'
+#' @param x vector or timestamps
+#' @param fuzz amount of extra leeway to give the function to avoid small gaps
+#'
+#' @return
+#' @export
+time_group <- function(x, fuzz = 0){
+  dt = diff(as.numeric(x[order(x)]))
+  breaks = c(F, dt > (median(dt) + fuzz))
+  grps = cumsum(as.numeric(breaks)) + 1
+  return()
+}
+
 #' Round dateTime to x minutes
 #'
 #' @param x vector of POSIXct datetimes
@@ -180,51 +284,75 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 
 #' Find mixed layer depth
 #'
-#' @description  simple threshold technique, mld where p +/- 0.125 of surface p
-#' @details returns max depth if threshold not met
-#' @param depth numeric vector of depth
-#' @param density vector of density
-#' @param threshold numeric density threshold, default is 0.125
+#' @description  simple threshold technique
+#' @details returns max z if threshold not met
+#' @param z numeric vector of z (either pressure or depth)
+#' @param y vector of MLD indicating variable, typically temperature, or density
+#' @param threshold numeric y threshold, default is 0.125 (assuming you using density in kg L-1)
+#' @param ref_z reference `z` for threshold, default is shallowest `z` available
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #' @param band default is false, if true function returns paired vector of interval which meets threshold
+#' @param mean_ref if T will take the mean of the values above `ref_z` as the reference `y`
 #'
-#' @return mld
+#' @return mld in units of `z`
 #' @import data.table
 #' @export
-findMLD <- function(depth, density, threshold = 0.125, surface = T, band=F){
-  depth = depth[order(depth)]
-  density = density[order(depth)]
+#' @examples
+#' x = data.table(pressure = 1:100,
+#'                density = approx(c(1, 40, 50, 80, 100),
+#'                                 c(1.125, 1.125, 1.293, 1.308, 1.308),
+#'                                 xout = 1:100)$y)
+#'
+#' findMLD(x$pressure, x$density)
+findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F, mean_ref=F){
+  y = y[order(z)] # make sure you sort y first
+  z = z[order(z)]
 
-  if(anyNA(depth)){ warning("NA's found in depth record") }
-  if(anyNA(density)){ warning("NA's found in density record") }
+  if(anyNA(z)){ error("NA's found in z record") }
+  if(anyNA(y)){ warning("NA's found in y record") }
 
-  bottom = density[match(max(depth, na.rm = T), depth)] # density at max depth
-  top = density[match(min(depth, na.rm = T), depth)] # density at min depth
+  if(!is.na(ref_z) & mean_ref == T){
+    y[z <= ref_z] = mean(y[z <= ref_z])
+  }
+
+  if(!is.na(ref_z)){
+    # Subset to ref_z
+    y = y[z >= ref_z]
+    z = z[z >= ref_z]
+  }
+  if(length(na.omit(z)) < 5 | length(na.omit(y)) < 5 ){
+    # need some actual data to calculate MLD
+    warning("n < 5, too few points to calculate MLD, returning NA")
+    return(as.numeric(NA))
+  }
+
+  bottom = y[match(max(z, na.rm = T), z)] # y at max z
+  top = y[match(min(z, na.rm = T), z)] # y at min z
 
   if(surface == T){
-    # done this way as some dips have min density !@ surface
+    # done this way as some dips have min y @ surface
     if(abs(top - bottom) > threshold){ # is there strat?
+      index = min(which(abs(y - top) > threshold))
       if(band){
-        index = min(which(abs(density - top) > threshold))
-        return(list("upper" = depth[index-1], "lower" = depth[index]))
+        return(list("upper" = z[index-1], "lower" = z[index]))
       }else{
-        return(min(depth[abs(density - top) > threshold], na.rm = T))
+        return(z[index])
       }
     }else{
-      return(max(depth, na.rm = T)) # fully mixed
+      return(max(z, na.rm = T)) # fully mixed
     }
   }
   if(surface == F){
-    # done this way as some dips have min density !@ surface
+    # done this way as some dips have min y @ surface
     if(abs(top - bottom) > threshold){ # is there strat?
+      index = max(which(abs(y - bottom) > threshold))
       if(band){
-        index = max(which(abs(density - bottom) > threshold))
-        return(list("upper" = depth[index], "lower" = depth[index+1]))
+        return(list("upper" = z[index], "lower" = z[index+1]))
       }else{
-        return(max(depth[abs(density - bottom) > threshold], na.rm = T))
+        return(z[index])
       }
     }else{
-      return(max(depth, na.rm = T)) # fully mixed
+      return(max(z, na.rm = T)) # fully mixed
     }
   }
 }
@@ -238,7 +366,7 @@ findMLD <- function(depth, density, threshold = 0.125, surface = T, band=F){
 #' This differs from the value provided by the `yday` lubridate  function
 #'
 #' @param x as POSIXct vector
-#' @param from either "year" or "start" see details. "year is default"
+#' @param from either "year", "start" or provide a "YYYY-mm-dd" date to start from. "year is default"
 #'
 #' @return numeric vector of day of the year with decimal time
 #' @export
@@ -249,8 +377,11 @@ ydaytime <- function(x, from = "year"){
     yr = lubridate::year(x)
     origin = as.numeric(as.POSIXct(paste0(yr,"-01-01"), format = "%Y-%m-%d", tz = "UTC"))
   }
-  if(from == "start"){
+  else if(from == "start"){
     origin = as.numeric(min(x))
+  }
+  else{
+    origin = as.numeric(as.POSIXct(from, tz="UTC", format = "%Y-%m-%d"))
   }
   r = (n - origin) / (60 * 60 * 24)
   return(r)
@@ -282,9 +413,9 @@ fuzzymatch <- function(dat, reference, index="dateTime", threshold = Inf, return
   reference[, (paste0("ref_", index)) := get(index)] # add duplicate reference column
   out = reference[dat, roll="nearest", on=index] # match nearest
   if(return){
-    out = out[abs( as.numeric(get(paste0("ref_", index))) - as.numeric(get(index)) ) < threshold, within_threshold := T]
+    out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold, within_threshold := T]
   }else{
-    out = out[abs( as.numeric(get(paste0("ref_", index))) - as.numeric(get(index)) ) < threshold] # exclude values outside threshold
+    out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold] # exclude values outside threshold
   }
   return(copy(out))
 }
@@ -476,12 +607,12 @@ RH_from_dewtemp <- function(t2m, d2m, unit="C"){
 #'
 #' @param TEMP vector of temperature
 #' @param unit "C" default or "K"
-#' @param method options are "Wagner", "Buck" and "Weiss"
+#' @param method options are "Wagner", "Buck" and "Weiss", default ("Weiss")
 #'
 #' @return saturation vapour pressure in hPa (mBar)
 #' @export
 #'
-saturation_vapour_pressure <- function(TEMP, unit="C", method="Wagner"){
+saturation_vapour_pressure <- function(TEMP, unit="C", method="Weiss"){
   if(unit == "C"){
     KTEMP = TEMP + 273.15
   }else{
@@ -508,7 +639,7 @@ saturation_vapour_pressure <- function(TEMP, unit="C", method="Wagner"){
     return(6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP)))) # hPa/mbar
   }
   if(method == "Weiss")
-    # weiss1970 [mbar]
+    # weiss1980 [mbar]
     return(
       (exp(24.4543 - 67.4509 * (100/(273.15 + TEMP)) - 4.8489 * log((273.15 + TEMP)/100) - 0.000544 * 0)) * 1013.25
     )
@@ -547,7 +678,7 @@ plt + labs(caption = paste0(
 #'
 #' finds the deepest point of pressure record
 #'
-#' @param pressure
+#' @param pressure a order vector of pressures, any unit
 #'
 #' @return vector of same length as pressure, with -1 for desending and 1 for assending (after deepest point)
 #' @export
@@ -557,3 +688,42 @@ dircast <- function(pressure){
   out[max_prs_index:length(pressure)] = 1
   return(out)
 }
+
+#' First order differentitation
+#'
+#' This is an implemention of Sunke Schmidtko's method for a first order differentation of a vector.
+#' Unlike the standard R diff function this returns a vector of the same length, coping with end effects.
+#' If time is supplied to the optional "t" variable then the value returned will be dx/dt.
+#' Otherwise it will just be dx.
+#'
+#' @param x vector of values to differentiate
+#' @param t optional time in seconds, or POSIXct
+#'
+#' @return
+#' @export
+fdiff <- function(x, t = NA){
+  # this is Sunke's method for first order differentiation with an vector of same length
+  dx = diff(x)
+  Xx = cbind(c(NA, dx), c(dx, NA))
+  dx = apply(Xx, 1, mean, na.rm=T)
+  if(!all(is.na(t))){
+    dt = diff(as.numeric(t))
+    Xt = cbind(c(NA, dt), c(dt, NA))
+    dt = apply(Xt, 1, mean, na.rm=T)
+    return(dx / dt)
+  }else{
+    return(dx)
+  }
+}
+
+# replacement for reshape2::melt for netcdf arrays
+melt_dt_array <- function(x){
+  # tested and is 3x faster than data.table(reshape2::melt(x))
+  dimnames(x) <- list(NULL, 1:ncol(x))
+  d = as.data.table(x)
+  d[ , row := 1:.N]
+  d = melt.data.table(d, id.vars = "row", variable.name = "col")
+  d[ , col := as.integer(col)]
+  return(d)
+}
+
