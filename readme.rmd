@@ -1,13 +1,3 @@
----
-title: "Using the cefasMOS package"
-author: "Tom Hull"
-date: "26 June 2020"
-output: 
-  html_document: 
-    highlight: pygments
-    keep_md: yes
----
-
 # Installing
 
 The `cefasMOS` package is in development and has not been submitted to CRAN.
