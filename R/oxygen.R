@@ -462,7 +462,7 @@ oxygen.conc_to_pp <- function(O2, TEMP, SAL=0, PRS=0){
 #' @keywords oxygen
 #' @references Bittig, H.C., Körtzinger, A., Neill, C., van Ooijen, E., Plant, J.N., Hahn, J., Johnson, K.S., Yang, B., Emerson, S.R., 2018. Oxygen Optode Sensors: Principle, Characterization, Calibration, and Application in the Ocean. Frontiers in Marine Science 4, 1–25. https://doi.org/10/ggc8m9
 #' @examples
-#' oxygen.air_conc(10, 1019.5, 80, return_con=F) # partial pressure of oxygen at 10oC and 1019.5 hPa local air pressure and 80% relative humidity
+#' oxygen.air_conc(10, 1019.5, 80, return_con = FALSE) # partial pressure of oxygen at 10oC and 1019.5 hPa local air pressure and 80% relative humidity
 #' @return oxygen concentration in mmol m-3
 #' @export
 oxygen.air_conc <- function(TEMP, AIRPRS, RH = NA, DTEMP = NA, return_conc=T){

@@ -11,7 +11,7 @@ optode.lagcorrect_hahn(
   coefs,
   tau = NA,
   tau_DO = c(14.8, -0.4),
-  filter = T
+  k = 3
 )
 }
 \arguments{
@@ -25,11 +25,11 @@ optode.lagcorrect_hahn(
 
 \item{tau_DO}{default is c(14.8, -0.4)}
 
-\item{filter}{default = True to apply a median pre-filter}
+\item{k}{width of the median filter, default = 3}
 }
 \value{
 lagged phase
 }
 \description{
-Implements the Hahn optode lag correction, as used in UEA seaglider toolbox
+Implements the Hahn optode lag correction
 }
