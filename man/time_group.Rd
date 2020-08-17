@@ -18,6 +18,6 @@ time_group(x, fuzz = 0)
 given a timeseries with gaps, this returns a vector which can serve as a label for each unbroken period
 }
 \details{
-in short, it calcualtes the median time between all observations,
+in short, it calculates the median time between all observations,
 and assigns a new group number when there is a gap.
 }

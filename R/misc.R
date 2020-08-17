@@ -87,7 +87,7 @@ as.melt.data.table <- function(m, value_name = "value"){
 #'
 #' given a timeseries with gaps, this returns a vector which can serve as a label for each unbroken period
 #'
-#' in short, it calcualtes the median time between all observations,
+#' in short, it calculates the median time between all observations,
 #'  and assigns a new group number when there is a gap.
 #'
 #' @param x vector or timestamps
@@ -99,7 +99,7 @@ time_group <- function(x, fuzz = 0){
   dt = diff(as.numeric(x[order(x)]))
   breaks = c(F, dt > (median(dt) + fuzz))
   grps = cumsum(as.numeric(breaks)) + 1
-  return()
+  return(grps)
 }
 
 #' Round dateTime to x minutes
