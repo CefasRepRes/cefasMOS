@@ -186,8 +186,8 @@ convert_latlong <- function(degrees, decimal_minutes, polarity = NA){
 #' @return decimal degrees
 #' @export
 convert_latlong_ddmmm <- function(degrees, paste=T){
-  dd = degrees %/% 1
-  mm = round((degrees %% 1) * 60, 3)
+  dd = floor(abs(degrees)) * sign(degrees)
+  mm = round((abs(degrees) %% 1) * 60, 3)
   if(paste){
     return(paste0(dd, "'", mm))
   }else{
