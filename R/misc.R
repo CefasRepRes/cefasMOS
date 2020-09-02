@@ -727,3 +727,34 @@ melt_dt_array <- function(x){
   return(d)
 }
 
+#' Tidier for Stan timeseries
+#'
+#' Takes a stanfit object, calculates median, and 95 % quantiles, includes Rhat and number of effective samples and includes a column for the observation number,
+#' very useful for time-series data with large parameter vectors.
+#'
+#'
+#' @param fit a stanfit object
+#'
+#' @return tidied data.table
+#' @export
+#'
+tidyMCMCts <- function(fit){
+  stan <- inherits(fit, "stanfit")
+  ss <- if(stan){
+    as.matrix(fit)
+  }
+  else{stop("not a stan fit")}
+  m = apply(ss, 2, median)
+  summ = rstan::summary(fit, probs=NULL)$summary[,c("Rhat", "n_eff"), drop = F]
+  ret = data.table(term = stringr::str_extract(names(m), "[\\w\\_]+"),
+                   obs = as.numeric(stringr::str_extract(names(m), "\\d+")),
+                   estimate = m,
+                   std.error = apply(ss, 2, sd),
+                   conf.low = apply(ss, 2, quantile, 0.05),
+                   conf.high = apply(ss, 2, quantile, 0.95),
+                   Rhat = summ[,"Rhat"],
+                   n_eff = round(summ[,"n_eff"])
+  )
+}
+
+
