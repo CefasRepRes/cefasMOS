@@ -8,7 +8,6 @@ optode.lagcorrect_hahn(
   dateTime,
   TCphase,
   temp,
-  coefs,
   tau = NA,
   tau_DO = c(14.8, -0.4),
   k = 3
