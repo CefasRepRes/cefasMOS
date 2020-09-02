@@ -256,7 +256,7 @@ optode.tau <- function(temp, IL, type=c("fast", "standard", "SBE63")){
 #' @return lagged phase
 #' @export
 #'
-optode.lagcorrect_hahn <- function(dateTime, TCphase, temp, coefs, tau = NA, tau_DO = c(14.8, -0.4), k = 3){
+optode.lagcorrect_hahn <- function(dateTime, TCphase, temp, tau = NA, tau_DO = c(14.8, -0.4), k = 3){
   if(is.na(tau[1])){
     tau = tau_DO[1] + tau_DO[2] * (temp - 20)
   }
