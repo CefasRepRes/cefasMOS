@@ -413,9 +413,9 @@ fuzzymatch <- function(dat, reference, index="dateTime", threshold = Inf, return
   reference[, (paste0("ref_", index)) := get(index)] # add duplicate reference column
   out = reference[dat, roll="nearest", on=index] # match nearest
   if(return){
-    out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold, within_threshold := T]
+    out = out[abs(as.numeric(get(paste0("ref_", index))) - as.numeric(get(index)) ) < threshold, within_threshold := T]
   }else{
-    out = out[abs( get(paste0("ref_", index)) - get(index) ) < threshold] # exclude values outside threshold
+    out = out[abs(as.numeric(get(paste0("ref_", index))) - as.numeric(get(index)) ) < threshold] # exclude values outside threshold
   }
   return(copy(out))
 }
