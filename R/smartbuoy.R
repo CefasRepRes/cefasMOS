@@ -6,6 +6,35 @@
 #' Fetches SmartBuoy data
 #'
 #' @details This function querys the Smartbuoy database and returns
+#'
+#' If using RQ0 = F QA flags are returned:
+#' - 0 - Data passed all active QA checks
+#' - 1 - spike threshold exceeded
+#' - 2 - below minimum for parameter
+#' - 3 - above maximum for parameter
+#' - 4 - biofouled sensor
+#' - 12 - sensor malfunction
+#' - 13 - Tpeak anomaly
+#' - 14 - dependency failure
+#' - 15 - WMS bag not spiked with mercuric chloride
+#' - 100 - sensor is out of water - 1
+#' - 200 - results outside limits (level 2) - 1
+#' - 16 - low battery voltage
+#' - 17 - sensor not connected
+#' - 18 - deviation from rolling mean
+#' - 19 - deviation from neighbouring point
+#' - 201 - results outside specified concentration range (level 2) - 1
+#' - 20 - sensor flooded
+#' - 21 - possible chlorophyll fluorescence quenching
+#' - 255 - Backup Results
+#' - 22 - Low volume sample
+#' - 5 - removed during Median filtering
+#' - 6 - light intrusion effect on optical sensor
+#' - 7 - weed or debris on sensor / sensor obscured
+#' - 8 - hunting error on auto-ranging sensor
+#' - 9 - suspicious data (unknown cause)
+#' - 10 - discrepancy between two data sets
+#' - 11 - sensor platform out of position
 #' @param deployment optional string matching smartbuoy deployment
 #' @param deployment_group optional string matching smartbuoy deployment_group
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"

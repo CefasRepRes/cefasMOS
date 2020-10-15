@@ -2,28 +2,39 @@
 #'
 #' reads ferrybox device data files
 #'
-#' @details TODO
+#' @details
 #' Ferrybox quality codes:
-#' 0 = good, 1 = no data, 2 = over value, 4 = under value, 8 = sensor timeout
-#' 64 = clean cycle, 128 = standby, 256 = empty, 512 = error, 1024 = undefined, 2048 = simulation mode
-    #' sometimes \0 characters appear in data, to sanitise run sed from a bash terminal
-    # sed -i -b "s/\x0//g" *
-    # filter by files by ... *_A_Optode*
-    # -i = in place, -b = binary (keep windows line feeds)
+#' - 0 = good,
+#' - 1 = no data,
+#' - 2 = over value,
+#' - 4 = under value,
+#' - 8 = sensor timeout
+#' - 64 = clean cycle,
+#' - 128 = standby,
+#' - 256 = empty,
+#' - 512 = error,
+#' - 1024 = undefined,
+#' - 2048 = simulation mode
+#'
+#' sometimes \0 characters appear in data, to sanitise run sed from a bash terminal
+#  sed -i -b "s/\x0//g" *
+#  filter by files by ... *_A_Optode*
+# -i = in place, -b = binary (keep windows line feeds)
 
 #' @param devdata_folder character string indicating path to folder containing device data files
-#' @param pivot optional boolian indicating if returned table should be recast into 'wide' format
-#' @return data.frame
+#' @param pivot optional boolean indicating if returned table should be recast into 'wide' format
+#' @param print optional boolean indicating if current file should be printed, default is True.
+#' @return data.table
 #' @keywords ferrybox
 #' @import data.table
 #' @export
-read.ferrybox.devdata <- function(devdata_folder, pivot = F){
+read.ferrybox.devdata <- function(devdata_folder, pivot = F, print = T){
 
-    dat = data.table()
+    dat = list()
     for(fn in list.files(devdata_folder)){
         f = paste(devdata_folder, fn, sep='/')
         print(f)
-        fd = readLines(f)
+        fd = readLines(f, 50) # all the info should be in the first 50 lines, no need to read whole file
         startLine = grep("DATASETS",fd)
         sensorLine = grep("Type", fd)
         sensor = unlist(strsplit(fd[sensorLine], '; '))[2]
@@ -32,10 +43,11 @@ read.ferrybox.devdata <- function(devdata_folder, pivot = F){
         d = d[-1, c('$Timestamp', param, 'Quality', 'Minimum', 'Maximum', 'Variance', 'MeasCount', 'Longitude', 'Latitude'), with = F]
         setnames(d, c('$Timestamp', param, 'Quality','Minimum', 'Maximum', 'Variance', 'MeasCount', 'Longitude', 'Latitude'),
                  c('dateTime', 'value', 'quality', 'min', 'max', 'variance', 'count', 'lon', 'lat'))
-        d$sensor = sensor
-        d$param = param
-        dat = rbind(dat, d)
+        d[, sensor := sensor]
+        d[, param := param]
+        dat[[fn]] = d
     }
+    dat = rbindlist(dat)
     dat$dateTime = as.POSIXct(dat$dateTime, format = '%Y.%m.%d %H:%M:%S', tz='UTC')
 
     export = dat

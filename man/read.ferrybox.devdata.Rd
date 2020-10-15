@@ -4,24 +4,37 @@
 \alias{read.ferrybox.devdata}
 \title{Ferrybox device data reader}
 \usage{
-read.ferrybox.devdata(devdata_folder, pivot = F)
+read.ferrybox.devdata(devdata_folder, pivot = F, print = T)
 }
 \arguments{
 \item{devdata_folder}{character string indicating path to folder containing device data files}
 
-\item{pivot}{optional boolian indicating if returned table should be recast into 'wide' format}
+\item{pivot}{optional boolean indicating if returned table should be recast into 'wide' format}
+
+\item{print}{optional boolean indicating if current file should be printed, default is True.}
 }
 \value{
-data.frame
+data.table
 }
 \description{
 reads ferrybox device data files
 }
 \details{
-TODO
 Ferrybox quality codes:
-0 = good, 1 = no data, 2 = over value, 4 = under value, 8 = sensor timeout
-64 = clean cycle, 128 = standby, 256 = empty, 512 = error, 1024 = undefined, 2048 = simulation mode
+\itemize{
+\item 0 = good,
+\item 1 = no data,
+\item 2 = over value,
+\item 4 = under value,
+\item 8 = sensor timeout
+\item 64 = clean cycle,
+\item 128 = standby,
+\item 256 = empty,
+\item 512 = error,
+\item 1024 = undefined,
+\item 2048 = simulation mode
+}
+
 sometimes \0 characters appear in data, to sanitise run sed from a bash terminal
 }
 \keyword{ferrybox}

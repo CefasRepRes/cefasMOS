@@ -5,6 +5,36 @@
 #' @details This function querys the Smartbuoy database and returns ESM2 profiler data matching the provided critiera.
 #' Note that startTime is the time at which the instrument started logging.
 #' remember to do `options(digits.secs=3)` if you want to display POSIXct miliseconds.
+#'
+#' If using RQ0 = F QA flags are returned:
+#' - 0 - Data passed all active QA checks
+#' - 1 - spike threshold exceeded
+#' - 2 - below minimum for parameter
+#' - 3 - above maximum for parameter
+#' - 4 - biofouled sensor
+#' - 12 - sensor malfunction
+#' - 13 - Tpeak anomaly
+#' - 14 - dependency failure
+#' - 15 - WMS bag not spiked with mercuric chloride
+#' - 100 - sensor is out of water - 1
+#' - 200 - results outside limits (level 2) - 1
+#' - 16 - low battery voltage
+#' - 17 - sensor not connected
+#' - 18 - deviation from rolling mean
+#' - 19 - deviation from neighbouring point
+#' - 201 - results outside specified concentration range (level 2) - 1
+#' - 20 - sensor flooded
+#' - 21 - possible chlorophyll fluorescence quenching
+#' - 255 - Backup Results
+#' - 22 - Low volume sample
+#' - 5 - removed during Median filtering
+#' - 6 - light intrusion effect on optical sensor
+#' - 7 - weed or debris on sensor / sensor obscured
+#' - 8 - hunting error on auto-ranging sensor
+#' - 9 - suspicious data (unknown cause)
+#' - 10 - discrepancy between two data sets
+#' - 11 - sensor platform out of position
+#'
 #' @param cruiseID optional cruise ID string, e.g. "CEND_02_14", if provided only data from this cruise will be returned.
 #' @param profiler optional profiler name string, e.g. "PR009", if provided only data from this profiler will be returned.
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
