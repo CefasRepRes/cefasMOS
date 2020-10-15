@@ -54,6 +54,37 @@ Fetches CTD data from ESM2 profiler records
 This function querys the Smartbuoy database and returns ESM2 profiler data matching the provided critiera.
 Note that startTime is the time at which the instrument started logging.
 remember to do \code{options(digits.secs=3)} if you want to display POSIXct miliseconds.
+
+If using RQ0 = F QA flags are returned:
+\itemize{
+\item 0 - Data passed all active QA checks
+\item 1 - spike threshold exceeded
+\item 2 - below minimum for parameter
+\item 3 - above maximum for parameter
+\item 4 - biofouled sensor
+\item 12 - sensor malfunction
+\item 13 - Tpeak anomaly
+\item 14 - dependency failure
+\item 15 - WMS bag not spiked with mercuric chloride
+\item 100 - sensor is out of water - 1
+\item 200 - results outside limits (level 2) - 1
+\item 16 - low battery voltage
+\item 17 - sensor not connected
+\item 18 - deviation from rolling mean
+\item 19 - deviation from neighbouring point
+\item 201 - results outside specified concentration range (level 2) - 1
+\item 20 - sensor flooded
+\item 21 - possible chlorophyll fluorescence quenching
+\item 255 - Backup Results
+\item 22 - Low volume sample
+\item 5 - removed during Median filtering
+\item 6 - light intrusion effect on optical sensor
+\item 7 - weed or debris on sensor / sensor obscured
+\item 8 - hunting error on auto-ranging sensor
+\item 9 - suspicious data (unknown cause)
+\item 10 - discrepancy between two data sets
+\item 11 - sensor platform out of position
+}
 }
 \keyword{ctd}
 \keyword{esm2}
