@@ -7,7 +7,9 @@
 read.ULP000(file)
 }
 \arguments{
-\item{file}{an extracted ESM2 .000 filename}
+\item{file}{an extracted ESM2 .000 filename
+
+to unpack a .ULP use the \code{unulp.exe} with the following command: \code{ulunp -i *.ULP}.}
 }
 \value{
 data.table
