@@ -132,9 +132,12 @@ read.profiler.ULP <- function(f){
 #'
 #' @param file an extracted ESM2 .000 filename
 #'
+#' to unpack a .ULP use the `unulp.exe` with the following command: `ulunp -i *.ULP`.
+#'
 #' @return data.table
 #' @export
 read.ULP000 <- function(file){
+  file = "ULP/UL000000.000"
   fl = readLines(file)
   id = fl[max(grep("ID", fl)+1)]
   id = unlist(strsplit(id, ","))
@@ -143,18 +146,23 @@ read.ULP000 <- function(file){
   startTime = paste(startTime[5], startTime[4], startTime[3])
   startTime = as.POSIXct(startTime, format = "%Y %d/%m %H%M.%S", tz = "UTC")
   startLine = max(grep("CHAN", fl)) + 1
-  dat = data.table()
-  for(sen in fl[startLine:length(fl)] ){
-    sen = unlist(strsplit(sen, ","))
+  dat = list()
+  for(i in fl[startLine:length(fl)] ){
+    sen = unlist(strsplit(i, ","))
     channel = as.numeric(sen[2])
     rate = as.numeric(sen[3])
     d = sen[7:length(sen)]
     index = seq(0,(length(d)*rate)-rate,rate)
-    dat = rbind(dat, data.table(index = index, value = d, channel, stringsAsFactors=F))
+    dat[[i]] = data.table(index = index, raw = d, channel, stringsAsFactors=F)
   }
+  dat = rbindlist(dat)
   dat[, burst := id[6]]
   dat[, time := startTime + (index/10)]
   dat[, id := id[1]]
+  fst = dat[index == 0]
+  max_element = max(stringr::str_count(fst$raw, ";"))
+  outs = paste0("v", 0:max_element)
+  dat[, (outs) := tstrsplit(raw, ";", type.convert = T)]
   return(dat)
 }
 
