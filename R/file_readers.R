@@ -137,7 +137,6 @@ read.profiler.ULP <- function(f){
 #' @return data.table
 #' @export
 read.ULP000 <- function(file){
-  file = "ULP/UL000000.000"
   fl = readLines(file)
   id = fl[max(grep("ID", fl)+1)]
   id = unlist(strsplit(id, ","))
