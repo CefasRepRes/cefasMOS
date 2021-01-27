@@ -87,7 +87,7 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @import ggplot2 rworldmap cmocean
 #' @export
 #'
-bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, expand = 0.02){
+bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expand = 0.02){
   xlim = range(lon, na.rm = T)
   ylim = range(lat, na.rm = T)
   xlim_exp = scales::expand_range(xlim, expand)
@@ -117,11 +117,11 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
   # mapdata = mapdata[mapdata[,.I[any(long %between% c(-50, 25)) & any(lat %between% c(45, 70))], by = list(group)]$V1]
   # devtools::use_data(mapdata, overwrite=T)
   data("mapdata") # saved for speed
-  mapdata = mapdata[mapdata[,.I[any(long %between% xlim_exp) & any(lat %between% ylim_exp)], by = list(group)]$V1]
+  mapdata = mapdata[mapdata[,.I[any(lon %between% xlim_exp) & any(lat %between% ylim_exp)], by = list(group)]$V1]
 
   # make geom
-  coast.poly = geom_polygon(data=mapdata, aes(x=long, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
-  coast.outline = geom_path(data=mapdata, aes(x=long, y=lat, group=group), colour="#000000", lwd=0.2)
+  coast.poly = geom_polygon(data=mapdata, aes(x=lon, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
+  coast.outline = geom_path(data=mapdata, aes(x=lon, y=lat, group=group), colour="#000000", lwd=0.2)
 
   mp = ggplot(bathy) +
     bathy_raster + bathy_scale +
