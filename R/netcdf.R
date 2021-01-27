@@ -2,9 +2,10 @@
 #'
 #' @param ncfile a netcdf filename
 #'
+#' @import ncdf4
 #' @return variable names
 #' @export
-printvars <- function(ncfile){
+nc_print <- function(ncfile){
   nc = nc_open(ncfile)
   print(names(nc$var))
   nc_close(nc)
@@ -72,3 +73,49 @@ read.ecmwf <- function(file, convert_units = F){
   }
   return(met)
 }
+
+read.bfm <- function(filename, vars = "all"){
+  require(ncdf4)
+  require(data.table)
+  nc = nc_open(filename)
+  dims = names(nc$dim)
+  if(vars[1] == "all"){
+    vars = names(nc$var)
+  }
+  # vars = c("O2o", "temp")
+  lon = nc$dim$lonc$vals
+  lat = nc$dim$latc$vals
+
+  time_origin = ncatt_get(nc, "time", "units")$value
+  if(grepl("hours", time_origin)){
+    time_scale = 60*60
+  }else{
+    time_scale = 1
+  }
+  time_origin = stringr::str_extract(time_origin, "[0-9\\-]+ [0-9:]+")
+  dateTime = nc$dim$time$vals # hours since 1900-01-01
+  dateTime = as.POSIXct(dateTime * time_scale, origin = time_origin, tz = "UTC")
+  met = list()
+  for(var in vars){
+    print(paste("extracting", var))
+    dat = ncvar_get(nc, var, collapse_degen=F)
+    unit = ncatt_get(nc, var, "units")
+    dat = as.data.table(dat)
+    var_dim_index = nc$var[[var]]$dimids + 1 # get dim indexes
+    colnames(dat) = c(dims[var_dim_index], "value")
+    dat$variable = var
+    dat[, dateTime := dateTime[time]]
+    for(d_name in dims[var_dim_index]){
+      d_vals = nc$dim[[d_name]]$vals
+      dat[, (d_name) := d_vals[get(d_name)]]
+    }
+    met[[var]] = unique(dat)
+    # rm(d_vals, d_name, var)
+  }
+  nc_close(nc)
+  met = rbindlist(met, fill=T)
+  met = dcast.data.table(met, dateTime + lonc + latc + level ~ variable, fun.aggregate = mean)
+  # bfm = met[lonc == max(lonc) & latc == max(latc)]
+  return(met)
+}
+
