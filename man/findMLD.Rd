@@ -8,9 +8,9 @@ findMLD(
   z,
   y,
   threshold = 0.125,
-  ref_z = NA,
   surface = T,
   band = F,
+  ref_z = NA,
   mean_ref = F
 )
 }
@@ -21,11 +21,11 @@ findMLD(
 
 \item{threshold}{numeric y threshold, default is 0.125 (assuming you using density in kg L-1)}
 
-\item{ref_z}{reference \code{z} for threshold, default is shallowest \code{z} available}
-
 \item{surface}{default is true, set to false for bottom mixed layer threshold (base of gradient)}
 
 \item{band}{default is false, if true function returns paired vector of interval which meets threshold}
+
+\item{ref_z}{reference \code{z} for threshold, default is shallowest \code{z} available}
 
 \item{mean_ref}{if T will take the mean of the values above \code{ref_z} as the reference \code{y}}
 }

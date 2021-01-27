@@ -304,21 +304,32 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #'                                 xout = 1:100)$y)
 #'
 #' findMLD(x$pressure, x$density)
-findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F, mean_ref=F){
+findMLD <- function(z, y, threshold = 0.125, surface = T, band = F, ref_z = NA, mean_ref = F){
   y = y[order(z)] # make sure you sort y first
   z = z[order(z)]
+  # note this means if you supply a up and down cast they are combined together
+  # internal waves or hysteresis of sensors means this should be avoided
 
   if(anyNA(z)){ error("NA's found in z record") }
   if(anyNA(y)){ warning("NA's found in y record") }
 
   if(!is.na(ref_z) & mean_ref == T){
-    y[z <= ref_z] = mean(y[z <= ref_z])
+    if(surface == T){
+      y[z <= ref_z] = mean(y[z <= ref_z]) # calculate mean y for everything between ref_z and min_z
+    }else{
+      y[z >= ref_z] = mean(y[z >= ref_z]) # calculate mean y for everything between ref_z and max_z
+    }
   }
 
   if(!is.na(ref_z)){
     # Subset to ref_z
-    y = y[z >= ref_z]
-    z = z[z >= ref_z]
+    if(surface == T){
+      y = y[z >= ref_z]
+      z = z[z >= ref_z]
+    }else{
+      y = y[z <= ref_z]
+      z = z[z <= ref_z]
+    }
   }
   if(length(na.omit(z)) < 5 | length(na.omit(y)) < 5 ){
     # need some actual data to calculate MLD
