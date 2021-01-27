@@ -285,35 +285,61 @@ read.seaglider_basestation_nc <- function(folder, variables = c("sigma_theta", "
 
 #' Read BODC ego glider files (e.g. slocum)
 #'
+#' Reads EGO glider time-series data
+#' Currently only tested with v1.2
+#'
 #' @param ncfile ego netcdf file
 #' @param vars character vector of variables to extract, e.g. c("DOXY", "PRES")
 #'
 #' @import ncdf4
 #' @return data.table containing extracted fields
 #' @export
-read.ego <- function(ncfile, vars = c("DOXY", "PRES", "TEMP", "CNDC", "CHLA", "BBP700")){
-  d = list()
-  metadata = list()
+read.ego <- function(ncfile, vars = c("DOXY", "PRES", "TEMP", "SAL", "CNDC", "CHLA", "BBP700")){
   nc = nc_open(ncfile)
+  nc_var_names = names(nc$var)
+
+  EGO_version = ncatt_get(nc, 0, "format_version")
+  EGO_type = ncatt_get(nc, 0, "data_Type")
+  if(!(EGO_version$value == 1.2) & EGO_type$value == "EGO glider time-series data"){
+    stop("invalid netCDF, not EGO timeseries version 1.2")
+  }
+
+    # check variables are present
+  if(!"TIME" %in% names(nc$dim)){
+    stop("TIME variable missing from netcdf, unable to continue")
+  }
+  if(!all(c("LATITUDE", "LONGITUDE") %in% nc_var_names)){
+    stop("LATITUDE or LONGITUDE variable missing from netcdf, unable to continue")
+  }
+  if(!all(vars %in% nc_var_names)){
+    warning(paste(paste(vars[!vars %in% nc_var_names], collapse = ", "),
+                  "variable(s) not found in netcdf, skipping\n"))
+    vars = vars[vars %in% nc_var_names]
+  }
+
+    # phase?
+  if("PHASE" %in% nc_var_names){
+    vars = c(vars, "PHASE")
+  }
+
   time_var = ncvar_get(nc, "TIME")
   time_var = as.POSIXct(time_var, origin = "1970-01-01", tz="UTC")
   lat = as.vector(ncvar_get(nc, "LATITUDE"))
   lon = as.vector(ncvar_get(nc, "LONGITUDE"))
+  d = list()
+  metadata = list()
   for(var in vars){
-    if(var %in% names(nc$var)){
-      print(paste("extracting", var))
-      x = ncvar_get(nc, var)
-      unit = ncatt_get(nc, var, "units")
-      x = melt(x)
-      dims = sapply(nc$var[[var]]$dim, function(i){i$name})
-      colnames(x) = c(dims, "value")
-      x = as.data.table(x)
-      if(unit$hasatt){
-        x[, unit := unit$value]
-      }
-      x[, c("lat", "lon") := list(lat, lon)]
-      d[[var]] = x
+    print(paste("extracting", var))
+    x = ncvar_get(nc, var, collapse_degen = T)
+    unit = ncatt_get(nc, var, "units")
+    x = data.table(1:length(x), x)
+    dims = sapply(nc$var[[var]]$dim, function(i){i$name})
+    colnames(x) = c(dims, "value")
+    if(unit$hasatt){
+      x[, unit := unit$value]
     }
+    x[, c("lat", "lon") := list(lat, lon)]
+    d[[var]] = x
   }
   out = rbindlist(d, fill=T, idcol="var")
   out[, dateTime := time_var[TIME]]
