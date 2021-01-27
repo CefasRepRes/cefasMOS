@@ -1,6 +1,4 @@
 
-
-
 #' propagate errors for data.table
 #'
 #' This function serves as a wrapper for `propagate::propagate` to make it easier to calculate errors in a data.table
@@ -91,7 +89,7 @@ as.melt.data.table <- function(m, value_name = "value"){
 #'  and assigns a new group number when there is a gap.
 #'
 #' @param x vector or timestamps
-#' @param fuzz amount of extra leeway to give the function to avoid small gaps
+#' @param fuzz amount of extra leeway in seconds to give the function to avoid small gaps, default is 0
 #'
 #' @return
 #' @export
@@ -122,22 +120,6 @@ round_minute <- function(x, minutes = 30){
   }
 }
 
-
-#' Calculate rate of change
-#'
-#' Calculates rate of change given datetime and value
-#'
-#' @param dateTime POSIXct vector
-#' @param value  numeric vector
-#'
-#' @return vector of rate of change in unit/second
-#' @export
-rate_of_change <- function(dateTime, value){
-  dt = as.numeric(dateTime) - shift(as.numeric(dateTime))
-  dV = value - shift(value)
-  return(dV/dt)
-}
-
 #' ftu from ADC
 #'
 #' Calculates FTU value from ESM2 raw hex ADC counts
@@ -145,11 +127,11 @@ rate_of_change <- function(dateTime, value){
 #' @details This function querys the Smartbuoy database and returns
 #' @param x vector of ESM2 hex ADC counts, each count should be 6 characters i.e. "1a13D2"
 #' @param factor channel calibration factor, specific to logger, default is 1.22
-#' @param offset channel calibration offset, default is 0.001
+#' @param offset channel calibration offset, default is 0.0
 #' @return vector of calibrated FTU values
 #' @keywords esm2
 #' @export
-esm2.FTU_from_ADC<- function(x, factor = 1.22, offset = 0.001){
+esm2.FTU_from_ADC<- function(x, factor = 1.22, offset = 0.0){
     which_range <- function(range){
         switch(range,
                "0" = 500,
@@ -205,11 +187,11 @@ esm2.FLUORS_from_ADC <- function(x, factor = 1.22, offset = 0.001){
 #' @details This function querys the Smartbuoy database and returns
 #' @param x vector of ESM2 hex ADC counts, each count should be 6 characters i.e. "1a13D2"
 #' @param factor channel calibration factor, specific to logger, default is 1.22
-#' @param offset channel calibration offset, default is 0.001
+#' @param offset channel calibration offset, default is 0.0
 #' @return vector of channel corrected voltage values
 #' @keywords esm2
 #' @export
-esm2.volts_from_ADC <- function(x, factor = 1.22, offset = 0.001){
+esm2.volts_from_ADC <- function(x, factor = 1.22, offset = 0.0){
   dec = as.numeric(paste0("0x", substr(x, 4, 6)))
   dec.mv = dec / 1000 # convert to mV
   dec.c = (dec.mv * factor) - (offset / 1000)  # apply channel calibrations
@@ -231,18 +213,6 @@ esm2.volts_from_ADC <- function(x, factor = 1.22, offset = 0.001){
 PAR_from_Voltage <- function(x, factor, offset){
     return(factor * exp(offset * x))
 }
-
-ferrybox.PAR_from_ADC <- function(y){
-    #       (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834
-    return( (0.5301*exp(((y-32770)/3276.7)*3.3674))/5.008332834 )
-}
-
-fix_par <- function(x){
-    ADC = ((log((x * 5.008332834) / (0.5301 * 3.3674))) * 3276.7) + 32770
-    PAR = (0.5301 * exp(((ADC - 32770)/3276.7) * 3.3674)) / 5.008332834
-    return(PAR)
-}
-
 
 #' Calculate salinity
 #'
@@ -570,8 +540,6 @@ qpercentunif = function(p, mean, percent){
 #' function designed to flag data based on specified start times
 #' This is mostly used for flagging data for x minutes after an event
 #'
-#' TODO needs testing and documention
-#'
 #' @param dateTime a vector of times which are to be flagged, this does not need to be POSIXct
 #' @param init POSIXct times of event
 #' @param lag integer period to add to times, should be in the same units i.e. seconds for POSIXct
@@ -667,7 +635,6 @@ saturation_vapour_pressure <- function(TEMP, unit="C", method="Weiss"){
 #' @export
 #'
 ggplot.lm <- function (fit, option="caption") {
-require(ggplot2)
 plt = ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
   geom_point() +
   stat_smooth(method = "lm", col = "red")
@@ -691,7 +658,7 @@ plt + labs(caption = paste0(
 #'
 #' @param pressure a order vector of pressures, any unit
 #'
-#' @return vector of same length as pressure, with -1 for desending and 1 for assending (after deepest point)
+#' @return vector of same length as pressure, with -1 for descending and 1 for ascending (after deepest point)
 #' @export
 dircast <- function(pressure){
   max_prs_index = min(which(pressure == max(pressure, na.rm=T)))
@@ -767,5 +734,13 @@ tidyMCMCts <- function(fit){
                    n_eff = round(summ[,"n_eff"])
   )
 }
+
+scale_colour_datetimen <- function (..., colours, values = NULL, space = "Lab", na.value = "grey50",
+                                    guide = "colourbar", aesthetics = "colour"){
+  ggplot2:::datetime_scale("colour", "time",
+                           palette = scales::gradient_n_pal(colours, values, space),
+                           na.value = na.value, guide = guide, ...)
+}
+
 
 

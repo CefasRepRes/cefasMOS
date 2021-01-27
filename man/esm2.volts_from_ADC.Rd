@@ -4,14 +4,14 @@
 \alias{esm2.volts_from_ADC}
 \title{volts from ADC}
 \usage{
-esm2.volts_from_ADC(x, factor = 1.22, offset = 0.001)
+esm2.volts_from_ADC(x, factor = 1.22, offset = 0)
 }
 \arguments{
 \item{x}{vector of ESM2 hex ADC counts, each count should be 6 characters i.e. "1a13D2"}
 
 \item{factor}{channel calibration factor, specific to logger, default is 1.22}
 
-\item{offset}{channel calibration offset, default is 0.001}
+\item{offset}{channel calibration offset, default is 0.0}
 }
 \value{
 vector of channel corrected voltage values
