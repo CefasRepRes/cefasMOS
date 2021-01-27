@@ -11,7 +11,8 @@ theme_glider(
   line_size = 0.5,
   rel_small = 12/14,
   rel_tiny = 11/14,
-  rel_large = 16/14
+  rel_large = 16/14,
+  legend.position = "bottom"
 )
 }
 \value{
