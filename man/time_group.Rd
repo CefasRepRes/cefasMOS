@@ -9,7 +9,7 @@ time_group(x, fuzz = 0)
 \arguments{
 \item{x}{vector or timestamps}
 
-\item{fuzz}{amount of extra leeway to give the function to avoid small gaps}
+\item{fuzz}{amount of extra leeway in seconds to give the function to avoid small gaps, default is 0}
 }
 \value{
 

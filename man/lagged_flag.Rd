@@ -20,9 +20,6 @@ logical vector of same length as dateTime, True denotes flagged
 function designed to flag data based on specified start times
 This is mostly used for flagging data for x minutes after an event
 }
-\details{
-TODO needs testing and documention
-}
 \examples{
 
 wash_times = as.POSIXct("2017-01-01 11:05:00")

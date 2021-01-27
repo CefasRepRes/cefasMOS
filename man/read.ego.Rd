@@ -4,7 +4,10 @@
 \alias{read.ego}
 \title{Read BODC ego glider files (e.g. slocum)}
 \usage{
-read.ego(ncfile, vars = c("DOXY", "PRES", "TEMP", "CNDC", "CHLA", "BBP700"))
+read.ego(
+  ncfile,
+  vars = c("DOXY", "PRES", "TEMP", "SAL", "CNDC", "CHLA", "BBP700")
+)
 }
 \arguments{
 \item{ncfile}{ego netcdf file}
@@ -15,5 +18,6 @@ read.ego(ncfile, vars = c("DOXY", "PRES", "TEMP", "CNDC", "CHLA", "BBP700"))
 data.table containing extracted fields
 }
 \description{
-Read BODC ego glider files (e.g. slocum)
+Reads EGO glider time-series data
+Currently only tested with v1.2
 }
