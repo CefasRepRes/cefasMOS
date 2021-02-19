@@ -325,7 +325,7 @@ smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
   INNER JOIN Deployment ON
   DeploymentInstrument.DepId = Deployment.DepId
   WHERE
-  SequenceNumber > 1")
+  SequenceNumber > -1")
   if(!is.na(deployment[1])){
       deployment = paste(deployment, collapse = "', '")
       query = paste0(query, " AND DeploymentInstrument.[DepId] IN ('", deployment, "')")
