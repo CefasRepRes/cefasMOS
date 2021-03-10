@@ -19,7 +19,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                            after = NA, before = NA,
@@ -154,7 +154,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.fetch_burst <- function(deployment = NA,
                            parameters = NA,
@@ -198,7 +198,7 @@ smartbuoy.fetch_burst <- function(deployment = NA,
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggplot object
 #' @keywords esm2
-#' @import ggplot2 data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
 
@@ -254,7 +254,7 @@ smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #'
 #' @return data.table containing query results
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
                                  parameters = NA,
@@ -308,6 +308,7 @@ smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
 #' @param deployment_group provide if you want everything for a site e.g. "WESTGAB2"
 #'
 #' @return data.table of lat-long from telemetry messages
+#' @import RODBC
 #' @export
 #'
 smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
@@ -356,7 +357,7 @@ smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table of positions
 #' @keywords SmartBuoy
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
     sbdb = odbcConnect(db_name)
@@ -398,7 +399,7 @@ smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table of parcodes
 #' @keywords SmartBuoy
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.parcodes <- function(db_name = 'smartbuoydblive'){
   sbdb = odbcConnect(db_name)

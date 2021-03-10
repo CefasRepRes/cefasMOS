@@ -25,7 +25,7 @@ Calculates in-air concentration of oxygen, given temperature, pressure and relat
 If only given dewpoint will use Sargent (1980) approximation to derive relative humidity
 }
 \examples{
-oxygen.air_conc(10, 1019.5, 80, return_con=F) # partial pressure of oxygen at 10oC and 1019.5 hPa local air pressure and 80\% relative humidity
+oxygen.air_conc(10, 1019.5, 80, return_con = FALSE) # partial pressure of oxygen at 10oC and 1019.5 hPa local air pressure and 80\% relative humidity
 }
 \references{
 Bittig, H.C., Körtzinger, A., Neill, C., van Ooijen, E., Plant, J.N., Hahn, J., Johnson, K.S., Yang, B., Emerson, S.R., 2018. Oxygen Optode Sensors: Principle, Characterization, Calibration, and Application in the Ocean. Frontiers in Marine Science 4, 1–25. https://doi.org/10/ggc8m9

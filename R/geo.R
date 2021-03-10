@@ -13,7 +13,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggmap object
 #' @keywords SmartBuoy
-#' @import ggplot2 data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.map <- function(platforms = c(1, 4, 8),
                             deployment_group_id = 'ALL',
@@ -84,7 +84,6 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @references Coastlines from rworldmap
 #'
 #' @return ggplot
-#' @import ggplot2 rworldmap cmocean
 #' @export
 #'
 bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, expand = 0.02){
@@ -204,6 +203,7 @@ convert_latlong_ddmmm <- function(degrees, paste=T){
 #' @param size distance in meters
 #'
 #' @return vector of limits (north, east, south, west)
+#' @importFrom geosphere destPoint
 #' @export
 #'
 #' @examples
@@ -265,7 +265,7 @@ match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 36
 #' @param dt distance in meters to match within
 #' @param tt time in seconds to match within
 #' @param merge bool
-#' @import geosphere ggplot2 data.table
+#' @import geosphere
 #'
 #' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
 #' @export

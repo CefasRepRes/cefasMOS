@@ -11,7 +11,6 @@
 #' @param dat a matrix denoting the mean and standard deviation, see examples
 #' @param mode either `"prop"` or `"MC`
 #' @param n number of iterations for Monte-Carlo, minimum is 10000
-#' @import propagate
 #'
 #' @return a list of mean and standard deviations
 #' @export
@@ -107,6 +106,7 @@ time_group <- function(x, fuzz = 0){
 #' @param x vector of POSIXct datetimes
 #' @param minutes integer minutes to round to, default is 30
 #'
+#' @importFrom lubridate is.POSIXct
 #' @return vector of rounded POSIXct
 #' @export
 round_minute <- function(x, minutes = 30){
@@ -295,7 +295,6 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' @param mean_ref if T will take the mean of the values above `ref_z` as the reference `y`
 #'
 #' @return mld in units of `z`
-#' @import data.table
 #' @export
 #' @examples
 #' x = data.table(pressure = 1:100,
@@ -369,6 +368,7 @@ findMLD <- function(z, y, threshold = 0.125, ref_z = NA, surface = T, band=F, me
 #' @param from either "year", "start" or provide a "YYYY-mm-dd" date to start from. "year is default"
 #'
 #' @return numeric vector of day of the year with decimal time
+#' @importFrom lubridate is.POSIXct
 #' @export
 ydaytime <- function(x, from = "year"){
   if(!lubridate::is.POSIXct(x)){stop("input is not valid POSIXct!")}
@@ -401,7 +401,6 @@ ydaytime <- function(x, from = "year"){
 #' @param threshold integer value for maximum permissible gap between lookup value, unit = seconds for "dateTime".
 #' @param return if false (default) values with no match, or outside threshold are dropped
 #' @return data.table with added variable column and index from `reference`
-#' @import data.table
 #'
 #' @examples
 #'dat = data.table(i = c(4.3, 5.9, 1.2), datval = runif(3)+10, datstuff="test")
@@ -460,7 +459,6 @@ smartbuoy.telid <- function(x){
 #' @return ggplot
 #'
 ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = "hours", ylim = NA){
-  require(scales)
 
   if(colors == "viridis"){
     grad_scale = scale_fill_viridis_c()
@@ -564,7 +562,6 @@ qpercentunif = function(p, mean, percent){
 #' @param dateTime a vector of times which are to be flagged, this does not need to be POSIXct
 #' @param init POSIXct times of event
 #' @param lag integer period to add to times, should be in the same units i.e. seconds for POSIXct
-#' @import data.table
 #'
 #' @return logical vector of same length as dateTime, True denotes flagged
 #' @export
@@ -650,13 +647,10 @@ saturation_vapour_pressure <- function(TEMP, unit="C", method="Weiss"){
 #' quickly plot a lm like everyone wants from excel
 #'
 #' @param fit a lm fit object
-#' @param option currently just "caption"
 #'
-#' @return ggplot2 dotplot with equation at top
-#' @export
+#' @return ggplot2 dot plot with equation at top
 #'
-ggplot.lm <- function (fit, option="caption") {
-require(ggplot2)
+ggplot.lm <- function (fit) {
 plt = ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
   geom_point() +
   stat_smooth(method = "lm", col = "red")

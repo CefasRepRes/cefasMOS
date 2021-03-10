@@ -19,7 +19,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords profiler ctd esm2 query
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 profiler.fetch <- function(cruiseID = NA, profiler = NA,
                            after = NA, before = NA,
@@ -156,7 +156,7 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.frame of Cruise and instrument Id's
 #' @keywords profiler ctd esm2 query
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     query = paste("SELECT DISTINCT [CruiseId], [InstId] FROM [SmartBuoy].[dbo].[CtdHeader]",
@@ -178,7 +178,7 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #'
 #' @return data.frame of headers
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     query = paste("SELECT [CtdHeaderId], [CruiseId], [InstId], [Latitude], [Longitude], (CAST([StartDate] AS NVARCHAR)) AS startTime FROM",
@@ -215,7 +215,6 @@ profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @param O2_trim if true the first measurement in each bin is dropped, this is to give the sensor time to respond
 #' @return character vector of Cruise Id's
 #' @keywords profiler ctd esm2 query
-#' @import data.table
 #' @export
 profiler.binning <- function(x, bin_height= 1,
                              method = round,
@@ -269,7 +268,6 @@ profiler.binning <- function(x, bin_height= 1,
 #' @param smartbuoy_db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return list containing matched data and regression ggplot
 #' @keywords profiler ctd ferrybox QA
-#' @import data.table
 #' @export
 profiler.match_ferrybox <- function(cruiseID = NA,
                                     parameters = c('TEMP'),

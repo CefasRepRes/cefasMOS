@@ -13,7 +13,7 @@
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return dygraph or ggplot object depending on style, or if return_data is True a data.table for the timeseries.
 #' @keywords profiler ctd esm2
-#' @import data.table RODBC dygraphs
+#' @import RODBC
 #' @export
 smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       yr = year(Sys.time()),
@@ -119,7 +119,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
         dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + serial + QAlevel, value.var = 'result', fun.aggregate = median)
         dts = xts::xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
-        dg = dygraph(dts, main = title) %>% dyRangeSelector() %>% dyOptions(useDataTimezone = T)
+        dg = dygraphs::dygraph(dts, main = title) %>% dyRangeSelector() %>% dyOptions(useDataTimezone = T)
         return(list('data' = dat, 'dygraph' = dg))
     }else{ print('style not implemented') }
 }

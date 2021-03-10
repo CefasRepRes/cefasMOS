@@ -4,15 +4,13 @@
 \alias{ggplot.lm}
 \title{ggplot lm}
 \usage{
-\method{ggplot}{lm}(fit, option = "caption")
+\method{ggplot}{lm}(fit)
 }
 \arguments{
 \item{fit}{a lm fit object}
-
-\item{option}{currently just "caption"}
 }
 \value{
-ggplot2 dotplot with equation at top
+ggplot2 dot plot with equation at top
 }
 \description{
 quickly plot a lm like everyone wants from excel

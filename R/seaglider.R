@@ -8,7 +8,6 @@
 #' @param echo if true print name of log file
 #'
 #' @return data.table containing processed logfiles
-#' @import data.table
 #' @export
 read.seaglider_log <- function(glider_folder, echo=F){
   file_list = list.files(glider_folder, full.names = T, pattern = "\\d+\\.log")
@@ -114,8 +113,6 @@ read.seaglider_log <- function(glider_folder, echo=F){
 }
 
 read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp")){
-  # require(ncdf4)
-  # require(data.table)
   variables = c("dive", "time", "direction", "pressure", "lat", "lon", variables)
   nc = nc_open(ncfile)
   if(!grepl("UEA gt_sg_", ncatt_get(nc, varid=0, attname="About")$value)){
@@ -148,7 +145,7 @@ read.seaglider_toolbox_nc <- function(ncfile, variables = c("sigma0", "salinity"
 #' @param ncfile UEA glider netcdf timeseries file
 #' @param variables varibles to extract as named in netcdf, e.g. c("salinity", "temp")
 #'
-#' @import data.table ncdf4
+#' @import ncdf4
 #' @return data.table containing extracted fields
 #' @export
 read.seaglider_toolbox_ts_nc <- function(ncfile, variables = c("sigma0", "salinity", "oxygen", "temp"), keep_flag = F){
@@ -221,7 +218,6 @@ read.seaglider_eng <- function(folder=NA, files=NA){
 
 read.seaglider_basestation_binned_nc <- function(ncfile, variables = c("sigma_theta", "pressure", "salinity", "temperature")){
   # for binned basestation NC
-    # require(ncdf4)
     nc = nc_open(ncfile)
     my_vars = c("dive_number", "start_time", "start_latitude", "start_longitude",
                 "end_latitude", "end_longitude", variables)
