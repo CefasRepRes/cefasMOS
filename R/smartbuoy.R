@@ -351,9 +351,9 @@ smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
 
 #' SmartBuoy positions
 #'
-#' Fetches median positions of deployments
+#' Fetches positions of deployments, uses database deployment position rather than any telemetry.
 #'
-#' @param group if True (default) aggregates position by deployment group
+#' @param group if True (default) aggregates position (median) by deployment group
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table of positions
 #' @keywords SmartBuoy
@@ -377,19 +377,20 @@ smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
     if(group){
       d = d[,list(lat = median(lat), lon = median(long),
                   dateTo = max(dateTo), dateFrom = min(dateFrom),
-                  platform = platform[1]), by = groupId] # group by deployment group
+                  platform = platform[1]), by = list(deployment = groupId)] # group by deployment group
     }else{
       d = d[,list(lat = median(lat), lon = median(long),
                   dateTo = max(dateTo), dateFrom = min(dateFrom),
-                  platform = platform[1]), by = dep] # group by deployment
+                  platform = platform[1]), by = list(deployment = dep)] # group by deployment
     }
-    d$active = "inactive"
-    d$active[d$dateTo > lubridate::now()] = "active"
+    d[, active := "inactive"]
+    d[dateTo > lubridate::now(), active := "active"]
 
     d[platform == 1, platformName := 'SmartBuoy']
     d[platform == 4, platformName := 'Lander']
     d[platform == 8, platformName := 'Waverider']
-    return(d[,.(deployment = groupId, lat, lon, dateFrom, dateTo, platform = platformName, active)])
+    d = d[order(deployment)]
+    return(d[,.(deployment, lat, lon, dateFrom, dateTo, platform = platformName, active)])
 }
 
 #' SmartBuoy parameter codes

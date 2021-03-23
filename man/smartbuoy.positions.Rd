@@ -9,12 +9,12 @@ smartbuoy.positions(db_name = "smartbuoydblive", group = T)
 \arguments{
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 
-\item{group}{if True (default) aggregates position by deployment group}
+\item{group}{if True (default) aggregates position (median) by deployment group}
 }
 \value{
 data.table of positions
 }
 \description{
-Fetches median positions of deployments
+Fetches positions of deployments, uses database deployment position rather than any telemetry.
 }
 \keyword{SmartBuoy}
