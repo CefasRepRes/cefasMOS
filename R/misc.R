@@ -721,3 +721,35 @@ melt_dt_array <- function(x){
   return(d)
 }
 
+
+#' rescale axis for use with ggplot2 sec_axis
+#'
+#' rescales variables to use with ggplot2 when using secondary axis,
+#' perfect for a CTD profile.
+#'
+#' @param x vector of variable to be scaled
+#' @param y vector of variable to scale against
+#'
+#' @return rescaled vector
+#' @export
+#'
+#' @examples
+#'library(oce)
+#'data("ctd") # example CTD profile from oce
+#'
+#'x = as.data.frame(ctd@data)
+#'
+#'ggplot(x) +
+#'  geom_path(aes(salinity, pressure, color = "Salinity")) +
+#'  geom_path(aes(sec_axis_rescale(temperature, salinity), pressure, color = "Temperature")) +
+#'  scale_x_continuous("Salinity", sec.axis = sec_axis(bquote(Temperature~(degree*C)),
+#'                                                     trans = ~ sec_axis_rescale(., x$temperature))) +
+#'  scale_y_reverse("Pressure (dbar)")
+sec_axis_rescale <- function(x, y){
+  x_r = range(x, na.rm = T)
+  y_r = range(y, na.rm = T)
+  y_r[1] + (y_r[2] - y_r[1]) * (x - x_r[1]) / (x_r[2] - x_r[1])
+}
+
+
+
