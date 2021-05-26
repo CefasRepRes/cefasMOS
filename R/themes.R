@@ -7,11 +7,13 @@
 #' @return ggplot2 theme
 #' @export
 #'
-theme_glider <- function(base_size = 11, font_size = 12, font_family = "", line_size = 0.5,  rel_small = 12/14, rel_tiny = 11/14, rel_large = 16/14) {
+theme_glider <- function(base_size = 11, font_size = 12, font_family = "",
+                         line_size = 0.5,  rel_small = 12/14, rel_tiny = 11/14, rel_large = 16/14,
+                         legend.position = "bottom") {
   half_line <- font_size/2
   small_size <- rel_small * font_size
   theme_bw() %+replace%
-    theme(legend.position = "bottom",
+    theme(legend.position = legend.position,
           text = element_text(family = font_family,
                               face = "plain", color = "black", size = font_size,
                               hjust = 0.5, vjust = 0.5, angle = 0, lineheight = 0.9,
