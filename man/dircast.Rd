@@ -10,7 +10,7 @@ dircast(pressure)
 \item{pressure}{a order vector of pressures, any unit}
 }
 \value{
-vector of same length as pressure, with -1 for desending and 1 for assending (after deepest point)
+vector of same length as pressure, with -1 for descending and 1 for ascending (after deepest point)
 }
 \description{
 finds the deepest point of pressure record

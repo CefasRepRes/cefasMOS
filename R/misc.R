@@ -98,7 +98,7 @@ time_group <- function(x, fuzz = 0){
   dt = diff(as.numeric(x[order(x)]))
   breaks = c(F, dt > (median(dt) + fuzz))
   grps = cumsum(as.numeric(breaks)) + 1
-  return()
+  return(grps)
 }
 
 #' Round dateTime to x minutes
@@ -677,7 +677,7 @@ plt + labs(caption = paste0(
 #'
 #' @param pressure a order vector of pressures, any unit
 #'
-#' @return vector of same length as pressure, with -1 for desending and 1 for assending (after deepest point)
+#' @return vector of same length as pressure, with -1 for descending and 1 for ascending (after deepest point)
 #' @export
 dircast <- function(pressure){
   max_prs_index = min(which(pressure == max(pressure, na.rm=T)))
@@ -686,9 +686,9 @@ dircast <- function(pressure){
   return(out)
 }
 
-#' First order differentitation
+#' First order differentiation
 #'
-#' This is an implemention of Sunke Schmidtko's method for a first order differentation of a vector.
+#' This is an implementation of Sunke Schmidtko's method for a first order differentiation of a vector.
 #' Unlike the standard R diff function this returns a vector of the same length, coping with end effects.
 #' If time is supplied to the optional "t" variable then the value returned will be dx/dt.
 #' Otherwise it will just be dx.
@@ -717,11 +717,11 @@ fdiff <- function(x, t = NA){
 melt_dt_array <- function(x){
   # tested and is 3x faster than data.table(reshape2::melt(x))
   dimnames(x) <- list(NULL, 1:ncol(x))
-  d = as.data.table(x)
-  d[ , row := 1:.N]
-  d = melt.data.table(d, id.vars = "row", variable.name = "col")
-  d[ , col := as.integer(col)]
-  return(d)
+  x = as.data.table(x)
+  x[ , row := 1:.N]
+  x = melt.data.table(x, id.vars = "row", variable.name = "col")
+  x[ , col := as.integer(col)]
+  return(x)
 }
 
 

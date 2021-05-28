@@ -4,22 +4,14 @@
 \alias{findMLD}
 \title{Find mixed layer depth}
 \usage{
-findMLD(
-  z,
-  y,
-  threshold = 0.125,
-  ref_z = NA,
-  surface = T,
-  band = F,
-  mean_ref = F
-)
+findMLD(z, y, threshold = 0.3, ref_z = NA, surface = T, band = F, mean_ref = F)
 }
 \arguments{
 \item{z}{numeric vector of z (either pressure or depth)}
 
 \item{y}{vector of MLD indicating variable, typically temperature, or density}
 
-\item{threshold}{numeric y threshold, default is 0.125 (assuming you using density in kg L-1)}
+\item{threshold}{numeric y threshold, default is 0.03 (assuming you using density in kg m^-3)}
 
 \item{ref_z}{reference \code{z} for threshold, default is shallowest \code{z} available}
 
@@ -34,6 +26,8 @@ mld in units of \code{z}
 }
 \description{
 simple threshold technique
+
+For de Boyer Montegut et al, 2004 definition set threshold to 0.03 and ref_z to 10
 }
 \details{
 returns max z if threshold not met
