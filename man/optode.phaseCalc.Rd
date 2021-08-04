@@ -4,12 +4,14 @@
 \alias{optode.phaseCalc}
 \title{Optode phase}
 \usage{
-optode.phaseCalc(phase, Temp, coefs)
+optode.phaseCalc(phase, Temp, coefs, silent = F)
 }
 \arguments{
 \item{Temp}{vector of temperature (C)}
 
 \item{coefs}{list (or data.frame) consisting of C0..C6 coefs, see examples}
+
+\item{silent}{if True function won't print out the equation and batch numbers when called}
 
 \item{DPhase}{vector of phase values}
 }
@@ -17,11 +19,11 @@ optode.phaseCalc(phase, Temp, coefs)
 oxygen concentration in mmol m-3
 }
 \description{
-Uses suppled optode calibration coeffients to calculate oxygen concentration from Dphase/Calphase and temperature.
+Uses supplied optode calibration coefficients to calculate oxygen concentration from Dphase/Calphase and temperature.
 }
 \details{
 For mk1 optodes provide Dphase
-for mk2 without SVU multipoint calibtaion provide Calphase (not TCphase!)
+for mk2 without SVU multipoint calibration provide Calphase (not TCphase!)
 remember, for optodes > #1000 two point calibrations will only affect the linear transformation coefs.
 }
 \examples{
