@@ -671,6 +671,15 @@ plt + labs(caption = paste0(
            )
 }
 
+scale_colour_datetimen <- function(..., colours, values = NULL, space = "Lab",
+                                   na.value = "grey50", guide = "colourbar", colors){
+  colours <- if (missing(colours))
+    colors
+  else colours
+  ggplot2:::datetime_scale("colour", "time", palette = scales::gradient_n_pal(colours, values, space),
+                           na.value = na.value, guide = guide, ...)
+}
+
 #' mark up and down casts
 #'
 #' finds the deepest point of pressure record
