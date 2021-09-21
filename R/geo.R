@@ -104,10 +104,10 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
   if(breaks == T){
     GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
     bathy[, label := cut(depth, breaks = c(-Inf, 25, 50, 100, 200, Inf), labels = c('< 25','25-50','50-100','100-200','> 200'))]
-    bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth [m]')
+    bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth (m)')
     bathy_raster = geom_raster(aes(lon, lat, fill=label))
   }else{
-    bathy_scale = scale_fill_gradientn(name = "Depth [m]", colors=cmocean("deep")(256))
+    bathy_scale = scale_fill_gradientn(name = "Depth (m)", colors=cmocean("deep")(256))
     bathy_raster = geom_raster(aes(lon, lat, fill=depth))
   }
 
@@ -125,7 +125,7 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
   mp = ggplot(bathy) +
     bathy_raster + bathy_scale +
     coast.poly + coast.outline +
-    labs(x = NULL, y = NULL) +
+    labs(x = bquote(Latitude~(degree)), y = bquote(Longitude~(degree))) +
     coord_quickmap(xlim_exp, ylim_exp, expand = F)
 
   # mp +  geom_contour(aes(lon, lat, z=depth), binwidth=20, color="black")
