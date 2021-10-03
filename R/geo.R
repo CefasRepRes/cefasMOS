@@ -125,7 +125,7 @@ bathymap <- function(lon = c(-15, 8), lat = c(45, 64.5), breaks=T, highres=F, ex
   mp = ggplot(bathy) +
     bathy_raster + bathy_scale +
     coast.poly + coast.outline +
-    labs(x = bquote(Latitude~(degree)), y = bquote(Longitude~(degree))) +
+    labs(x = bquote(Longitude~(degree)), y = bquote(Latitude~(degree))) +
     coord_quickmap(xlim_exp, ylim_exp, expand = F)
 
   # mp +  geom_contour(aes(lon, lat, z=depth), binwidth=20, color="black")
