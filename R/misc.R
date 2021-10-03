@@ -589,6 +589,40 @@ lagged_flag <- function(dateTime, init, lag = 300){
   return(flag$flag)
 }
 
+#' Parse a NMEA GGA GPS file
+#'
+#' Tool to parse a text log containing GGA NMEA strings
+#' Note that GGA has a timestamp but not a date, so the date origin needs to be supplied
+#'
+#' Tool returns gpsTime (UTC), lat and lon in decimal degrees, number of satelites.
+#' HDOP and altitude in meters.
+#'
+#' @param file
+#' @param date_origin default "2000-01-01"
+#'
+#' @return data.table with processed positions
+#' @export
+#'
+#' @examples
+#'  gps = read.NEMA_GGA("teraterm.log", date_origin = "2021-10-02")
+read.NEMA_GGA <- function(file, date_origin = "2000-01-01"){
+  ln = readLines(file)
+  ln = ln[grepl("GPGGA", ln)]
+  GGA = stringr::str_extract_all(ln, "\\$..GGA[\\w\\d,.\\*]+")
+  GGA = data.table(stringr::str_split_fixed(GGA, ",", 15))
+  GGA[, gpsTime := as.POSIXct(paste(date_origin, V2), format = "%Y-%m-%d %H%M%S", origin = , tz = "UTC")]
+  GGA[, lat := convert_latlong(stringr::str_sub(V3,1,2), stringr::str_sub(V3, -8, -1), polarity = V4)]
+  GGA[, lon := convert_latlong(stringr::str_sub(V5,1,3), stringr::str_sub(V5, -8, -1), polarity = V6)]
+  GGA[, fix := V7]
+  GGA[, sat := V8]
+  GGA[, HDOP := V9]
+  GGA[, alt := V10]
+  GGA = GGA[fix != 0 & sat != "0"]
+  return(GGA[,.(gpsTime, lat, lon, sat, HDOP, alt)])
+}
+
+
+
 #' Calculate relative humidity from air temperature and dewpoint
 #'
 #' @param t2m air temperature
