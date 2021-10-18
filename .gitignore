@@ -5,3 +5,4 @@
 .Rbuildignore
 *.html
 dev/
+tags
