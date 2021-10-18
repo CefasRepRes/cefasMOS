@@ -393,3 +393,40 @@ read.CTDQC <- function(session, type = c("data", "untrimmed")){
   }
   return(rbindlist(m, idcol="stn", fill=T))
 }
+
+#' read and parse NMEA GGA log file
+#'
+#' Tool will parse a NMEA log file, and decode each line with a "$xxGGA" string
+#' Note that GGA does not contain the date, only UTC time, so a date origin must be supplied for each file.
+#' If your log file spans multiple days, make sure you handle the roll-over at midnight!
+#'
+#' This tool also ignores any prefix to the $xxGGA string start, so preceding Teraterm timestamps are ignored.
+#'
+#' @param file filename
+#' @param date_origin character string containing the date origin in "YYYY-MM-DD"
+#' @param only_good if True (default) discard lines with bad GPS fixes
+#'
+#' @return data.table containing, gpsTime, lat, lon, number of satelites, HDOP (meters) and altitude (meters)
+#' @export
+#'
+#' @examples
+#' read.NMEA_GGA("teraterm.log", "2020-01-01")
+read.NMEA_GGA <- function(file, date_origin = "2000-01-01", only_good = T){
+  ln = readLines(file)
+  ln = ln[grepl("\\w\\wGGA", ln)]
+  GGA = stringr::str_extract_all(ln, "\\$..GGA[\\w\\d,.\\*]+")
+  GGA = data.table(stringr::str_split_fixed(GGA, ",", 15))
+  GGA[, gpsTime := as.POSIXct(paste(date_origin, V2), format = "%Y-%m-%d %H%M%S", origin = , tz = "UTC")]
+  GGA[, lat := convert_latlong(stringr::str_sub(V3,1,2), stringr::str_sub(V3, -8, -1), polarity = V4)]
+  GGA[, lon := convert_latlong(stringr::str_sub(V5,1,3), stringr::str_sub(V5, -8, -1), polarity = V6)]
+  GGA[, fix := V7]
+  GGA[, sat := as.numeric(V8)]
+  GGA[, HDOP := as.numeric(V9)]
+  GGA[, alt := as.numeric(V10)]
+  if(only_good){
+    GGA = GGA[fix != 0 & sat != "0"]
+    return(GGA[,.(gpsTime, lat, lon, sat, HDOP, alt)])
+  }else{
+    return(GGA[,.(gpsTime, lat, lon, sat, HDOP, alt, fix)])
+  }
+}
