@@ -430,3 +430,39 @@ read.NMEA_GGA <- function(file, date_origin = "2000-01-01", only_good = T){
     return(GGA[,.(gpsTime, lat, lon, sat, HDOP, alt, fix)])
   }
 }
+
+#' Read ESMx Burst files
+#'
+#' @param file
+#'
+#' @return
+#'
+#' @examples
+#' flist = list.files(pattern = "Burst*") # get the files e.g. "1001_Burst 2.csv"
+#' d = lapply(flist, read.ESMxburst)
+#' d = rbindlist(d)[order(dateTime)]
+read.ESMxburst <- function(file){
+    # read ESMx converted bin (burst)
+  print(file)
+  d = list()
+  ln = readLines(file)
+  start_ind = which(grepl("Burst", ln))
+  end_ind = c(start_ind[-1]-1, length(ln))
+  for(i in 1:length(start_ind)){
+    varname = ln[start_ind[i]]
+    if(end_ind[i] - start_ind[i] < 1){
+      warning(paste("No data for "), file, varname)
+    }else{
+      DT = fread(text = ln[(start_ind[i]+1):end_ind[i]])
+      DT[, V1 := as.POSIXct(V1, format = "%d/%m/%Y %H:%M:%S", tz = "UTC")]
+      colnames(DT) = c("dateTime", 1:(ncol(DT)-1))
+      DT = melt(DT, id.var = "dateTime")
+      DT[, sensor := stringr::str_extract(varname, "(?<=- )\\w+")]
+      DT[, burst := as.numeric(stringr::str_extract(varname, "(?<=Burst )(\\d+)"))]
+      d[[i]] = DT
+    }
+  }
+  d = rbindlist(d, fill = T)
+  setcolorder(d, c("dateTime", "burst", "sensor", "variable", "value"))
+  return(d)
+}
