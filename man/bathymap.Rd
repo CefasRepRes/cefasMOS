@@ -5,8 +5,8 @@
 \title{GEBCO Bathymetry base map}
 \usage{
 bathymap(
-  lon = c(-15, 8),
-  lat = c(45, 64.5),
+  lon = c(-14, 9),
+  lat = c(46, 62),
   breaks = T,
   highres = F,
   expand = 0.02
