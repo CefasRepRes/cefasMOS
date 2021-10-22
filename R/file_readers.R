@@ -26,7 +26,6 @@
 #' @param print optional boolean indicating if current file should be printed, default is True.
 #' @return data.table
 #' @keywords ferrybox
-#' @import data.table
 #' @export
 read.ferrybox.devdata <- function(devdata_folder, pivot = F, print = T){
 
@@ -79,7 +78,6 @@ read.ferrybox.devdata <- function(devdata_folder, pivot = F, print = T){
 #' @param conlog character string indicating device data file
 #' @return data.frame
 #' @keywords ferrybox conlog
-#' @import data.table
 #' @importFrom stringr str_extract
 #' @export
 read.ferrybox.conlog <- function(conlog){
@@ -175,8 +173,8 @@ read.ULP000 <- function(file){
 #' @param print_file if true filenames are printed as processed (faster without)
 #' @param debug if true enables careful parsing
 #' @return data.frame (data.table) of processed 10min files
-#' @import data.table
 #' @keywords ferrybox 10minfile
+#' @importFrom zoo na.locf
 #' @export
 read.ferrybox.10min <- function(folder, recursive = F, print_file = F, debug = F){
   # for(f in list.files(folder, recursive = T))
@@ -239,7 +237,6 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = F, debug = F
 #' @param file location of live aquire file, leave blank to use dialog box
 #' @return a list containing a data frame and ggplot
 #' @keywords smartbuoy esm2
-#' @import ggplot2
 #' @export
 read.SmartBuoyLiveAquireExport <- function(file = svDialogs::dlgOpen(title = 'Open LiveAquire file...')$res){
   warning("This tool can not be considered 'robust'!")
@@ -261,12 +258,45 @@ read.SmartBuoyLiveAquireExport <- function(file = svDialogs::dlgOpen(title = 'Op
     return(list(dat, plot))
 }
 
+#' Read (and check) ESM2 LiveAquire
+#'
+#' Function to parse and optionally plot liveaquire data
+#'
+#' @param f filename
+#' @param plot if True (default) plots the liveaquire data
+#'
+#' @return ggplot or data.table depending on value of "plot"
+#' @export
+#'
+read.liveAquire <- function(f, plot = T){
+  x = fread(f)
+  m = suppressWarnings(melt(x, id.vars = "Seconds Elapsed"))
+  m = m[!is.na(value)]
+  m[, variable := gsub(",|#|\\(|\\)", "", variable)]
+  m[, c("channel", "variable") := tstrsplit(variable, ":")]
+  m[, c("serial", "variable", "depth") := tstrsplit(variable, " ")]
+  m[, channel := as.numeric(channel)]
+  if(plot == T){
+    p1 = ggplot(m[channel %between% c(0, 5.9)]) + geom_line(aes(`Seconds Elapsed`, value, color = variable)) +
+      facet_grid(channel + serial + depth + variable ~ ., scales = "free_y") +
+      theme(legend.position = "none") +
+      labs(title = f, y = NULL)
+    p2 = ggplot(m[channel %between% c(6, 19)]) + geom_line(aes(`Seconds Elapsed`, value, color = variable)) +
+      facet_grid(channel + serial + depth + variable ~ ., scales = "free_y") +
+      labs(y = NULL) +
+      theme(legend.position = "none")
+    return(p1 + p2)
+  }else{
+    return(m)
+  }
+}
+
+
 #' read analog live aquire data
 #'
 #' @param x one or more files captured from liveaquire
 #' @param channels_table data.frame containing channel calibrations
 #' @return processed data table
-#' @import data.table
 #' @export
 #'
 read.liveAquireAnalog <- function(x, channels_table = data.frame(channel = c(0, 1, 6),
@@ -355,7 +385,6 @@ read.BODC_ctd_ascii <- function(file, stripAgg = T){
 #' @param filename single xlsx filename
 #'
 #' @return long format data.table
-#' @import openxlsx data.table
 #' @export
 read.nutrients <- function(filename){
   r = openxlsx::read.xlsx(filename, sheet="Samples", detectDates=F)

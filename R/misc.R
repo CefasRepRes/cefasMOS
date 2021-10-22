@@ -9,7 +9,6 @@
 #' @param dat a matrix denoting the mean and standard deviation, see examples
 #' @param mode either `"prop"` or `"MC`
 #' @param n number of iterations for Monte-Carlo, minimum is 10000
-#' @import propagate
 #'
 #' @return a list of mean and standard deviations
 #' @export
@@ -105,6 +104,7 @@ time_group <- function(x, fuzz = 0){
 #' @param x vector of POSIXct datetimes
 #' @param minutes integer minutes to round to, default is 30
 #'
+#' @importFrom lubridate is.POSIXct
 #' @return vector of rounded POSIXct
 #' @export
 round_minute <- function(x, minutes = 30){
@@ -255,17 +255,19 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #' Find mixed layer depth
 #'
 #' @description  simple threshold technique
+#'
+#' For de Boyer Montegut et al, 2004 definition set threshold to 0.03 and ref_z to 10
+#'
 #' @details returns max z if threshold not met
 #' @param z numeric vector of z (either pressure or depth)
 #' @param y vector of MLD indicating variable, typically temperature, or density
-#' @param threshold numeric y threshold, default is 0.125 (assuming you using density in kg L-1)
+#' @param threshold numeric y threshold, default is 0.03 (assuming you using density in kg m^-3)
 #' @param ref_z reference `z` for threshold, default is shallowest `z` available
 #' @param surface default is true, set to false for bottom mixed layer threshold (base of gradient)
 #' @param band default is false, if true function returns paired vector of interval which meets threshold
 #' @param mean_ref if T will take the mean of the values above `ref_z` as the reference `y`
 #'
 #' @return mld in units of `z`
-#' @import data.table
 #' @export
 #' @examples
 #' x = data.table(pressure = 1:100,
@@ -274,7 +276,7 @@ SAL_from_CT <- function (Cond, t, p = max(0, P - 1.013253), P = 1.013253) {
 #'                                 xout = 1:100)$y)
 #'
 #' findMLD(x$pressure, x$density)
-findMLD <- function(z, y, threshold = 0.125, surface = T, band = F, ref_z = NA, mean_ref = F){
+findMLD <- function(z, y, threshold = 0.03, ref_z = NA, surface = T, band=F, mean_ref=F){
   y = y[order(z)] # make sure you sort y first
   z = z[order(z)]
   # note this means if you supply a up and down cast they are combined together
@@ -350,6 +352,7 @@ findMLD <- function(z, y, threshold = 0.125, surface = T, band = F, ref_z = NA, 
 #' @param from either "year", "start" or provide a "YYYY-mm-dd" date to start from. "year is default"
 #'
 #' @return numeric vector of day of the year with decimal time
+#' @importFrom lubridate is.POSIXct
 #' @export
 ydaytime <- function(x, from = "year"){
   if(!lubridate::is.POSIXct(x)){stop("input is not valid POSIXct!")}
@@ -382,7 +385,6 @@ ydaytime <- function(x, from = "year"){
 #' @param threshold integer value for maximum permissible gap between lookup value, unit = seconds for "dateTime".
 #' @param return if false (default) values with no match, or outside threshold are dropped
 #' @return data.table with added variable column and index from `reference`
-#' @import data.table
 #'
 #' @examples
 #'dat = data.table(i = c(4.3, 5.9, 1.2), datval = runif(3)+10, datstuff="test")
@@ -441,7 +443,6 @@ smartbuoy.telid <- function(x){
 #' @return ggplot
 #'
 ggwavelet <- function(wt, base = 2, colors = "viridis", isPOSIXct = T, yscale = "hours", ylim = NA){
-  require(scales)
 
   if(colors == "viridis"){
     grad_scale = scale_fill_viridis_c()
@@ -543,7 +544,6 @@ qpercentunif = function(p, mean, percent){
 #' @param dateTime a vector of times which are to be flagged, this does not need to be POSIXct
 #' @param init POSIXct times of event
 #' @param lag integer period to add to times, should be in the same units i.e. seconds for POSIXct
-#' @import data.table
 #'
 #' @return logical vector of same length as dateTime, True denotes flagged
 #' @export
@@ -567,6 +567,40 @@ lagged_flag <- function(dateTime, init, lag = 300){
   }
   return(flag$flag)
 }
+
+#' Parse a NMEA GGA GPS file
+#'
+#' Tool to parse a text log containing GGA NMEA strings
+#' Note that GGA has a timestamp but not a date, so the date origin needs to be supplied
+#'
+#' Tool returns gpsTime (UTC), lat and lon in decimal degrees, number of satelites.
+#' HDOP and altitude in meters.
+#'
+#' @param file
+#' @param date_origin default "2000-01-01"
+#'
+#' @return data.table with processed positions
+#' @export
+#'
+#' @examples
+#'  gps = read.NMEA_GGA("teraterm.log", date_origin = "2021-10-02")
+read.NMEA_GGA <- function(file, date_origin = "2000-01-01"){
+  ln = readLines(file)
+  ln = ln[grepl("GPGGA", ln)]
+  GGA = stringr::str_extract_all(ln, "\\$..GGA[\\w\\d,.\\*]+")
+  GGA = data.table(stringr::str_split_fixed(GGA, ",", 15))
+  GGA[, gpsTime := as.POSIXct(paste(date_origin, V2), format = "%Y-%m-%d %H%M%S", origin = , tz = "UTC")]
+  GGA[, lat := convert_latlong(stringr::str_sub(V3,1,2), stringr::str_sub(V3, -8, -1), polarity = V4)]
+  GGA[, lon := convert_latlong(stringr::str_sub(V5,1,3), stringr::str_sub(V5, -8, -1), polarity = V6)]
+  GGA[, fix := V7]
+  GGA[, sat := V8]
+  GGA[, HDOP := V9]
+  GGA[, alt := V10]
+  GGA = GGA[fix != 0 & sat != "0"]
+  return(GGA[,.(gpsTime, lat, lon, sat, HDOP, alt)])
+}
+
+
 
 #' Calculate relative humidity from air temperature and dewpoint
 #'
@@ -629,12 +663,10 @@ saturation_vapour_pressure <- function(TEMP, unit="C", method="Weiss"){
 #' quickly plot a lm like everyone wants from excel
 #'
 #' @param fit a lm fit object
-#' @param option currently just "caption"
 #'
-#' @return ggplot2 dotplot with equation at top
-#' @export
+#' @return ggplot2 dot plot with equation at top
 #'
-ggplot.lm <- function (fit, option="caption") {
+ggplot.lm <- function (fit) {
 plt = ggplot(fit$model, aes_string(x = names(fit$model)[2], y = names(fit$model)[1])) +
   geom_point() +
   stat_smooth(method = "lm", col = "red")
@@ -652,6 +684,15 @@ plt + labs(caption = paste0(
            )
 }
 
+scale_colour_datetimen <- function(..., colours, values = NULL, space = "Lab",
+                                   na.value = "grey50", guide = "colourbar", colors){
+  colours <- if (missing(colours))
+    colors
+  else colours
+  ggplot2:::datetime_scale("colour", "time", palette = scales::gradient_n_pal(colours, values, space),
+                           na.value = na.value, guide = guide, ...)
+}
+
 #' mark up and down casts
 #'
 #' finds the deepest point of pressure record
@@ -667,9 +708,9 @@ dircast <- function(pressure){
   return(out)
 }
 
-#' First order differentitation
+#' First order differentiation
 #'
-#' This is an implemention of Sunke Schmidtko's method for a first order differentation of a vector.
+#' This is an implementation of Sunke Schmidtko's method for a first order differentiation of a vector.
 #' Unlike the standard R diff function this returns a vector of the same length, coping with end effects.
 #' If time is supplied to the optional "t" variable then the value returned will be dx/dt.
 #' Otherwise it will just be dx.
@@ -698,11 +739,11 @@ fdiff <- function(x, t = NA){
 melt_dt_array <- function(x){
   # tested and is 3x faster than data.table(reshape2::melt(x))
   dimnames(x) <- list(NULL, 1:ncol(x))
-  d = as.data.table(x)
-  d[ , row := 1:.N]
-  d = melt.data.table(d, id.vars = "row", variable.name = "col")
-  d[ , col := as.integer(col)]
-  return(d)
+  x = as.data.table(x)
+  x[ , row := 1:.N]
+  x = melt.data.table(x, id.vars = "row", variable.name = "col")
+  x[ , col := as.integer(col)]
+  return(x)
 }
 
 #' Tidier for Stan timeseries
@@ -737,10 +778,37 @@ tidyMCMCts <- function(fit){
 
 scale_colour_datetimen <- function (..., colours, values = NULL, space = "Lab", na.value = "grey50",
                                     guide = "colourbar", aesthetics = "colour"){
+  # fix for broken ggplot2 datetime colour scales
   ggplot2:::datetime_scale("colour", "time",
                            palette = scales::gradient_n_pal(colours, values, space),
                            na.value = na.value, guide = guide, ...)
 }
 
-
-
+#' rescale axis for use with ggplot2 sec_axis
+#'
+#' rescales variables to use with ggplot2 when using secondary axis,
+#' perfect for a CTD profile.
+#'
+#' @param x vector of variable to be scaled
+#' @param y vector of variable to scale against
+#'
+#' @return rescaled vector
+#' @export
+#'
+#' @examples
+#'library(oce)
+#'data("ctd") # example CTD profile from oce
+#'
+#'x = as.data.frame(ctd@data)
+#'
+#'ggplot(x) +
+#'  geom_path(aes(salinity, pressure, color = "Salinity")) +
+#'  geom_path(aes(sec_axis_rescale(temperature, salinity), pressure, color = "Temperature")) +
+#'  scale_x_continuous("Salinity", sec.axis = sec_axis(bquote(Temperature~(degree*C)),
+#'                                                     trans = ~ sec_axis_rescale(., x$temperature))) +
+#'  scale_y_reverse("Pressure (dbar)")
+sec_axis_rescale <- function(x, y){
+  x_r = range(x, na.rm = T)
+  y_r = range(y, na.rm = T)
+  y_r[1] + (y_r[2] - y_r[1]) * (x - x_r[1]) / (x_r[2] - x_r[1])
+}

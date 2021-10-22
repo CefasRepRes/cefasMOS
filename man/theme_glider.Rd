@@ -7,7 +7,7 @@
 theme_glider(
   base_size = 11,
   font_size = 12,
-  font_family = "",
+  base_family = "serif",
   line_size = 0.5,
   rel_small = 12/14,
   rel_tiny = 11/14,

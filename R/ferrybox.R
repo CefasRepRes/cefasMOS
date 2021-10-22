@@ -14,7 +14,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return data.frame with returned data in "long" format or error string if no data returned
 #' @keywords ferrybox query
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 ferrybox.fetch <- function(cruiseID = NA,
                            after = NA, before = NA,
@@ -119,6 +119,7 @@ ferrybox.fetch <- function(cruiseID = NA,
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return character vector of Cruise Id's
 #' @keywords ferrybox query
+#' @import RODBC
 #' @export
 ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
     query = "SELECT DISTINCT [CruiseId] FROM ConfigHeader"
@@ -141,7 +142,7 @@ ferrybox.cruiselist <- function(yr = 'ALL', db_name = 'ferrybox'){
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param db_name character string matching ODBC data source name, defaults to 'ferrybox'
 #' @return data.frame (data.table) containing the ferrybox cruise track
-#' @import data.table RODBC
+#' @import RODBC
 #' @keywords ferrybox query
 #' @export
 ferrybox.position <- function(cruiseID = NA,
@@ -253,6 +254,7 @@ ferrybox.haserror <- function(x, code){
 #' @param unit "knots" (default) or "ms" for meters per second
 #'
 #' @return vector of speeds
+#' @importFrom geosphere distGeo
 #' @export
 #'
 ferrybox.speed <- function(dateTime, lat, lon, threshold = 65, unit = "knots"){

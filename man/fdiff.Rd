@@ -2,7 +2,7 @@
 % Please edit documentation in R/misc.R
 \name{fdiff}
 \alias{fdiff}
-\title{First order differentitation}
+\title{First order differentiation}
 \usage{
 fdiff(x, t = NA)
 }
@@ -15,7 +15,7 @@ fdiff(x, t = NA)
 
 }
 \description{
-This is an implemention of Sunke Schmidtko's method for a first order differentation of a vector.
+This is an implementation of Sunke Schmidtko's method for a first order differentiation of a vector.
 Unlike the standard R diff function this returns a vector of the same length, coping with end effects.
 If time is supplied to the optional "t" variable then the value returned will be dx/dt.
 Otherwise it will just be dx.

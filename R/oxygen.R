@@ -98,15 +98,16 @@ optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
 
 #' Optode phase
 #'
-#' Uses suppled optode calibration coeffients to calculate oxygen concentration from Dphase/Calphase and temperature.
+#' Uses supplied optode calibration coefficients to calculate oxygen concentration from Dphase/Calphase and temperature.
 #'
 #' For mk1 optodes provide Dphase
-#' for mk2 without SVU multipoint calibtaion provide Calphase (not TCphase!)
+#' for mk2 without SVU multipoint calibration provide Calphase (not TCphase!)
 #' remember, for optodes > #1000 two point calibrations will only affect the linear transformation coefs.
 #'
 #' @param DPhase vector of phase values
 #' @param Temp vector of temperature (C)
 #' @param coefs list (or data.frame) consisting of C0..C6 coefs, see examples
+#' @param silent if True function won't print out the equation and batch numbers when called
 #'
 #' @return oxygen concentration in mmol m-3
 #' @export
@@ -137,11 +138,11 @@ optode.analogCalphase <- function(v, PhaseLimit0=10, PhaseLimit1=70){
 #'   C4 = c(0.000265042, -0.00000683, 0.000000167, -1.62E-09))
 #' optode.phaseCalc(30, 10, coefs=coefs)
 
-optode.phaseCalc <- function(phase, Temp, coefs){
+optode.phaseCalc <- function(phase, Temp, coefs, silent = F){
   with(coefs, {
     if(coef[1] == "SVU"){
       # For 4831 multipoint calibrated optodes
-      print(paste("using SVU foil batch coefs", batch))
+      if(!silent){ print(paste("using SVU foil batch coefs", batch)) }
       Ksv = C0 + C1*Temp + C2*Temp^2
       P0 = C3 + C4*Temp
       Pc = C5 + C6*phase # actually calphase
@@ -149,7 +150,7 @@ optode.phaseCalc <- function(phase, Temp, coefs){
     }
     if(coef[1] == "mk1"){
       # for mkl optodes 3830 & 3835
-      print(paste("using mk1 foil batch coefs", batch[1]))
+      if(!silent){ print(paste("using mk1 foil batch coefs", batch[1])) }
       DO = (C0[1]+C0[2]*Temp+C0[3]*Temp^2+C0[4]*Temp^3) +
         (C1[1]+C1[2]*Temp+C1[3]*Temp^2+C1[4]*Temp^3) *
         phase+(C2[1]+C2[2]*Temp+C2[3]*Temp^2+C2[4]*Temp^3) *
@@ -159,7 +160,7 @@ optode.phaseCalc <- function(phase, Temp, coefs){
     }
     if(coef[1] == "mk2"){
       # for mk2 optodes 4330, 4835
-      print(paste("using mk2 foil batch coefs", batch[1]))
+      if(!silent){ print(paste("using mk2 foil batch coefs", batch[1])) }
         # calculate partial pressure
 
       Pp =

@@ -13,7 +13,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggmap object
 #' @keywords SmartBuoy
-#' @import ggplot2 data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.map <- function(platforms = c(1, 4, 8),
                             deployment_group_id = 'ALL',
@@ -84,7 +84,6 @@ smartbuoy.map <- function(platforms = c(1, 4, 8),
 #' @references Coastlines from rworldmap
 #'
 #' @return ggplot
-#' @import ggplot2 rworldmap cmocean
 #' @export
 #'
 bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expand = 0.02){
@@ -105,10 +104,10 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
   if(breaks == T){
     GEBCOcolors5 = rev(c("#0F7CAB", "#38A7BF", "#68CDD4", "#A0E8E4", "#E1FCF7"))
     bathy[, label := cut(depth, breaks = c(-Inf, 25, 50, 100, 200, Inf), labels = c('< 25','25-50','50-100','100-200','> 200'))]
-    bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth [m]')
+    bathy_scale = scale_fill_manual(values = GEBCOcolors5, name='Depth (m)')
     bathy_raster = geom_raster(aes(lon, lat, fill=label))
   }else{
-    bathy_scale = scale_fill_gradientn(name = "Depth [m]", colors=cmocean("deep")(256))
+    bathy_scale = scale_fill_gradientn(name = "Depth (m)", colors=cmocean("deep")(256))
     bathy_raster = geom_raster(aes(lon, lat, fill=depth))
   }
 
@@ -126,7 +125,7 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
   mp = ggplot(bathy) +
     bathy_raster + bathy_scale +
     coast.poly + coast.outline +
-    labs(x = NULL, y = NULL) +
+    labs(x = bquote(Longitude~(degree)), y = bquote(Latitude~(degree))) +
     coord_quickmap(xlim_exp, ylim_exp, expand = F)
 
   # mp +  geom_contour(aes(lon, lat, z=depth), binwidth=20, color="black")
@@ -204,6 +203,7 @@ convert_latlong_ddmmm <- function(degrees, paste=T){
 #' @param size distance in meters
 #'
 #' @return vector of limits (north, east, south, west)
+#' @importFrom geosphere destPoint
 #' @export
 #'
 #' @examples
@@ -265,7 +265,7 @@ match_spacetime <- function(x, y, distance_threshold = 5000, time_threshold = 36
 #' @param dt distance in meters to match within
 #' @param tt time in seconds to match within
 #' @param merge bool
-#' @import geosphere ggplot2 data.table
+#' @import geosphere
 #'
 #' @return if merge is true (default) returns single combined data.table of matching values, else returns list of the two subset data.tables
 #' @export

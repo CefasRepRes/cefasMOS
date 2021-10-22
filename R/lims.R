@@ -13,7 +13,7 @@
 #' @param convert convert fields to numeric? default = True
 #' @param db_name character string matching ODBC data source name, defaults to 'lims'
 #' @return data frame (data.table) of extracted nutrients data
-#' @import RODBC data.table
+#' @import RODBC
 #' @export
 lims.fetch <- function(parameters = c('SAL', 'CHLOROPHYLL', 'SPM', 'TOXN', 'SIO4', 'NH4', 'PHAEOP', 'NO2', 'PO4', 'DO2'),
                        cruise = NA,

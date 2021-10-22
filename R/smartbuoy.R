@@ -48,7 +48,7 @@
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                            after = NA, before = NA,
@@ -183,7 +183,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.fetch_burst <- function(deployment = NA,
                            parameters = NA,
@@ -218,6 +218,56 @@ smartbuoy.fetch_burst <- function(deployment = NA,
     return(dat)
 }
 
+smartbuoy.fetch_wavenet <- function(deployment = NA, deployment_group = NA,
+                           after = NA, before = NA,
+                           db_name = 'smartbuoydblive'){
+
+  query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
+                  "[Deployment Id] as deployment,",
+                  "[Deployment Group Id] as deployment_group,",
+                  "[Deployment Latitude] as lat,",
+                  "[Deployment Longitude] as lon,",
+                  "[Instrument Id] as instrument_id,",
+                  "[Result - mean] as value,",
+                  "[Parameter Code] as par,",
+                  "SensorParameter.[ParUnit] as unit",
+                  "FROM AdHocRetrieval_BurstMeanResults",
+                  "INNER JOIN SensorParameter ON",
+                  "AdHocRetrieval_BurstMeanResults.[Sensor Id] = SensorParameter.SensorId AND",
+                  "AdHocRetrieval_BurstMeanResults.[Parameter Code] = SensorParameter.ParCode")
+
+    query = paste0(query, " WHERE [Parameter code] IN ('Hm0', 'Tpeak', 'Tz', 'W_PDIR', 'W_SPR')")
+
+    # filter deployments, is.na evaluates each element of vector, so only check first one is not NA
+    if(!is.na(deployment[1])){
+        deployment = paste(deployment, collapse = "', '")
+        query = paste0(query, " AND [Deployment Id] IN ('", deployment, "')")
+    }
+    if(!is.na(deployment_group[1])){
+        deployment_group = paste(deployment_group, collapse = "', '")
+        query = paste0(query, " AND [Deployment Group Id] IN ('", deployment_group, "')")
+    }
+      # if before or after is suppled build filter into query
+    if(!is.na(before)){
+        query = paste0(query, " AND [Date/Time] <= '", before, "'")
+    }
+    if(!is.na(after)){
+        query = paste0(query, " AND [Date/Time] >= '", after, "'")
+    }
+    print(query)
+    sb = odbcConnect(db_name)
+    dat = data.table(sqlQuery(sb, query))
+    odbcCloseAll()
+
+    # check if valid data has been returned, if not quit
+    if(! nrow(dat) > 1){
+        stop("no data returned")
+    }
+    dat[, dateTime := as.POSIXct(dateTime, format="%b %d %Y %I:%M%p", tz="UTC")]
+    return(dat[order(dateTime)])
+}
+
+
 #' SmartBuoy T/S plots
 #'
 #' Draws a T/S plot for a SmartBuoy Deployment
@@ -227,7 +277,7 @@ smartbuoy.fetch_burst <- function(deployment = NA,
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return ggplot object
 #' @keywords esm2
-#' @import ggplot2 data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
 
@@ -283,7 +333,7 @@ smartbuoy.TS <- function(deployment, db_name = 'smartbuoydblive'){
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #'
 #' @return data.table containing query results
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
                                  parameters = NA,
@@ -337,6 +387,7 @@ smartbuoy.sensorCals <- function(deployment = NA, deployment_group= NA,
 #' @param deployment_group provide if you want everything for a site e.g. "WESTGAB2"
 #'
 #' @return data.table of lat-long from telemetry messages
+#' @import RODBC
 #' @export
 #'
 smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
@@ -379,13 +430,13 @@ smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
 
 #' SmartBuoy positions
 #'
-#' Fetches median positions of deployments
+#' Fetches positions of deployments, uses database deployment position rather than any telemetry.
 #'
-#' @param group if True (default) aggregates position by deployment group
+#' @param group if True (default) aggregates position (median) by deployment group
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table of positions
 #' @keywords SmartBuoy
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
     sbdb = odbcConnect(db_name)
@@ -405,19 +456,20 @@ smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
     if(group){
       d = d[,list(lat = median(lat), lon = median(long),
                   dateTo = max(dateTo), dateFrom = min(dateFrom),
-                  platform = platform[1]), by = groupId] # group by deployment group
+                  platform = platform[1]), by = list(deployment = groupId)] # group by deployment group
     }else{
       d = d[,list(lat = median(lat), lon = median(long),
                   dateTo = max(dateTo), dateFrom = min(dateFrom),
-                  platform = platform[1]), by = dep] # group by deployment
+                  platform = platform[1]), by = list(deployment = dep)] # group by deployment
     }
-    d$active = "inactive"
-    d$active[d$dateTo > lubridate::now()] = "active"
+    d[, active := "inactive"]
+    d[dateTo > lubridate::now(), active := "active"]
 
     d[platform == 1, platformName := 'SmartBuoy']
     d[platform == 4, platformName := 'Lander']
     d[platform == 8, platformName := 'Waverider']
-    return(d[,.(deployment = groupId, lat, lon, dateFrom, dateTo, platform = platformName, active)])
+    d = d[order(deployment)]
+    return(d[,.(deployment, lat, lon, dateFrom, dateTo, platform = platformName, active)])
 }
 
 #' SmartBuoy parameter codes
@@ -427,7 +479,7 @@ smartbuoy.positions <- function(db_name = 'smartbuoydblive', group=T){
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table of parcodes
 #' @keywords SmartBuoy
-#' @import data.table RODBC
+#' @import RODBC
 #' @export
 smartbuoy.parcodes <- function(db_name = 'smartbuoydblive'){
   sbdb = odbcConnect(db_name)

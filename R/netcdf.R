@@ -4,6 +4,7 @@
 #'
 #' @import ncdf4
 #' @return variable names
+#' @import ncdf4
 #' @export
 nc_print <- function(ncfile){
   nc = nc_open(ncfile)
@@ -17,7 +18,7 @@ nc_print <- function(ncfile){
 #' @param convert_units if True convert to more typical units (i.e. Celcius / mbar), default is False.
 #'
 #' @return data.table containing all netcdf variables in wide format
-#' @import ncdf4 data.table
+#' @import ncdf4
 #' @export
 read.ecmwf <- function(file, convert_units = F){
   nc = nc_open(file)
