@@ -4,7 +4,7 @@
 \alias{read.ferrybox.10min}
 \title{Ferrybox 10min file data reader}
 \usage{
-read.ferrybox.10min(folder, recursive = F, print_file = F, debug = F)
+read.ferrybox.10min(folder, recursive = T, print_file = F, debug = F)
 }
 \arguments{
 \item{folder}{folder containing 10min files}
