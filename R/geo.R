@@ -86,6 +86,9 @@ bathy_match <- function(lon, lat){
 
 #' Convert degrees + decimal minutes to decimal degrees
 #'
+#' Be mindful of precision, 4 decimal places points to a room in a house, while
+#' 5 decimal places would be a person in that room, if you're reporting to 6 decimal places you're lying!
+#'
 #' @param degrees numeric vector of whole degrees, if negative will convert to W or S.
 #' @param decimal_minutes numeric vector of decimal minutes
 #' @param polarity optional "E, W, N, S"
@@ -108,7 +111,7 @@ convert_latlong <- function(degrees, decimal_minutes, polarity = NA){
 #' Convert decimal degrees  to degrees + decimal minutes
 #'
 #' @param degrees numeric vector of decimal degrees
-#' @param paste if True (default) return a pasted string, otherwise returns list of DD and MM
+#' @param paste if True (default) return formatted string, otherwise returns list of DD and MM
 #'
 #' @return decimal degrees
 #' @export
@@ -116,7 +119,7 @@ convert_latlong_ddmmm <- function(degrees, paste=T){
   dd = floor(abs(degrees)) * sign(degrees)
   mm = round((abs(degrees) %% 1) * 60, 3)
   if(paste){
-    return(paste0(dd, "'", mm))
+    return(paste0(dd, "°", sprintf("%03.3f", mm)))
   }else{
     return(list(dd, mm))
   }
