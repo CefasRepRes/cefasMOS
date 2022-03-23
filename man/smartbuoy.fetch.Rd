@@ -48,7 +48,10 @@ data.table with returned data in "long" format or error string if no data return
 Fetches SmartBuoy data
 }
 \details{
-This function querys the Smartbuoy database and returns
+This function queries the SmartBuoy database and returns a data.table
+
+The averaging_period parameter does a simple time-stamp based block-mean.
+i.e. it will include data from multiple sensors or buoys if they overlap.
 
 If using RQ0 = F QA flags are returned:
 \itemize{

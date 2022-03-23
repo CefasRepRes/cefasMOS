@@ -5,7 +5,10 @@
 #'
 #' Fetches SmartBuoy data
 #'
-#' @details This function querys the Smartbuoy database and returns
+#' @details This function queries the SmartBuoy database and returns a data.table
+#'
+#' The averaging_period parameter does a simple time-stamp based block-mean.
+#'  i.e. it will include data from multiple sensors or buoys if they overlap.
 #'
 #' If using RQ0 = F QA flags are returned:
 #' - 0 - Data passed all active QA checks
@@ -99,6 +102,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                   "[Result - mean] as value,",
                   "[Result - Std Dev] as stdev,",
                   "[Result - Count] as n,",
+                  "[Result - Confidence Limit] as stdev_derived,",
                   "[Sensor Descr] as sensor,",
                   "[Sensor Serial Number] as sensor_serial,",
                   "[Parameter Code] as par,",
@@ -167,7 +171,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
         averaging_period = averaging_period*60*60 # convert to seconds
         dat$dateTime = as.POSIXct(round(as.numeric(dat$dateTime) / averaging_period) *
                                       averaging_period, origin = '1970-01-01', tz = 'UTC')
-        dat = dat[,.(value = mean(value), stdev = mean(stdev), n = length(value), stdev_derived = mean(stdev_derived)),
+        dat = dat[,.(value = mean(value), n = length(value)),
             by = list(dateTime, deployment_group, deployment, lat, lon, depth, sensor, sensor_serial, unit, par)]
         return(dat[order(dateTime),])
     }
