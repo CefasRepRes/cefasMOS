@@ -196,25 +196,32 @@ convert_latlong_ddmmm <- function(degrees, paste=T){
 
 #' Calculate bounding box
 #'
-#' used WGS84 elipsoid to calculate northern, eastern, southern and western extent from a starting lat/lon.
+#' uses WGS84 elipsoid to calculate northern, eastern, southern and western square extent from a starting lat/lon.
 #'
 #' @param lat vector of lat
 #' @param lon vector of lon
 #' @param size distance in meters
+#' @param bbox bool, if True (default is False) return `sp` style matrix
 #'
-#' @return vector of limits (north, east, south, west)
+#' @return vector of limits (north, east, south, west) or `sp` style bbox matrix
 #' @importFrom geosphere destPoint
 #' @export
 #'
 #' @examples
 #' calc_bounding_box(51, 1.2, 500) # 1x1km square
-calc_bounding_box <- function(lat, lon, size = 250){
-  north = geosphere::destPoint(c(lon, lat), 0, size)
-  east = geosphere::destPoint(c(lon, lat), 90, size)
-  south = geosphere::destPoint(c(lon, lat), 180, size)
-  west = geosphere::destPoint(c(lon, lat), 270, size)
-  box = c(north[2], east[1], south[2], west[1])
-  return(box)
+calc_bounding_box <- function(lat, lon, size = 250, bbox = F){
+  ymax = geosphere::destPoint(c(lon, lat), 0, size)[2]
+  xmax = geosphere::destPoint(c(lon, lat), 90, size)[1]
+  ymin = geosphere::destPoint(c(lon, lat), 180, size)[2]
+  xmin = geosphere::destPoint(c(lon, lat), 270, size)[1]
+  box = c("ymax" = ymax, "xmax" = xmax, "ymin" = ymin, "xmin" = xmin)
+  if(bbox == T){
+    return(matrix(rev(box), nrow = 2,
+                  dimnames = list(c("x", "y"), c("min", "max"))))
+  }
+  else{
+    return(box)
+  }
 }
 
 #' Spatial-temporal matching

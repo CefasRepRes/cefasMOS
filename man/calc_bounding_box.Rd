@@ -4,7 +4,7 @@
 \alias{calc_bounding_box}
 \title{Calculate bounding box}
 \usage{
-calc_bounding_box(lat, lon, size = 250)
+calc_bounding_box(lat, lon, size = 250, bbox = F)
 }
 \arguments{
 \item{lat}{vector of lat}
@@ -12,12 +12,14 @@ calc_bounding_box(lat, lon, size = 250)
 \item{lon}{vector of lon}
 
 \item{size}{distance in meters}
+
+\item{bbox}{bool, if True (default is False) return \code{sp} style matrix}
 }
 \value{
-vector of limits (north, east, south, west)
+vector of limits (north, east, south, west) or \code{sp} style bbox matrix
 }
 \description{
-used WGS84 elipsoid to calculate northern, eastern, southern and western extent from a starting lat/lon.
+uses WGS84 elipsoid to calculate northern, eastern, southern and western square extent from a starting lat/lon.
 }
 \examples{
 calc_bounding_box(51, 1.2, 500) # 1x1km square
