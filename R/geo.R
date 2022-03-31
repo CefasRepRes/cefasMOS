@@ -125,6 +125,36 @@ convert_latlong_ddmmm <- function(degrees, paste=T){
   }
 }
 
+#' Convert degrees + minutes + seconds to decimal degrees
+#'
+#' @param degrees numeric vector of whole degrees, if negative will convert to W or S.
+#' @param minutes numeric vector of minutes
+#' @param seconds numeric vector of seconds
+#' @param polarity optional "E, W, N, S"
+#'
+#' @return
+#' @export
+convert_latlong_ddmmss <- function(degrees, minutes, seconds, polarity = NA){
+  degrees = as.numeric(degrees)
+  minutes = as.numeric(minutes)
+  seconds = as.numeric(seconds)
+  if(length(polarity) == 1){
+    polarity = rep(polarity, length(degrees))
+  }
+  if(length(polarity) != length(degrees)){
+    stop("polarity must be same length as data or single value")
+  }
+
+  if(any(is.na(degrees)) | any(is.na(minutes)) | any(is.na(seconds))){return(NA)}
+  if((min(degrees, na.rm = T) < 0) & !any(is.na(polarity))){
+    stop("polarity supplied for negative degree value")
+  }
+  decimal_minutes = minutes + (seconds / 60)
+  decimal_degrees = degrees + (decimal_minutes / 60)
+  decimal_degrees[grepl("[sSwW]", polarity)] = decimal_degrees[grep("[sSwW]", polarity)] * -1 # apply polarity
+  return(decimal_degrees)
+}
+
 #' Calculate bounding box
 #'
 #' uses WGS84 elipsoid to calculate northern, eastern, southern and western square extent from a starting lat/lon.
