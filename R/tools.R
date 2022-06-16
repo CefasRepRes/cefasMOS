@@ -1,8 +1,8 @@
 #' Clearwater data converter and QA1
 #'
-#' @param file csv file from Clearview software
+#' @param file csv file from Clearview software, if left blank will open dialog.
 #' @param parcode string matching the SmartBuoy database parameter code, currently only "TOXN"
-#' @param return_excel if FALSE (default) returns data.table, if True writes an excel file.
+#' @param return_excel if TRUE (default) writes an excel file, otherwise returns data.table.
 #'
 #' This tool converts the output from the Clearwater software,
 #' applies a simple in-out of range check to the data (QA level 1) and returns a data.table or optionally a excel file ready for upload
@@ -19,7 +19,15 @@
 #'
 #' @examples
 #' convert.clearwater("WGAB2_CWN54/WESTGAB2_000_CWN54.csv")
-convert.clearwater <- function(file, parcode = "TOXN", return_excel = FALSE){
+convert.clearwater <- function(file = NA, parcode = "TOXN", return_excel = TRUE){
+  if(is.na(file)){
+    if (!(requireNamespace("svDialogs", quietly = TRUE) & requireNamespace("openxlsx", quietly = TRUE))) {
+      stop("Package \"svDialogs\" and \"openxlsx\" must be installed to use this function.", call. = FALSE)
+    }
+    else{
+      file = svDialogs::dlgOpen()$res
+    }
+  }
   x = fread(file)
   x[, dateTime := as.POSIXct(`Time (sensor)`, format = "%d/%m/%Y %H:%M:%S", tz="UTC")]
   # remove unused columns
@@ -49,7 +57,7 @@ convert.clearwater <- function(file, parcode = "TOXN", return_excel = FALSE){
                                 ResultMean = value,
                                 ResultQuality = flag)]
   if(return_excel == TRUE){
-    if (!requireNamespace("pkg", quietly = TRUE)) {
+    if (!(requireNamespace("svDialogs", quietly = TRUE) & requireNamespace("openxlsx", quietly = TRUE))) {
       stop("Package \"svDialogs\" and \"openxlsx\" must be installed to use this function.", call. = FALSE)
     }
     else{
