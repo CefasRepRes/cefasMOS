@@ -222,54 +222,6 @@ smartbuoy.fetch_burst <- function(deployment = NA,
     return(dat)
 }
 
-smartbuoy.fetch_wavenet <- function(deployment = NA, deployment_group = NA,
-                           after = NA, before = NA,
-                           db_name = 'smartbuoydblive'){
-
-  query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
-                  "[Deployment Id] as deployment,",
-                  "[Deployment Group Id] as deployment_group,",
-                  "[Deployment Latitude] as lat,",
-                  "[Deployment Longitude] as lon,",
-                  "[Instrument Id] as instrument_id,",
-                  "[Result - mean] as value,",
-                  "[Parameter Code] as par,",
-                  "SensorParameter.[ParUnit] as unit",
-                  "FROM AdHocRetrieval_BurstMeanResults",
-                  "INNER JOIN SensorParameter ON",
-                  "AdHocRetrieval_BurstMeanResults.[Sensor Id] = SensorParameter.SensorId AND",
-                  "AdHocRetrieval_BurstMeanResults.[Parameter Code] = SensorParameter.ParCode")
-
-    query = paste0(query, " WHERE [Parameter code] IN ('Hm0', 'Tpeak', 'Tz', 'W_PDIR', 'W_SPR')")
-
-    # filter deployments, is.na evaluates each element of vector, so only check first one is not NA
-    if(!is.na(deployment[1])){
-        deployment = paste(deployment, collapse = "', '")
-        query = paste0(query, " AND [Deployment Id] IN ('", deployment, "')")
-    }
-    if(!is.na(deployment_group[1])){
-        deployment_group = paste(deployment_group, collapse = "', '")
-        query = paste0(query, " AND [Deployment Group Id] IN ('", deployment_group, "')")
-    }
-      # if before or after is suppled build filter into query
-    if(!is.na(before)){
-        query = paste0(query, " AND [Date/Time] <= '", before, "'")
-    }
-    if(!is.na(after)){
-        query = paste0(query, " AND [Date/Time] >= '", after, "'")
-    }
-    print(query)
-    sb = odbcConnect(db_name)
-    dat = data.table(sqlQuery(sb, query))
-    odbcCloseAll()
-
-    # check if valid data has been returned, if not quit
-    if(! nrow(dat) > 1){
-        stop("no data returned")
-    }
-    dat[, dateTime := as.POSIXct(dateTime, format="%b %d %Y %I:%M%p", tz="UTC")]
-    return(dat[order(dateTime)])
-}
 
 
 #' SmartBuoy T/S plots
