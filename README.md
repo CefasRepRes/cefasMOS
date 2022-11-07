@@ -1,26 +1,24 @@
 # Installing
 
 The `cefasMOS` package is in development and has not been submitted to CRAN.
-You can install it directly from bitbucket (A github analog) using the `devtools` package.
+You can install it directly from github using the `devtools` package.
 
 The package should now handle all of it's dependencies.
 Other rarely used functions may require additional packages, install these later if you have problems.
 Please report any issues to Tom.
 
-
-
 ```r
 install.packages("devtools")
 
-devtools::install_bitbucket("betascoo8/cefasmos")
+devtools::install_github("cefasRepRes/cefasmos")
 
   # optionally if you want the development version
-devtools::install_bitbucket("betascoo8/cefasmos", subdir = "dev")
+devtools::install_bitbucket("cefasRepRes/cefasmos", subdir = "dev")
 
-  # install_bitbucket considers a package built under a different version of R an error
+  # install_github considers a package built under a different version of R an error
   # (it's not)
   # if it fails to install with such and error try
-devtools::install_bitbucket("betascoo8/cefasmos", force = T)
+devtools::install_github("cefasRepRes/cefasmos", force = T)
 ```
 
 
