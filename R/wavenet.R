@@ -3,7 +3,6 @@
 #' Fetches WaveNet DWR data
 #'
 #' @details This function queries the SmartBuoy database and returns a data.table
-#' Fetches 'Hm0', 'Tpeak', 'Tz', 'W_PDIR' and 'W_SPR'
 #'
 #' @param deployment optional string matching smartbuoy deployment
 #' @param deployment_group optional string matching smartbuoy deployment_group
@@ -11,12 +10,12 @@
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
-#' @keywords smartbuoy esm2 query
+#' @keywords wavenet query
 #' @import RODBC
-#' @export
 wavenet.fetch <- function(deployment = NA, deployment_group = NA,
-                           after = NA, before = NA,
-                           db_name = 'smartbuoydblive'){
+                          parameters = c('Hm0', 'Tpeak', 'Tz', 'W_PDIR', 'W_SPR'),
+                          after = NA, before = NA,
+                          db_name = 'smartbuoydblive'){
 
   query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
                   "[Deployment Id] as deployment,",
@@ -32,7 +31,8 @@ wavenet.fetch <- function(deployment = NA, deployment_group = NA,
                   "AdHocRetrieval_BurstMeanResults.[Sensor Id] = SensorParameter.SensorId AND",
                   "AdHocRetrieval_BurstMeanResults.[Parameter Code] = SensorParameter.ParCode")
 
-    query = paste0(query, " WHERE [Parameter code] IN ('Hm0', 'Tpeak', 'Tz', 'W_PDIR', 'W_SPR')")
+    parameters = paste(parameters, collapse = "', '")
+    query = paste0(query, " WHERE [Parameter code] IN ('", parameters, "')")
 
     # filter deployments, is.na evaluates each element of vector, so only check first one is not NA
     if(!is.na(deployment[1])){
