@@ -1,75 +1,3 @@
-#' Deployment Map
-#'
-#' Creates a map of MOS deployment sites
-#'
-#' @details 1 for SmartBuoy, 4 = Lander, 8 = Waverider
-#' @param platforms optional integer vector, if supplied only these platforms will be displayed. see details. default is c(1, 4, 8)
-#' @param deployment_group_id optional chararacter vector, if supplied only these deployments will be displayed.
-#' @param labels boolean, if True labels are plotted using directlabels.
-#' @param active_only boolean, if True only current active deployments will be displayed
-#' @param zoom_to_group boolean, if True map is centred and zoomed to selected deployments, if False entire UK is used.
-#' @param point_size numeric, size of plotted points
-#' @param style character string denoting map style, default is 'gsat'
-#' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
-#' @return ggmap object
-#' @keywords SmartBuoy
-#' @import RODBC
-#' @export
-smartbuoy.map <- function(platforms = c(1, 4, 8),
-                            deployment_group_id = 'ALL',
-                            style = 'gsat',
-                            point_size = 5,
-                            labels = TRUE,
-                            active_only = TRUE,
-                            zoom_to_group = TRUE,
-                            db_name = 'smartbuoydblive'){
-
-    sbdb = odbcConnect(db_name)
-
-    pos_query = paste("SELECT
-                      Deployment.[DepLocLat] as lat, Deployment.[DepLocLong] as long,
-                      Deployment.[DepGroupId] as groupId, Deployment.[DepDateFrom] as dateFrom,
-                      Deployment.[DepDateTo] as dateTo, Deployment.[DepDescr] as description,
-                      Deployment.[DepId] as dep, Platform.[PlatformId] as platformId,
-                      Platform.[PlatformTypeId] as platform
-                      FROM Deployment INNER JOIN Platform ON Deployment.PlatformId=Platform.PlatformId ")
-    d = data.table(sqlQuery(sbdb, pos_query))
-    odbcCloseAll()
-
-    d = d[platform %in% c(1, 4, 8)] # remove non-standard deployments
-    d = d[!(groupId %in% c('LOWTEST', 'ESM2TEST'))] # remove test deployments
-    d = d[,list(lat = median(lat), lon = median(long), dateTo = max(dateTo), platform = platform[1]), by = groupId] # group by deployment
-    d$active = "inactive"
-    d$active[d$dateTo > lubridate::now()] = "active"
-
-    d[platform == 1, c("shape", "platformName") := list(2, 'SmartBuoy')]
-    d[platform == 4, c("shape", "platformName") := list(0, 'Lander')]
-    d[platform == 8, c("shape", "platformName") := list(1, 'Waverider')]
-
-    d = d[platform %in% platforms] # remove unwanted deployments
-    if(deployment_group_id != 'ALL'){
-        d = d[groupId %in% deployment_group_id]
-    }
-
-    if(active_only == T){
-        d = d[active == 'active']
-    }
-
-    if(style == 'gsat'){
-    mp = ggmap.fetch(d$lat, d$lon, zoom_to_group)
-    mp = mp +
-      geom_point(data = d, aes(lon, lat, color = active, shape = platformName), size = point_size) +
-      scale_color_discrete('') +
-      labs(x = 'Longitude', y = 'Latitude')
-    }else{
-        warning('style not implemented')
-        mp = NA
-    }
-
-    return(list(map = mp, data = d))
-}
-
-
 #' GEBCO Bathymetry base map
 #'
 #' Basemap using GEBCO 2019 data, if you want something more technical, perhaps try the marmap package.
@@ -158,6 +86,9 @@ bathy_match <- function(lon, lat){
 
 #' Convert degrees + decimal minutes to decimal degrees
 #'
+#' Be mindful of precision, 4 decimal places points to a room in a house, while
+#' 5 decimal places would be a person in that room, if you're reporting to 6 decimal places you're lying!
+#'
 #' @param degrees numeric vector of whole degrees, if negative will convert to W or S.
 #' @param decimal_minutes numeric vector of decimal minutes
 #' @param polarity optional "E, W, N, S"
@@ -180,7 +111,7 @@ convert_latlong <- function(degrees, decimal_minutes, polarity = NA){
 #' Convert decimal degrees  to degrees + decimal minutes
 #'
 #' @param degrees numeric vector of decimal degrees
-#' @param paste if True (default) return a pasted string, otherwise returns list of DD and MM
+#' @param paste if True (default) return formatted string, otherwise returns list of DD and MM
 #'
 #' @return decimal degrees
 #' @export
@@ -188,10 +119,40 @@ convert_latlong_ddmmm <- function(degrees, paste=T){
   dd = floor(abs(degrees)) * sign(degrees)
   mm = round((abs(degrees) %% 1) * 60, 3)
   if(paste){
-    return(paste0(dd, "'", mm))
+    return(paste0(dd, "°", sprintf("%03.3f", mm)))
   }else{
     return(list(dd, mm))
   }
+}
+
+#' Convert degrees + minutes + seconds to decimal degrees
+#'
+#' @param degrees numeric vector of whole degrees, if negative will convert to W or S.
+#' @param minutes numeric vector of minutes
+#' @param seconds numeric vector of seconds
+#' @param polarity optional "E, W, N, S"
+#'
+#' @return decimal degrees
+#' @export
+convert_latlong_ddmmss <- function(degrees, minutes, seconds, polarity = NA){
+  degrees = as.numeric(degrees)
+  minutes = as.numeric(minutes)
+  seconds = as.numeric(seconds)
+  if(length(polarity) == 1){
+    polarity = rep(polarity, length(degrees))
+  }
+  if(length(polarity) != length(degrees)){
+    stop("polarity must be same length as data or single value")
+  }
+
+  if(any(is.na(degrees)) | any(is.na(minutes)) | any(is.na(seconds))){return(NA)}
+  if((min(degrees, na.rm = T) < 0) & !any(is.na(polarity))){
+    stop("polarity supplied for negative degree value")
+  }
+  decimal_minutes = minutes + (seconds / 60)
+  decimal_degrees = degrees + (decimal_minutes / 60)
+  decimal_degrees[grepl("[sSwW]", polarity)] = decimal_degrees[grep("[sSwW]", polarity)] * -1 # apply polarity
+  return(decimal_degrees)
 }
 
 #' Calculate bounding box

@@ -176,16 +176,14 @@ read.ULP000 <- function(file){
 #' @keywords ferrybox 10minfile
 #' @importFrom zoo na.locf
 #' @export
-read.ferrybox.10min <- function(folder, recursive = F, print_file = F, debug = F){
-  # for(f in list.files(folder, recursive = T))
-
+read.ferrybox.10min <- function(folder, recursive = T, print_file = F, debug = F){
   read_10min <- function(f, print_file = F){
     if(grepl("10minfiles", f, ignore.case = F)){
       f = paste0(folder, f)
       ln = readLines(f)
       if(print_file){print(f)}
       dateLine = grep("Date[ /\t]Time", ln, perl = T)
-      d = read.table(f, sep = "\t", header = F, skip = dateLine + 1, fill = T)
+      d = fread(f, header = F, skip = dateLine + 1, fill = T)
       cruise = strsplit(ln[2], "\t")[[1]][2]
       SIC = strsplit(ln[3], "\t")[[1]][2]
       comment = strsplit(ln[6], "\t")[[1]][2]
@@ -196,26 +194,25 @@ read.ferrybox.10min <- function(folder, recursive = F, print_file = F, debug = F
       header = paste(header1, header2, sep = "~~") # combine headers
       header = gsub("Date/Time", "DateTime", header)
       colnames(d) = gsub("[^[:alnum:]~/]", "", header[1:length(colnames(d))]) # apply headers after removing bad chars
-      d = data.table(d)
       if("Date~~" %in% header){d[, "DateTime~~" := paste(`Date~~`, `Time~~`)]}
       d[, dateTime := as.POSIXct(d$"DateTime~~", format = "%Y.%m.%d %H:%M:%S", tz = "UTC")]
-      d = d[,-c("DateTime~~"), with = F]
       d = suppressWarnings(
-        melt.data.table(d, id.vars = grep("Course|Long|Lat|Satellite|Speed|Heading|dateTime", colnames(d)))
+        melt.data.table(d, id.vars = grep("Course|(^Longitude)|(^Latitude)|GPSSource|Satellite|Speed|Heading|dateTime", colnames(d)))
       )
       d[, c("variable", "unit", "telid", "serial", "stat") := tstrsplit(variable, "~~")]
       colnames(d) = gsub("~~[[:alnum:]]*", "", colnames(d))
-      d = na.omit(d)
+      d = d[!is.na(value) & !variable %in% c("Date", "Time")]
       if(anyDuplicated(d) > 0){ warning(paste("duplicates found and removed", f)) }
       d = dcast.data.table(unique(d), ... ~ stat, value.var = "value", fun.aggregate=median)
       d[, Quality := as.character(Quality)]
       d[, Cruise := cruise]
       d[, SIC := SIC]
       d[, Comment := comment]
+      d[, `NA` := NULL]
       if(debug){
         d[, filename := f]
       }
-      return(data.frame(d))
+      return(d)
     }
   }
   if(print_file){

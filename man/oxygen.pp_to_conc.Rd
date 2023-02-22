@@ -4,7 +4,7 @@
 \alias{oxygen.pp_to_conc}
 \title{convert oxygen partial pressure to molar oxygen concentration}
 \usage{
-oxygen.pp_to_conc(pO2, TEMP, SAL = 0, PRS = 0, APRS = 1013.25)
+oxygen.pp_to_conc(pO2, TEMP, SAL = 0, PRS = 0)
 }
 \arguments{
 \item{pO2}{partial pressure of oxygen in hPa}
@@ -14,8 +14,6 @@ oxygen.pp_to_conc(pO2, TEMP, SAL = 0, PRS = 0, APRS = 1013.25)
 \item{SAL}{salinity}
 
 \item{PRS}{hydrostatic pressure in dbar (default = 0)}
-
-\item{APRS}{air pressure in mbar (default = 1013.25)}
 }
 \value{
 oxygen concentration in mmol m-3

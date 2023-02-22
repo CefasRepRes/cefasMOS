@@ -13,9 +13,6 @@ turbo(n, start = 0, end = 1)
 
 \item{end}{default = 1}
 }
-\value{
-
-}
 \description{
 A colour map for those who really like Jet but know they can do better:
 }

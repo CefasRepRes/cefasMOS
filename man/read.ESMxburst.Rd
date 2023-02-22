@@ -9,9 +9,6 @@ read.ESMxburst(file)
 \arguments{
 \item{file}{}
 }
-\value{
-
-}
 \description{
 Read ESMx Burst files
 }

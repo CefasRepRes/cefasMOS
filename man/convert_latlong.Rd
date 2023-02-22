@@ -17,5 +17,6 @@ convert_latlong(degrees, decimal_minutes, polarity = NA)
 decimal degrees
 }
 \description{
-Convert degrees + decimal minutes to decimal degrees
+Be mindful of precision, 4 decimal places points to a room in a house, while
+5 decimal places would be a person in that room, if you're reporting to 6 decimal places you're lying!
 }

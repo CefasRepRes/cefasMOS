@@ -9,7 +9,7 @@ convert_latlong_ddmmm(degrees, paste = T)
 \arguments{
 \item{degrees}{numeric vector of decimal degrees}
 
-\item{paste}{if True (default) return a pasted string, otherwise returns list of DD and MM}
+\item{paste}{if True (default) return formatted string, otherwise returns list of DD and MM}
 }
 \value{
 decimal degrees

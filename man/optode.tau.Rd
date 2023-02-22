@@ -14,7 +14,7 @@ optode.tau(temp, IL, type = c("fast", "standard", "SBE63"))
 \item{type}{either "fast", "standard" or "SBE63"}
 }
 \value{
-
+tau value in seconds
 }
 \description{
 Calculates Tau as per Bittig & Korsinger 2017
