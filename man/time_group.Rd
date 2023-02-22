@@ -11,9 +11,6 @@ time_group(x, fuzz = 0)
 
 \item{fuzz}{amount of extra leeway in seconds to give the function to avoid small gaps, default is 0}
 }
-\value{
-
-}
 \description{
 given a timeseries with gaps, this returns a vector which can serve as a label for each unbroken period
 }

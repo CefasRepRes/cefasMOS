@@ -16,7 +16,7 @@ convert_latlong_ddmmss(degrees, minutes, seconds, polarity = NA)
 \item{polarity}{optional "E, W, N, S"}
 }
 \value{
-
+decimal degrees
 }
 \description{
 Convert degrees + minutes + seconds to decimal degrees

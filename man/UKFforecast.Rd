@@ -11,9 +11,6 @@ UKFforecast(filterData, nAhead = 1)
 
 \item{nAhead}{the number of steps ahead for which to predict system states}
 }
-\value{
-
-}
 \description{
 predicts future system states and observations for the Unscented Kalman Filter (UKF).
 }

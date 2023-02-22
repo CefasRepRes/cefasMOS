@@ -4,14 +4,14 @@
 \alias{convert.clearwater}
 \title{Clearwater data converter and QA1}
 \usage{
-convert.clearwater(file, parcode = "TOXN", return_excel = FALSE)
+convert.clearwater(file = NA, parcode = "TOXN", return_excel = TRUE)
 }
 \arguments{
-\item{file}{csv file from Clearview software}
+\item{file}{csv file from Clearview software, if left blank will open dialog.}
 
 \item{parcode}{string matching the SmartBuoy database parameter code, currently only "TOXN"}
 
-\item{return_excel}{if FALSE (default) returns data.table, if True writes an excel file.
+\item{return_excel}{if TRUE (default) writes an excel file, otherwise returns data.table.
 
 This tool converts the output from the Clearwater software,
 applies a simple in-out of range check to the data (QA level 1) and returns a data.table or optionally a excel file ready for upload

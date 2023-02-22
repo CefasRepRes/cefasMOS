@@ -132,7 +132,7 @@ convert_latlong_ddmmm <- function(degrees, paste=T){
 #' @param seconds numeric vector of seconds
 #' @param polarity optional "E, W, N, S"
 #'
-#' @return
+#' @return decimal degrees
 #' @export
 convert_latlong_ddmmss <- function(degrees, minutes, seconds, polarity = NA){
   degrees = as.numeric(degrees)

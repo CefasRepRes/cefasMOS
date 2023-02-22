@@ -227,7 +227,7 @@ optode.phaseCalc <- function(phase, Temp, coefs, silent = F){
 #' @param IL boundary layer thickness
 #' @param type either "fast", "standard" or "SBE63"
 #'
-#' @return
+#' @return tau value in seconds
 #' @export
 #'
 optode.tau <- function(temp, IL, type=c("fast", "standard", "SBE63")){
