@@ -13,7 +13,7 @@
 #' @param db_name optional character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return dygraph or ggplot object depending on style, or if return_data is True a data.table for the timeseries.
 #' @keywords profiler ctd esm2
-#' @import RODBC
+#' @import RODBC dygraphs
 #' @export
 smartbuoy.timeseries <- function(deploymentGroup, parcode,
                       yr = year(Sys.time()),
@@ -50,7 +50,7 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
       ORDER BY dateTime"
       )
     print(queryString)
-    dat = sqlQuery(smartbuoydb, queryString)
+    dat = RODBC::sqlQuery(smartbuoydb, queryString)
     odbcCloseAll()
         # check data is valid
     if(nrow(dat) > 1){
@@ -91,8 +91,8 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
             AND [Result Quality Flag] = 0
             ORDER BY dateTime
             ")
-        teldat= sqlQuery(smartbuoydb, telequery)
-        odbcCloseAll()
+        teldat= RODBC::sqlQuery(smartbuoydb, telequery)
+        RODBC::odbcCloseAll()
         if(nrow(teldat) != 0){
           teldat$dateTime = as.POSIXct(teldat$dateTime, format="%b %d %Y %I:%M%p",tz="UTC")
           teldat = data.table(teldat)
@@ -105,8 +105,9 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
     }
 
     if(night_flu_only & "FLUORS" %in% parcode){
-      dat[, sunrise := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunrise]
-      dat[, sunset := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunset]
+      stop("not implemented")
+      # dat[, sunrise := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunrise]
+      # dat[, sunset := as.data.frame(insol::daylength(lat, lon, insol::daydoy(dateTime), 0))$sunset]
       dat[, dhour := hour(dateTime) + (lubridate::minute(dateTime)/60)]
       dat = dat[(parcode == "FLUORS" & (dhour < sunrise | dhour > sunset)) | parcode != "FLUORS",]
       dat = dat[,!c("sunrise", "sunset", "dhour"), with = F]
@@ -116,10 +117,10 @@ smartbuoy.timeseries <- function(deploymentGroup, parcode,
 
         # plots
     if(style == 'dygraph'){
-        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + serial + QAlevel, value.var = 'result', fun.aggregate = median)
+        dts = dcast.data.table(dat, dateTime ~ pardesc + deployment + sensor + serial + QAlevel, value.var = 'result')
         dts = xts::xts(dts[,!"dateTime", with = F], order.by = dts$dateTime)
         title = paste(paste(deploymentGroup, collapse = ', '), paste(yr, collapse = ', '))
-        dg = dygraphs::dygraph(dts, main = title) %>% dyRangeSelector() %>% dyOptions(useDataTimezone = T)
+        dg = dygraphs::dygraph(dts, main = title) |> dygraphs::dyRangeSelector() |> dygraphs::dyOptions(useDataTimezone = T)
         return(list('data' = dat, 'dygraph' = dg))
     }else{ print('style not implemented') }
 }
