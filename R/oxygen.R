@@ -398,7 +398,6 @@ rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C =
 #' @param TEMP temperature
 #' @param SAL salinity
 #' @param PRS hydrostatic pressure in dbar (default = 0)
-#' @param APRS air pressure in mbar (default = 1013.25)
 #'
 #' @references
 #' Bittig, H., Körtzinger, A., Johnson, K., Claustre, H., Emerson, S., Fennel, K., Garcia, H., Gilbert, D., Gruber, N., Kang, D.-J., Naqvi, W., Prakash, S., Riser, S., Thierry, V., Tilbrook, B., Uchida, H., Ulloa, O., Xing, X., 2018. SCOR WG 142: Quality Control Procedures for Oxygen and Other Biogeochemical Sensors on Floats and Gliders. Recommendations on the conversion between oxygen quantities for Bio-Argo floats and other autonomous sensor platforms. https://doi.org/10/ggzjj3
@@ -407,7 +406,7 @@ rinko.p <- function(V, t, S, oC = list(A = -4.234162e+01, B = +1.276475e+02, C =
 #' @examples
 #' oxygen.pp_to_conc(200, 10, 35, 50) # 267.1465 mmol m-3
 #' @export
-oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0, APRS = 1013.25){
+oxygen.pp_to_conc <- function(pO2, TEMP, SAL=0, PRS = 0){
   xO2     = 0.20946 # mole fraction of O2 in dry air (Glueckauf 1951)
   pH2Osat = 1013.25*(exp(24.4543-(67.4509*(100./(TEMP+273.15)))-(4.8489*log(((273.15+TEMP)/100)))-0.000544*SAL)) # saturated water vapor in mbar (vapour pressure, Weiss & Price, 1980)
   # pH2Osat = 6.1121 * exp((18.678 - (TEMP / 234.5)) * (TEMP / (257.14 + TEMP))) # mbar , Buck 1996 equation for over water , TEMP = air temp ?more accurate
