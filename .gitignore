@@ -3,6 +3,9 @@
 .RData
 .Ruserdata
 .Rbuildignore
+.gitignore
 *.html
 dev/
 tags
+.secret
+cefasMOS.Rproj
