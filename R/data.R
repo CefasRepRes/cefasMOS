@@ -1,19 +1,19 @@
 # sinew::makeOxygen(mapdata)
 
-#' @title GEBCO 2019
-#' @description GEBCO bathymetry at 0.01 degree grid centred on the UK (45-65N -16-10E).
-#' @format A data frame with 3693762 rows and 3 variables:
+#' @title GEBCO 2022
+#' @description GEBCO bathymetry at 0.00417 degree grid centred on the UK (45-65N -16-10E).
+#' @format A data table
 #' \describe{
 #'   \item{\code{lon}}{WGS84 Longitude in decimal degrees}
 #'   \item{\code{lat}}{WGS84 Latitude in decimal degrees}
 #'   \item{\code{depth}}{depth in meters}
 #'}
 #' @source \url{https://www.gebco.net/}
-"gebco_2019"
+"gebco_2022"
 
-#' @title GEBCO 2019 Low
+#' @title GEBCO 2022 Low
 #' @description GEBCO bathymetry at 0.05 degree grid centred on the UK (45-65N -16-10E).
-#' @format A data frame with 152716 rows and 4 variables:
+#' @format A data table
 #' \describe{
 #'   \item{\code{lon}}{WGS84 Longitude in decimal degrees}
 #'   \item{\code{lat}}{WGS84 Latitude in decimal degrees}
@@ -21,7 +21,7 @@
 #'   \item{\code{label}}{label corisponding to depth bin}
 #'}
 #' @source \url{https://www.gebco.net/}
-"gebco_2019_low"
+"gebco_2022_low"
 
 #' @title cds_table
 #' @description a precompiled list of all possible combinations of Cefas Endeavour ferrybox error codes
@@ -49,7 +49,7 @@
 
 #' @title Western European shelf coastlines
 #' @description a subset from rworldmap high resolution, but just for the Western European shelf countries
-#' @format A data frame with 50873 rows and 7 variables:
+#' @format data frame
 #' \describe{
 #'   \item{\code{lon}}{WGS84 longitude in decimal degees}
 #'   \item{\code{lat}}{WGS84 latitude in decimal degees}
@@ -58,5 +58,5 @@
 #'}
 #' @references `rworldmap`
 #' @example
-# ggplot(mapdata) + geom_polygon(aes(lon, lat, group = group, fill = id))
-"mapdata"
+# ggplot(nwe_coastline) + geom_polygon(aes(lon, lat, group = group, fill = id))
+"nwe_coastline"

@@ -1,14 +1,14 @@
 #' GEBCO Bathymetry base map
 #'
-#' Basemap using GEBCO 2019 data, if you want something more technical, perhaps try the marmap package.
+#' Basemap using GEBCO 2022 data, if you want something more technical, perhaps try the marmap package.
 #'
 #' @param lon vector of longitude coordinates for calculating map extent
 #' @param lat as above for latitude
-#' @param highres default = False, if true fetch the full half degree GEBCO 2019 data
+#' @param highres default = False, if True fetch the full 0.00417 degree GEBCO 2022 data, otherwise uses 0.05 degree binned data
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
 #' @param expand expansion factor for margins, default = 0.02
 #'
-#' @references GEBCO data from GEBCO 2019
+#' @references GEBCO data from GEBCO 2022
 #' @references Coastlines from rworldmap
 #'
 #' @return ggplot
@@ -21,11 +21,11 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
   ylim_exp = scales::expand_range(ylim, expand)
 
   if(highres){
-    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 0.01 degree grid")}
-    bathy = gebco_2019[lon %between% xlim_exp & lat %between% ylim_exp]
+    if(!exists("gebco_2022")){data("gebco_2022");print("loaded GEBCO 2022, 0.00417 degree grid")}
+    bathy = gebco_2022[lon %between% xlim_exp & lat %between% ylim_exp]
   }else{
-    if(!exists("gebco_2019_low")){data("gebco_2019_low");print("loaded GEBCO 2019, 0.05 degree grid")}
-    bathy = gebco_2019_low[lon %between% xlim_exp & lat %between% ylim_exp]
+    if(!exists("gebco_2022_low")){data("gebco_2022_low");print("loaded GEBCO 2022, 0.05 degree grid")}
+    bathy = gebco_2022_low[lon %between% xlim_exp & lat %between% ylim_exp]
   }
 
   # classify
@@ -39,16 +39,16 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
     bathy_raster = geom_raster(aes(lon, lat, fill=depth))
   }
 
-  # mapdata = data.table(ggplot2::fortify(rworldmap::getMap("high")))
+  # nwe_coastline = data.table(ggplot2::fortify(rworldmap::getMap("high")))
     # subset to just regions in xlim and ylim, see http://stackoverflow.com/a/16574176
-  # mapdata = mapdata[mapdata[,.I[any(long %between% c(-50, 25)) & any(lat %between% c(45, 70))], by = list(group)]$V1]
-  # devtools::use_data(mapdata, overwrite=T)
-  data("mapdata") # saved for speed
-  mapdata = mapdata[mapdata[,.I[any(lon %between% xlim_exp) & any(lat %between% ylim_exp)], by = list(group)]$V1]
+  # nwe_coastline = nwe_coastline[nwe_coastline[,.I[any(long %between% c(-50, 25)) & any(lat %between% c(45, 70))], by = list(group)]$V1]
+  # usethis::use_data(nwe_coastline, overwrite=T)
+  if(!exists("nwe_coastline")){data("nwe_coastline");print("loaded NWE shelf subset of rworldmap")}
+  nwe_coastline = nwe_coastline[nwe_coastline[,.I[any(lon %between% xlim_exp) & any(lat %between% ylim_exp)], by = list(group)]$V1]
 
   # make geom
-  coast.poly = geom_polygon(data=mapdata, aes(x=lon, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
-  coast.outline = geom_path(data=mapdata, aes(x=lon, y=lat, group=group), colour="#000000", lwd=0.2)
+  coast.poly = geom_polygon(data=nwe_coastline, aes(x=lon, y=lat, group=group), colour="#999999", fill="#999999", lwd=0.2)
+  coast.outline = geom_path(data=nwe_coastline, aes(x=lon, y=lat, group=group), colour="#000000", lwd=0.2)
 
   mp = ggplot(bathy) +
     bathy_raster + bathy_scale +
@@ -62,7 +62,7 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
 
 #' Extract depth for position from GEBCO
 #'
-#' extract nearest point from GEBCO2019
+#' extract nearest point from GEBCO 2022 at 0.05 degree resolution
 #'
 #' @param lon longitude in decimal degrees
 #' @param lat latitude in decimal degrees
@@ -75,10 +75,10 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
 #' bathy_match(lons, lats)
 bathy_match <- function(lon, lat){
   if(length(lon) == length(lat)){
-    if(!exists("gebco_2019")){data("gebco_2019");print("loaded GEBCO 2019, 0.01 degree grid")}
-    res = 0.01 # resolution of gebco bathmetry
+    if(!exists("gebco_2022")){data("gebco_2022");print("loaded GEBCO 2022, 0.05 degree grid")}
+    res = 0.05
     pos = data.table(lon = round(lon/res)*res, lat = round(lat/res)*res)
-    round(gebco_2019[pos, on=list(lon, lat)]$depth, 1)
+    round(gebco_2022_low[pos, on=list(lon, lat)]$depth, 1)
   }else{
     error("lon and lat are not the same length")
   }

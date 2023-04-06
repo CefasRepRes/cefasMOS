@@ -19,7 +19,7 @@ bathymap(
 
 \item{breaks}{if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins}
 
-\item{highres}{default = False, if true fetch the full half degree GEBCO 2019 data}
+\item{highres}{default = False, if True fetch the full 0.00417 degree GEBCO 2022 data, otherwise uses 0.05 degree binned data}
 
 \item{expand}{expansion factor for margins, default = 0.02}
 }
@@ -27,10 +27,10 @@ bathymap(
 ggplot
 }
 \description{
-Basemap using GEBCO 2019 data, if you want something more technical, perhaps try the marmap package.
+Basemap using GEBCO 2022 data, if you want something more technical, perhaps try the marmap package.
 }
 \references{
-GEBCO data from GEBCO 2019
+GEBCO data from GEBCO 2022
 
 Coastlines from rworldmap
 }
