@@ -492,3 +492,25 @@ read.ESMxburst <- function(file){
   setcolorder(d, c("dateTime", "burst", "sensor", "variable", "value"))
   return(d)
 }
+
+
+#' Read teraterm datetime log
+#'
+#' Teraterm has a timestamp option, however it's awkward to parse, this function takes a log file created by teraterm,
+#' reads it as a table and extracts the dateTime column.
+#'
+#' You will need to clean the file to remove commands or badly formatted rows.
+#'
+#' @param f filename
+#' @importFrom stringi stri_extract
+#'
+#' @return data.table
+#' @export
+read.teraterm_log <- function(f){
+  x = fread(f, header = F)
+  x[,dateTime := stringi::stri_extract(V1, regex = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d+(.\\d)+")]
+  x[, dateTime := as.POSIXct(dateTime, tz = "UTC")]
+  x[, V1 := gsub("\\[.+\\] ", "", a, perl = T)]
+  setcolorder(x, "dateTime")
+  return(x)
+}
