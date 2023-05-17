@@ -355,7 +355,7 @@ smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
   ,[TelTime]
   ,[TelLocLat] as lat
   ,[TelLocLong] as lon
-  FROM [SmartBuoy].[dbo].[TelemetryHeader]
+  FROM TelemetryHeader
   INNER JOIN DeploymentInstrument ON
   TelemetryHeader.DepInstId = DeploymentInstrument.DepInstId
   INNER JOIN Deployment ON
@@ -375,11 +375,11 @@ smartbuoy.telemetry_position <- function(deployment = NA, deployment_group = NA,
   dat = data.table(sqlQuery(sb, query, as.is = T))
   odbcCloseAll()
   dep_check = deployment %in% dat$deployment | deployment_group %in% dat$deployment_group
-  dat[, lat := as.numeric(lat)]
-  dat[, lon := as.numeric(lon)]
   if(FALSE %in% dep_check){ # not working correctly
     warning(paste(deployment[!dep_check], "has no telemetry data"))
   }
+  dat[, lat := as.numeric(lat)]
+  dat[, lon := as.numeric(lon)]
   return(dat[order(deployment)])
 }
 
