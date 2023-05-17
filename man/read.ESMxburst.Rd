@@ -9,6 +9,9 @@ read.ESMxburst(file)
 \arguments{
 \item{file}{}
 }
+\value{
+data.table
+}
 \description{
 Read ESMx Burst files
 }

@@ -461,36 +461,104 @@ read.NMEA_GGA <- function(file, date_origin = "2000-01-01", only_good = T){
 #'
 #' @param file
 #'
-#' @return
+#' @return data.table
+#' @importFrom stringr str_extract
+#' @export
 #'
 #' @examples
 #' flist = list.files(pattern = "Burst*") # get the files e.g. "1001_Burst 2.csv"
 #' d = lapply(flist, read.ESMxburst)
 #' d = rbindlist(d)[order(dateTime)]
 read.ESMxburst <- function(file){
-    # read ESMx converted bin (burst)
-  print(file)
+  # read ESMx converted bin (burst)
   d = list()
   ln = readLines(file)
   start_ind = which(grepl("Burst", ln))
   end_ind = c(start_ind[-1]-1, length(ln))
+  burst_num = as.numeric(stringr::str_extract(ln[start_ind[1]], "(?<=Burst )(\\d+)"))
   for(i in 1:length(start_ind)){
     varname = ln[start_ind[i]]
+    sensor = stringr::str_extract(varname, "(?<=- )\\w+")
     if(end_ind[i] - start_ind[i] < 1){
       warning(paste("No data for "), file, varname)
     }else{
-      DT = fread(text = ln[(start_ind[i]+1):end_ind[i]])
+      DT = fread(text = ln[(start_ind[i]+1):end_ind[i]], header = F)
       DT[, V1 := as.POSIXct(V1, format = "%d/%m/%Y %H:%M:%S", tz = "UTC")]
-      colnames(DT) = c("dateTime", 1:(ncol(DT)-1))
-      DT = melt(DT, id.var = "dateTime")
-      DT[, sensor := stringr::str_extract(varname, "(?<=- )\\w+")]
-      DT[, burst := as.numeric(stringr::str_extract(varname, "(?<=Burst )(\\d+)"))]
-      d[[i]] = DT
+      DT = process_ESMx_sensor(DT, sensor)
+      DT[, burst := burst_num]
+      d[[sensor]] = DT
     }
   }
   d = rbindlist(d, fill = T)
-  setcolorder(d, c("dateTime", "burst", "sensor", "variable", "value"))
+  setcolorder(d, c("dateTime", "burst", "sensor", "variable", "value", "unit"))
   return(d)
+}
+
+# not exported
+process_ESMx_sensor <- function(DT, varname){
+  if(varname == "Turbidity"){
+    colnames(DT) = c("dateTime", "raw", "gain")
+    DT[, raw := as.numeric(raw)]
+    DT[, gain := as.numeric(gain)]
+    DT = merge(DT, data.table(gain = c(0, 1, 2, 3),
+                              factor = c(500, 100, 25, 5)))
+    DT[, volts := (raw / (2^12)) * 5] # convert ADC to volts
+    DT[, value := (volts) * factor] # apply gain
+    DT = DT[,.(dateTime, variable = "FTU", value, unit = "FTU", sensor = "Seapoint_turbidity")]
+    return(DT)
+  }
+  if(varname == "Fluorometer"){
+    colnames(DT) = c("dateTime", "raw", "gain")
+    DT[, raw := as.numeric(raw)]
+    DT[, gain := as.numeric(gain)]
+    DT = merge(DT, data.table(gain = c(0, 1, 2, 3),
+                              factor = c(30, 10, 3, 1)))
+    DT[, volts := (raw / (2^12)) * 5] # convert ADC to volts
+    DT[, value := (volts) * factor] # apply gain
+    DT = DT[,.(dateTime, variable = "FLUORS", value, unit = "", sensor = "Seapoint_chl")]
+    return(DT)
+  }
+  if(varname == "Light"){
+    factor = 0.1; offset = 3.45
+    colnames(DT) = c("dateTime", "raw")
+    DT[, raw := as.numeric(raw)]
+    DT[, value := factor * exp(offset * raw)]
+    DT = DT[,.(dateTime, variable = "PAR", value, unit = "uMol m^-2 s^-1", sensor = "LiCor_par")]
+    return(DT)
+  }
+  if(varname == "Aanderaa"){
+    colnames(DT) = c("dateTime", "O2CONC_raw", "TEMP", "O2SAT_raw")
+    DT = melt(DT, id.var = "dateTime")
+    DT[, value := as.numeric(value)]
+    DT = merge(DT, data.table(variable = c("O2CONC_raw", "TEMP", "O2SAT_raw"),
+                              unit = c("mmol m^-3", "oC", "%")))
+    DT[, sensor := "Aanderea_Optode"]
+    return(DT)
+  }
+  if(varname == "Battery"){
+    colnames(DT) = c("dateTime", "BATT1", "BATT2")
+    DT = melt(DT, id.var = "dateTime")
+    DT[, value := as.numeric(value)]
+    # DT[, value := (value / (2^12)) * 5] # convert ADC to volts
+    DT[, c("unit", "sensor") := list("ADC", "Battery")]
+    return(DT)
+  }
+  if(varname == "Roll"){
+    colnames(DT) = c("dateTime", "x", "y", "z")
+    DT = melt(DT, id.var = "dateTime")
+    DT[, value := as.numeric(value)]
+    DT[, c("unit", "sensor") := list("m/s^2", "Accelerometer")]
+    return(DT)
+  }
+  if(varname == "RBR"){
+    colnames(DT) = c("dateTime", "COND", "TEMP", "PRS", "SAL")
+    DT = melt(DT, id.var = "dateTime")
+    DT[, value := as.numeric(value)]
+    DT = merge(DT, data.table(variable = c("COND", "TEMP", "PRS", "SAL"),
+                              unit = c("mS/cm", "oC", "dbar", "")))
+    DT[, sensor := "RBR_CT"]
+    return(DT)
+  }
 }
 
 
@@ -502,15 +570,15 @@ read.ESMxburst <- function(file){
 #' You will need to clean the file to remove commands or badly formatted rows.
 #'
 #' @param f filename
-#' @importFrom stringi stri_extract
+#' @importFrom stringr str_extract
 #'
 #' @return data.table
 #' @export
 read.teraterm_log <- function(f){
   x = fread(f, header = F)
-  x[,dateTime := stringi::stri_extract(V1, regex = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d+(.\\d)+")]
+  x[, dateTime := stringr::str_extract(V1, "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d+(.\\d)+")]
   x[, dateTime := as.POSIXct(dateTime, tz = "UTC")]
-  x[, V1 := gsub("\\[.+\\] ", "", a, perl = T)]
+  x[, V1 := stringr::str_remove(V1, "\\[.+\\] ")]
   setcolorder(x, "dateTime")
   return(x)
 }
