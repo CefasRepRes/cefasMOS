@@ -189,17 +189,18 @@ profiler.fetch <- function(cruiseID = NA, profiler = NA,
 #' @import RODBC
 #' @export
 profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
-    query = paste("SELECT DISTINCT [CruiseId], [InstId] FROM [SmartBuoy].[dbo].[CtdHeader]",
-                  "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
-                  "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
+    query = paste("SELECT DISTINCT CruiseId, InstId FROM CtdHeader",
+                  "INNER JOIN CtdConfig",
+                  "ON CtdHeader.CtdConfigId = CtdConfig.CtdConfigId")
     if(yr != 'ALL'){
         query = paste(query, ' WHERE YEAR([StartDate]) = ', yr, sep = '')
     }
     sb = odbcConnect(db_name)
-    cruiseList = sqlQuery(sb, query, stringsAsFactors = F)
-    cruiseList = cruiseList[order(cruiseList$CruiseId),]
+    cruiseList = setDT(sqlQuery(sb, query, stringsAsFactors = F))
+    print(cruiseList)
+    cruiseList = cruiseList[order(CruiseId),]
     odbcCloseAll()
-    return(data.frame(cruiseList))
+    return(cruiseList)
 }
 
 #' ESM2 profiler header queryer
@@ -212,9 +213,9 @@ profiler.cruiselist <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
 #' @export
 profiler.header <- function(yr = 'ALL', db_name = 'smartbuoydblive'){
     query = paste("SELECT [CtdHeaderId], [CruiseId], [InstId], [Latitude], [Longitude], (CAST([StartDate] AS NVARCHAR)) AS startTime FROM",
-                  "[SmartBuoy].[dbo].[CtdHeader]",
-                  "INNER JOIN [SmartBuoy].[dbo].[CtdConfig]",
-                  "ON [SmartBuoy].[dbo].[CtdHeader].CtdConfigId = [SmartBuoy].[dbo].[CtdConfig].CtdConfigId")
+                  "[CtdHeader]",
+                  "INNER JOIN [CtdConfig]",
+                  "ON [CtdHeader].CtdConfigId = [CtdConfig].CtdConfigId")
     if(yr != 'ALL'){
         query = paste(query, ' WHERE YEAR([StartDate]) = ', yr, sep = '')
     }
