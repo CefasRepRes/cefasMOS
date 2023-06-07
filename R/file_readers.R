@@ -477,13 +477,13 @@ read.ESMxburst <- function(file){
   end_ind = c(start_ind[-1]-1, length(ln))
   burst_num = as.numeric(stringr::str_extract(ln[start_ind[1]], "(?<=Burst )(\\d+)"))
   for(i in 1:length(start_ind)){
+    print(paste("processing...", varname, i,"line", start_ind[i]))
     varname = ln[start_ind[i]]
     sensor = stringr::str_extract(varname, "(?<=- )\\w+")
     if(end_ind[i] - start_ind[i] < 1){
       warning(paste("No data for "), file, varname)
     }else{
-      DT = fread(text = ln[(start_ind[i]+1):end_ind[i]], header = F)
-      DT[, V1 := as.POSIXct(V1, format = "%d/%m/%Y %H:%M:%S", tz = "UTC")]
+      DT = fread(text = ln[(start_ind[i]+1):end_ind[i]], header = F, tz = "UTC")
       DT = process_ESMx_sensor(DT, sensor)
       DT[, burst := burst_num]
       d[[sensor]] = DT
@@ -494,12 +494,11 @@ read.ESMxburst <- function(file){
   return(d)
 }
 
-# not exported
 process_ESMx_sensor <- function(DT, varname){
   if(varname == "Turbidity"){
-    colnames(DT) = c("dateTime", "raw", "gain")
+    colnames(DT) = c("dateTime", "gain", "raw")
+    DT[, c("raw", "gain") := list(as.numeric(raw), as.numeric(gain))]
     DT[, raw := as.numeric(raw)]
-    DT[, gain := as.numeric(gain)]
     DT = merge(DT, data.table(gain = c(0, 1, 2, 3),
                               factor = c(500, 100, 25, 5)))
     DT[, volts := (raw / (2^12)) * 5] # convert ADC to volts
@@ -508,9 +507,9 @@ process_ESMx_sensor <- function(DT, varname){
     return(DT)
   }
   if(varname == "Fluorometer"){
-    colnames(DT) = c("dateTime", "raw", "gain")
+    colnames(DT) = c("dateTime", "gain", "raw")
+    DT[, c("raw", "gain") := list(as.numeric(raw), as.numeric(gain))]
     DT[, raw := as.numeric(raw)]
-    DT[, gain := as.numeric(gain)]
     DT = merge(DT, data.table(gain = c(0, 1, 2, 3),
                               factor = c(30, 10, 3, 1)))
     DT[, volts := (raw / (2^12)) * 5] # convert ADC to volts
@@ -522,17 +521,18 @@ process_ESMx_sensor <- function(DT, varname){
     factor = 0.1; offset = 3.45
     colnames(DT) = c("dateTime", "raw")
     DT[, raw := as.numeric(raw)]
-    DT[, value := factor * exp(offset * raw)]
+    DT[, value := (raw / (2^12)) * 5] # convert ADC to volts
+    # DT[, value := factor * exp(offset * raw)]
     DT = DT[,.(dateTime, variable = "PAR", value, unit = "uMol m^-2 s^-1", sensor = "LiCor_par")]
     return(DT)
   }
   if(varname == "Aanderaa"){
-    colnames(DT) = c("dateTime", "O2CONC_raw", "TEMP", "O2SAT_raw")
+    colnames(DT) = c("dateTime", "O2CONC_raw", "O2SAT_raw", "TEMP")
     DT = melt(DT, id.var = "dateTime")
     DT[, value := as.numeric(value)]
     DT = merge(DT, data.table(variable = c("O2CONC_raw", "TEMP", "O2SAT_raw"),
                               unit = c("mmol m^-3", "oC", "%")))
-    DT[, sensor := "Aanderea_Optode"]
+    DT[, sensor := "Aanderaa_Optode"]
     return(DT)
   }
   if(varname == "Battery"){
@@ -560,7 +560,6 @@ process_ESMx_sensor <- function(DT, varname){
     return(DT)
   }
 }
-
 
 #' Read teraterm datetime log
 #'
