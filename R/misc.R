@@ -812,3 +812,22 @@ sec_axis_rescale <- function(x, y){
   y_r = range(y, na.rm = T)
   y_r[1] + (y_r[2] - y_r[1]) * (x - x_r[1]) / (x_r[2] - x_r[1])
 }
+
+#' split string by group
+#'
+#' When you want to split a column in a data.table and extract various elements into new columns
+#'
+#' @param x string
+#' @param pattern a regex string with arbitrary number of matching groups
+#'
+#' @return a list containing the whole matched string, and each group
+#' @export
+#'
+#' @examples
+#' d = data.table(cruise = c("CEND 1/13", "HORK", "bon"), rep = 1:3)
+#' d[, c("original", "v1", "v2", "v3") := tstrgroup(cruise, "(CEND) ([\\d\\w]+)/(\\d+)")] # 3 groups
+tstrgroup <- function(x, pattern){
+  transpose(
+    stringr::str_match_all(x, pattern)
+  )
+}
