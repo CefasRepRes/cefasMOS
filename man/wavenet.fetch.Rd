@@ -10,6 +10,7 @@ wavenet.fetch(
   parameters = c("Hm0", "Tpeak", "Tz", "W_PDIR", "W_SPR"),
   after = NA,
   before = NA,
+  telemetry = F,
   db_name = "smartbuoydblive"
 )
 }
@@ -21,6 +22,8 @@ wavenet.fetch(
 \item{after}{optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"}
 
 \item{before}{optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"}
+
+\item{telemetry}{If true then query the telemetry table.}
 
 \item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }

@@ -9,12 +9,14 @@
 #' @param after optional date string, if provided only data after this date will be returned, assumes UTC e.g. "2014-08-10"
 #' @param before optional date string, if provided only data before this date will be returned, assumes UTC e.g. "2014-12-09"
 #' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
+#' @param telemetry If true then query the telemetry table.
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords wavenet query
 #' @import RODBC
 wavenet.fetch <- function(deployment = NA, deployment_group = NA,
                           parameters = c('Hm0', 'Tpeak', 'Tz', 'W_PDIR', 'W_SPR'),
                           after = NA, before = NA,
+                          telemetry = F,
                           db_name = 'smartbuoydblive'){
 
   query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
@@ -32,6 +34,21 @@ wavenet.fetch <- function(deployment = NA, deployment_group = NA,
                   "INNER JOIN SensorParameter ON",
                   "AdHocRetrieval_BurstMeanResults.[Sensor Id] = SensorParameter.SensorId AND",
                   "AdHocRetrieval_BurstMeanResults.[Parameter Code] = SensorParameter.ParCode")
+
+  if(telemetry){
+    query = paste("SELECT (CAST([Date/Time] AS NVARCHAR)) as dateTime,",
+              "[Parameter Code] as par,",
+              "[Parameter Description] as pardesc,",
+              "[Sensor Descr] as sensor,",
+              "[Sensor Serial Number] as serial,",
+              "[Result - Mean] as value,",
+              "[Deployment Id] as deployment,",
+              "[Deployment Group Id] as site",
+              "FROM AdHocRetrieval_TelemetryResults",
+              "INNER JOIN SensorParameter ON",
+              "AdHocRetrieval_TelemetryResults.[Sensor Id] = SensorParameter.SensorId AND",
+              "AdHocRetrieval_TelemetryResults.[Parameter Code] = SensorParameter.ParCode")
+    }
 
     parameters = paste(parameters, collapse = "', '")
     query = paste0(query, " WHERE [Parameter code] IN ('", parameters, "')")
