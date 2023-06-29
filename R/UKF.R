@@ -335,7 +335,7 @@ UKFsmooth <- function (filterData) {
 #' @param filterData an object as returned by UKF.
 #' @param nAhead  the number of steps ahead for which to predict system states
 #'
-#' @return
+#' @return list containing forecast elements
 #' @export
 #' @author Stefan Gelissen
 #'

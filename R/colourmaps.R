@@ -283,7 +283,7 @@ interpolate_vec <- function(colormap, x) {
 #' @param start default = 0
 #' @param end default = 1
 #'
-#' @return
+#' @return vector of colours
 #' @export
 #' @examples
 #'
