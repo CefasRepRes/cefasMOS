@@ -242,6 +242,18 @@ ferrybox.haserror <- function(x, code){
   return(sapply(x, function(z) intToBits(z)[bincode] == T))
 }
 
+ferrybox.convert_flag <- function(fberror){
+  out = rep(0, length(fberror))
+  out[apply(ferrybox.haserror(fberror, c(32, 1024, 2048)), 2, any)] = 9 # undefined (least important)
+  out[ferrybox.haserror(fberror, 4)] = 8 # flow too low
+  out[ferrybox.haserror(fberror, 2)] = 7 # flow too high
+  out[ferrybox.haserror(fberror, 8)] = 6 # timeout
+  out[ferrybox.haserror(fberror, 64)] = 5 # clean
+  out[apply(ferrybox.haserror(fberror, c(16, 128, 256, 512)), 2, any)] = 4 # standby
+  out[ferrybox.haserror(fberror, 1)] = 3 # bad / missing (most important)
+  return(out)
+}
+
 
 #' calculate speed from GPS
 #'
