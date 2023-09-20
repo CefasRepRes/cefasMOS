@@ -13,7 +13,7 @@ install.packages("devtools")
 devtools::install_github("cefasRepRes/cefasmos")
 
   # optionally if you want the development version
-devtools::install_bitbucket("cefasRepRes/cefasmos", subdir = "dev")
+devtools::install_github("cefasRepRes/cefasmos", subdir = "dev")
 
   # install_github considers a package built under a different version of R an error
   # (it's not)
