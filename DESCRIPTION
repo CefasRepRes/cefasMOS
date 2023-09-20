@@ -1,7 +1,7 @@
 Package: cefasMOS
 Title: Tools for Cefas MOS
-Version: 0.5.0
-Date: 2023-02-22
+Version: 0.6.0
+Date: 2023-09-18
 Authors@R: c(person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = c("cre", "aut")),
              person("Kate", "Collingridge", email = "kate.collingridge@cefas.co.uk", role = "ctb"))
 Description: Provides tools for Cefas MOS activities
@@ -21,15 +21,17 @@ Imports:
     geosphere,
     lubridate,
     ncdf4,
-    oce,
     pbapply,
     stringr,
     zoo,
     xts
 Suggests:
+    oce,
     knitr,
     shiny,
     openxlsx,
+    DBI,
+    RPostgres,
     propagate,
     svDialogs
 Roxygen: list(markdown = TRUE)
