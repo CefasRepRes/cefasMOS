@@ -398,28 +398,6 @@ read.nutrients <- function(filename){
   return(dat)
 }
 
-#' Read CTDQC data
-#'
-#' Extracts in a nice data.table format the nested oce CTD casts from a CTDQC session
-#'
-#' @param session i.e. that loaded with load("CTDQC.rdata")
-#' @param type  either "data" for the trimmed downcasts or "untrimmed" for everything
-#'
-#' @return data.table of all CTDs
-#' @export
-read.CTDQC <- function(session, type = c("data", "untrimmed")){
-  m = list()
-  for(i in session[[type[1]]]){
-    stn = i@metadata$station
-    m[[stn]] = as.data.table(i@data)
-    m[[stn]][, startTime := i@metadata$startTime]
-    fname = strsplit(i@metadata$filename, "\\\\")[[1]]
-    fname = fname[[length(fname)]]
-    m[[stn]][, filename := fname]
-  }
-  return(rbindlist(m, idcol="stn", fill=T))
-}
-
 #' read and parse NMEA GGA log file
 #'
 #' Tool will parse a NMEA log file, and decode each line with a "$xxGGA" string
@@ -477,14 +455,14 @@ read.ESMxburst <- function(file){
   end_ind = c(start_ind[-1]-1, length(ln))
   burst_num = as.numeric(stringr::str_extract(ln[start_ind[1]], "(?<=Burst )(\\d+)"))
   for(i in 1:length(start_ind)){
-    print(paste("processing...", varname, i,"line", start_ind[i]))
     varname = ln[start_ind[i]]
+    print(paste("processing...", varname, i,"line", start_ind[i]))
     sensor = stringr::str_extract(varname, "(?<=- )\\w+")
     if(end_ind[i] - start_ind[i] < 1){
       warning(paste("No data for "), file, varname)
     }else{
       DT = fread(text = ln[(start_ind[i]+1):end_ind[i]], header = F, tz = "UTC")
-      DT = process_ESMx_sensor(DT, sensor)
+      DT = setDT(process_ESMx_sensor(DT, sensor))
       DT[, burst := burst_num]
       d[[sensor]] = DT
     }
