@@ -141,10 +141,12 @@ read.wavenet_sbd_info <- function(sbd, debug = F){
   if(is.na(sst_index)){
     sst = NA
   }else{
-    sst = sbd[(sst_index+1):(sst_index+2)]
-    sst = rawToBits(sst)[1:10]
-    sst = raw_to_dec(sst)/20 - 5
+    raw = sbd[(sst_index):(sst_index+10)][2:3] # byte 1 and 2 bits of byte 2 (10 bit number)
+    comp = as.integer(raw[1]) * 0x100 + as.integer(raw[2])
+    var = bitwShiftR(comp, 6)
+    var = bitwAnd(var, 0x3FF) # mask to keep 10 bits (not needed)
+    sst = var/20 - 5
   }
 
-  return(list(lat = lat, lon = lon, batt = batt))
+  return(list(lat = lat, lon = lon, batt = batt, sst = sst))
 }
