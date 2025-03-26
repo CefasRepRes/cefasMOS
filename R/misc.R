@@ -90,7 +90,7 @@ as.melt.data.table <- function(m, value_name = "value"){
 #' @param x vector or timestamps
 #' @param fuzz amount of extra leeway in seconds to give the function to avoid small gaps, default is 0
 #'
-#' @return
+#' @return vector of group indexes
 #' @export
 time_group <- function(x, fuzz = 0){
   dt = diff(as.numeric(x[order(x)]))
@@ -576,7 +576,7 @@ lagged_flag <- function(dateTime, init, lag = 300){
 #' Tool returns gpsTime (UTC), lat and lon in decimal degrees, number of satelites.
 #' HDOP and altitude in meters.
 #'
-#' @param file
+#' @param file filename
 #' @param date_origin default "2000-01-01"
 #'
 #' @return data.table with processed positions
@@ -718,7 +718,7 @@ dircast <- function(pressure){
 #' @param x vector of values to differentiate
 #' @param t optional time in seconds, or POSIXct
 #'
-#' @return
+#' @return vector of differentiated values
 #' @export
 fdiff <- function(x, t = NA){
   # this is Sunke's method for first order differentiation with an vector of same length
@@ -830,4 +830,24 @@ tstrgroup <- function(x, pattern){
   transpose(
     stringr::str_match_all(x, pattern)
   )
+}
+
+#' Expanded range calculation
+#'
+#' Calculate the range of a vector, and then scale it. Useful when calculating xlims for plotting.
+#'
+#' @param x a vector
+#' @param scale factor by which to scale the range, default is 1.2 (20 % increase)
+#'
+#' @returns two element vector of min and max
+#' @export
+#'
+#' @examples
+#' lons = c(-9, 5.5, 9)
+#' expanded_range(lons)
+expanded_range <- function(x, scale = 1.2){
+  rng = range(x)
+  mid = median(rng)
+  half_width = diff(rng) * scale * 0.5
+  return(mid + c(-1, 1) * half_width)
 }

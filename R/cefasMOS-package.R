@@ -1,6 +1,6 @@
 #' cefasMOS.
 #'
 #' @name cefasMOS
-#' @docType package
+#' @docType _PACKAGE
 NULL
 Sys.setenv(TZ='UTC')

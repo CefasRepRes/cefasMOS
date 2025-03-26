@@ -11,6 +11,9 @@ fdiff(x, t = NA)
 
 \item{t}{optional time in seconds, or POSIXct}
 }
+\value{
+vector of differentiated values
+}
 \description{
 This is an implementation of Sunke Schmidtko's method for a first order differentiation of a vector.
 Unlike the standard R diff function this returns a vector of the same length, coping with end effects.

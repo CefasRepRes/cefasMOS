@@ -1,7 +1,7 @@
 Package: cefasMOS
 Title: Tools for Cefas MOS
-Version: 0.6.1
-Date: 2025-02-12
+Version: 0.6.2
+Date: 2025-03-26
 Authors@R: c(person("Tom", "Hull", email = "tom.hull@cefas.co.uk", role = c("cre", "aut")),
              person("Kate", "Collingridge", email = "kate.collingridge@cefas.co.uk", role = "ctb"))
 Description: Provides tools for Cefas MOS activities
@@ -37,6 +37,5 @@ Suggests:
 Roxygen: list(markdown = TRUE)
 VignetteBuilder: knitr
 License: GPL-2
-RoxygenNote: 7.2.3
 LazyData: true
 Encoding: UTF-8

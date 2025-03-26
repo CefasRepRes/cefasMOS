@@ -57,6 +57,5 @@
 #'   \item{\code{group}}{polygon group}
 #'}
 #' @references `rworldmap`
-#' @example
 # ggplot(nwe_coastline) + geom_polygon(aes(lon, lat, group = group, fill = id))
 "nwe_coastline"
