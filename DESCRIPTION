@@ -39,3 +39,4 @@ VignetteBuilder: knitr
 License: GPL-2
 LazyData: true
 Encoding: UTF-8
+RoxygenNote: 7.2.3

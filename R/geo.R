@@ -1,14 +1,14 @@
 #' GEBCO Bathymetry base map
 #'
-#' Basemap using GEBCO 2022 data, if you want something more technical, perhaps try the marmap package.
+#' Basemap using GEBCO 2024 data, if you want something more technical, perhaps try the marmap package.
 #'
 #' @param lon vector of longitude coordinates for calculating map extent
 #' @param lat as above for latitude
-#' @param highres default = False, if True fetch the full 0.00417 degree GEBCO 2022 data, otherwise uses 0.05 degree binned data
+#' @param highres default = False, if True fetch the full 0.004 degree GEBCO 2024 data, otherwise uses 0.05 degree binned data
 #' @param breaks if true (default) depths are binned to <25, 25-50, 50-100, 100-200 and >200m bins
 #' @param expand expansion factor for margins, default = 0.02
 #'
-#' @references GEBCO data from GEBCO 2022
+#' @references GEBCO data from GEBCO 2024
 #' @references Coastlines from rworldmap
 #'
 #' @return ggplot
@@ -21,11 +21,11 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
   ylim_exp = scales::expand_range(ylim, expand)
 
   if(highres){
-    if(!exists("gebco_2022")){data("gebco_2022");print("loaded GEBCO 2022, 0.00417 degree grid")}
-    bathy = gebco_2022[lon %between% xlim_exp & lat %between% ylim_exp]
+    if(!exists("gebco")){data("gebco");print("loaded GEBCO, High Resolution grid")}
+    bathy = gebco[lon %between% xlim_exp & lat %between% ylim_exp]
   }else{
-    if(!exists("gebco_2022_low")){data("gebco_2022_low");print("loaded GEBCO 2022, 0.05 degree grid")}
-    bathy = gebco_2022_low[lon %between% xlim_exp & lat %between% ylim_exp]
+    if(!exists("gebco_low")){data("gebco_2022_low");print("loaded GEBCO, 0.05 degree grid")}
+    bathy = gebco_low[lon %between% xlim_exp & lat %between% ylim_exp]
   }
 
   # classify
@@ -62,7 +62,7 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
 
 #' Extract depth for position from GEBCO
 #'
-#' extract nearest point from GEBCO 2022 at 0.05 degree resolution
+#' extract nearest point from GEBCO at 0.05 degree resolution
 #'
 #' @param lon longitude in decimal degrees
 #' @param lat latitude in decimal degrees
@@ -75,10 +75,10 @@ bathymap <- function(lon = c(-14, 9), lat = c(46, 62), breaks=T, highres=F, expa
 #' bathy_match(lons, lats)
 bathy_match <- function(lon, lat){
   if(length(lon) == length(lat)){
-    if(!exists("gebco_2022")){data("gebco_2022");print("loaded GEBCO 2022, 0.05 degree grid")}
+    if(!exists("gebco")){data("gebco");print("loaded GEBCO, 0.05 degree grid")}
     res = 0.05
     pos = data.table(lon = round(lon/res)*res, lat = round(lat/res)*res)
-    round(gebco_2022_low[pos, on=list(lon, lat)]$depth, 1)
+    round(gebco_low[pos, on=list(lon, lat)]$depth, 1)
   }else{
     error("lon and lat are not the same length")
   }

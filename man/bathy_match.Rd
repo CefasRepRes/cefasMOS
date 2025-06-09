@@ -15,7 +15,7 @@ bathy_match(lon, lat)
 depth in meters
 }
 \description{
-extract nearest point from GEBCO 2022 at 0.05 degree resolution
+extract nearest point from GEBCO at 0.05 degree resolution
 }
 \examples{
 lons = c(0.0001, -15)

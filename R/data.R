@@ -1,7 +1,7 @@
 # sinew::makeOxygen(mapdata)
 
-#' @title GEBCO 2022
-#' @description GEBCO bathymetry at 0.00417 degree grid centred on the UK (45-65N -16-10E).
+#' @title GEBCO
+#' @description GEBCO 2024 bathymetry at 0.004 degree grid centred on the UK (44-65N -17-11E).
 #' @format A data table
 #' \describe{
 #'   \item{\code{lon}}{WGS84 Longitude in decimal degrees}
@@ -9,10 +9,10 @@
 #'   \item{\code{depth}}{depth in meters}
 #'}
 #' @source \url{https://www.gebco.net/}
-"gebco_2022"
+"gebco"
 
-#' @title GEBCO 2022 Low
-#' @description GEBCO bathymetry at 0.05 degree grid centred on the UK (45-65N -16-10E).
+#' @title GEBCO Low Resolution
+#' @description GEBCO 2024 bathymetry at 0.05 degree grid centred on the UK (44-65N -17-11E).
 #' @format A data table
 #' \describe{
 #'   \item{\code{lon}}{WGS84 Longitude in decimal degrees}
@@ -21,7 +21,7 @@
 #'   \item{\code{label}}{label corisponding to depth bin}
 #'}
 #' @source \url{https://www.gebco.net/}
-"gebco_2022_low"
+"gebco_low"
 
 #' @title cds_table
 #' @description a precompiled list of all possible combinations of Cefas Endeavour ferrybox error codes
