@@ -313,3 +313,57 @@ ferrybox.course <- function(dateTime, lat, lon, threshold = 65){
   dat[course < 0, course := course + 360] # geosphere method goes 0 to 180/-180 rather than 360
   return(dat$course)
 }
+
+#' Read ferrybox port positions xml file
+#'
+#' @param xmlfile
+#'
+#' @returns data.table of positions and watch circles
+#' @export
+#' @import xml2
+#'
+ferrybox.read_port_xml  <- function(xmlfile = "data/Positions.xml") {
+
+  doc <- read_xml(xmlfile)
+  xml_ns_strip(doc)                      # drop the ni.com namespace
+
+  # helper to pull numeric or string values from an <Array><DBL>/<String> list
+  get_vals <- function(node, valtag = "DBL") {
+    xml_find_all(node, paste0(".//", valtag, "/Val")) |> xml_double()
+  }
+  get_strs <- function(node) {
+    xml_find_all(node, ".//String/Val") |> xml_text()
+  }
+  get_bools <- function(node) {
+    xml_find_all(node, ".//Boolean/Val") |> xml_integer() |> as.logical()
+  }
+
+  # find each Array by its <Name>
+  find_array <- function(arr_name) {
+    xml_find_first(doc, paste0('.//Array[Name="', arr_name, '"]'))
+  }
+
+  lon_node <- find_array("Longitude")
+  lat_node <- find_array("Latitude")
+  dst_node <- find_array("Distance Nm")
+  nam_node <- find_array("Name of harbour")
+  en_node  <- find_array("Enable")
+
+  lon_vals <- get_vals(lon_node)
+  lat_vals <- get_vals(lat_node)
+  # The LV file stores 2 values per port in Longitude/Latitude arrays:
+  #   index1, value1, index2, value2, ...
+  # Keep every **second** element (the actual coordinate)
+  lon <- lon_vals[seq(2, length(lon_vals), by = 2)]
+  lat <- lat_vals[seq(2, length(lat_vals), by = 2)]
+
+  ports_df <- data.table(
+    Harbour   = get_strs(nam_node),
+    Longitude = lon,
+    Latitude  = lat,
+    DistanceNm= get_vals(dst_node),
+    Enable    = get_bools(en_node)
+  )
+
+  return(ports_df)
+}
