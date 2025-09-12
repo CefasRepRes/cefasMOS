@@ -456,7 +456,7 @@ profiler.split <- function(x, t_threshold = 180, z_threshold = 0.25, use_prs = F
 #' dat = ctd.fetch(bbox = bbox)
 #' dat = ctd.fetch(after = "2018-01-01", parameters = c("SAL", "V1", "ALT"))
 #'}
-ctd.fetch <- function(survey = NA, bbox = NA, after = NA, before = NA, parameters = c("TEMP", "SAL", "O2CONC", "FTU", "FLUORS", "ALT", "PAR"), binned = T){
+ctd.fetch <- function(survey = NA, bbox = NA, after = NA, before = NA, parameters = c("PRS", "TEMP", "SAL", "O2CONC", "FTU", "FLUORS", "ALT", "PAR"), binned = T){
 
   con = DBI::dbConnect(
     drv = RPostgres::Postgres(),
