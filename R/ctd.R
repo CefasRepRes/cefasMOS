@@ -488,10 +488,26 @@ ctd.fetch <- function(survey = NA, bbox = NA, after = NA, before = NA, parameter
   if(binned){
     q = paste("SELECT * FROM binned_data WHERE", paste(where, collapse = " AND "))
   }else{
-    stop("query is not available for raw data")
-    # q = paste("SELECT * FROM data WHERE", paste(where, collapse = " AND "))
+    q = paste("SELECT * FROM data WHERE", paste(where, collapse = " AND "))
   }
   print(q)
+  d = data.table::setDT(DBI::dbGetQuery(con, q))
+  return(d)
+}
+
+#' Fetch list of surveys in CTD database
+#'
+#' @returns data.table
+#' @export
+ctd.list_surveys <- function(){
+  con = DBI::dbConnect(
+    drv = RPostgres::Postgres(),
+    dbname = "ctd",
+    host = "citprodpostgres01",
+    port = 5432,
+    application_name = "cefasMOS",
+    user = "ctd_reader", password = "itsatypeofs3abird")
+  q = "SELECT survey, project, start FROM survey ORDER BY start"
   d = data.table::setDT(DBI::dbGetQuery(con, q))
   return(d)
 }

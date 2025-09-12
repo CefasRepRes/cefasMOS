@@ -14,8 +14,7 @@ smartbuoy.fetch(
   RQ0 = TRUE,
   ct_temp_only = TRUE,
   averaging_period = NA,
-  night_flu_only = FALSE,
-  db_name = "smartbuoydblive"
+  night_flu_only = FALSE
 )
 }
 \arguments{
@@ -38,8 +37,6 @@ smartbuoy.fetch(
 \item{averaging_period, }{integer matching length in hours of averaging interval, i.e. 24 for daily means}
 
 \item{night_flu_only}{optional boolean, if True (default) only night flu data will be returned}
-
-\item{db_name}{character string matching ODBC data source name, defaults to 'smartbuoydblive'}
 }
 \value{
 data.table with returned data in "long" format or error string if no data returned

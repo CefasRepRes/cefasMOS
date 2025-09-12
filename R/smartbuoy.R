@@ -48,7 +48,6 @@
 #' @param ct_temp_only boolean, if True all non-FSI temperature data is discarded, default is False.
 #' @param averaging_period, integer matching length in hours of averaging interval, i.e. 24 for daily means
 #' @param night_flu_only optional boolean, if True (default) only night flu data will be returned
-#' @param db_name character string matching ODBC data source name, defaults to 'smartbuoydblive'
 #' @return data.table with returned data in "long" format or error string if no data returned
 #' @keywords smartbuoy esm2 query
 #' @import RODBC
@@ -59,8 +58,7 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
                            min_QA_reached = TRUE,
                            RQ0 = TRUE, ct_temp_only = TRUE,
                            averaging_period = NA,
-                           night_flu_only = FALSE,
-                           db_name = 'smartbuoydblive'){
+                           night_flu_only = FALSE){
 
     if(min_QA_reached == TRUE & RQ0 == TRUE){
         # boilerplate query start
@@ -144,9 +142,15 @@ smartbuoy.fetch <- function(deployment = NA, deployment_group = NA,
     query = paste(query, 'ORDER BY dateTime')
 
     print(query)
-    sb = odbcConnect(db_name)
-    dat = data.table(sqlQuery(sb, query))
-    odbcCloseAll()
+    db = DBI::dbConnect(
+      odbc::odbc(),
+      driver = "SQL Server",
+      server = "citprodwavenetsqlsvr.database.windows.net",
+      database = "citprodwavenetsqldb",
+      uid = "SmartbuoyMDRReader",
+      pwd = "PawP6tr0!")
+    dat = setDT(DBI::dbGetQuery(db, query))
+    DBI::dbDisconnect(db)
 
     # check if valid data has been returned, if not quit
     if(! nrow(dat) > 1){
