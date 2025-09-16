@@ -486,7 +486,7 @@ ctd.fetch <- function(survey = NA, bbox = NA, after = NA, before = NA, parameter
     where = append(where, paste0("parameter IN ('", paste0(parameters, collapse = "','"), "')"))
   }
   if(binned){
-    q = paste("SELECT * FROM binned_data WHERE", paste(where, collapse = " AND "))
+    q = paste("SELECT * FROM data_binned_1 WHERE", paste(where, collapse = " AND "))
   }else{
     q = paste("SELECT * FROM data WHERE", paste(where, collapse = " AND "))
   }
